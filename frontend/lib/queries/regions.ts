@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { createBuildClient } from "@/lib/supabase/server";
+const createClient = createBuildClient;
 import type { Database } from "@/lib/database.types";
 
 export type Region = Database["public"]["Tables"]["regions"]["Row"];

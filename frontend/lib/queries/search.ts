@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { createBuildClient } from "@/lib/supabase/server";
+const createClient = createBuildClient;
 import type { Article } from "./articles";
 
 export const SEARCH_PAGE_SIZE = 12;
