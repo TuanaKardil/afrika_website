@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #faf5ee;
+  --foreground: #3a302a;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Article body content styles */
+.article-content h2 {
+  font-family: var(--font-headline), serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: #3a302a;
+}
+
+.article-content h3 {
+  font-family: var(--font-headline), serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #3a302a;
+}
+
+.article-content p {
+  margin-bottom: 1.25rem;
+  line-height: 1.8;
+}
+
+.article-content blockquote {
+  border-left: 3px solid #c2652a;
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  color: #5a4a42;
+  font-style: italic;
+}
+
+.article-content ul,
+.article-content ol {
+  margin: 1rem 0 1.25rem 1.5rem;
+}
+
+.article-content ul {
+  list-style-type: disc;
+}
+
+.article-content ol {
+  list-style-type: decimal;
+}
+
+.article-content li {
+  margin-bottom: 0.4rem;
+  line-height: 1.7;
+}
+
+.article-content strong {
+  font-weight: 600;
+  color: #3a302a;
+}
+
+.article-content a {
+  color: #c2652a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-content a:hover {
+  color: #8c3c3c;
+}
+
+.article-content figure {
+  margin: 1.5rem 0;
+}
+
+.article-content figure img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.article-content figcaption {
+  font-size: 0.85rem;
+  color: #7a6a62;
+  margin-top: 0.4rem;
+  text-align: center;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}

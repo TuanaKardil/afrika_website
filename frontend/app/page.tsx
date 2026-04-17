@@ -1,0 +1,37 @@
+import type { Metadata } from "next";
+import { getFeaturedArticle, getLatestArticles } from "@/lib/queries/articles";
+import { getCategories } from "@/lib/queries/categories";
+import HeroSection from "@/components/sections/HeroSection";
+import ArticleGrid from "@/components/sections/ArticleGrid";
+import CategoryFilter from "@/components/sections/CategoryFilter";
+import Pagination from "@/components/sections/Pagination";
+
+export const metadata: Metadata = {
+  title: "Afrika Haberleri",
+  description: "Afrika'dan son dakika haberleri Turkce olarak.",
+};
+
+interface HomePageProps {
+  searchParams: { sayfa?: string };
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
+
+  const [featured, { articles, count }, categories] = await Promise.all([
+    getFeaturedArticle(),
+    getLatestArticles(page),
+    getCategories(),
+  ]);
+
+  return (
+    <>
+      {featured && <HeroSection article={featured} />}
+      <main className="container mx-auto px-4 py-8">
+        <CategoryFilter categories={categories} activeSlug={null} />
+        <ArticleGrid articles={articles} />
+        <Pagination page={page} total={count} basePath="/" />
+      </main>
+    </>
+  );
+}

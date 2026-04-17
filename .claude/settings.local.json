@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(chmod +x *)",
+      "Bash(npx husky *)",
+      "Bash(npx tsc *)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(pip install *)",
+      "Bash(pip3 install *)",
+      "Bash(python3 -m scrapy list)",
+      "Bash(python3 *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node_modules/.bin/tsc --noEmit --skipLibCheck)",
+      "Bash(node *)",
+      "Bash(node_modules/.bin/next build *)",
+      "Bash(echo \"BUILD_EXIT:$?\")",
+      "Bash(ps -p 92375 -o etime=)",
+      "Bash(kill 92375)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Vercel__list_teams",
+      "mcp__claude_ai_n8n__search_workflows",
+      "mcp__claude_ai_Supabase__get_project_url",
+      "mcp__claude_ai_Supabase__get_publishable_keys",
+      "mcp__claude_ai_Supabase__list_migrations",
+      "mcp__claude_ai_Vercel__list_projects",
+      "mcp__claude_ai_Supabase__apply_migration",
+      "mcp__claude_ai_Supabase__generate_typescript_types",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "Bash(vercel --version)",
+      "Bash(npx vercel *)"
+    ]
+  }
+}
