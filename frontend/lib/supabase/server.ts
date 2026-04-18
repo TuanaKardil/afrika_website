@@ -3,11 +3,18 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
 
-// Cookie-free client for build-time use (generateStaticParams, etc.)
+// Cookie-free client for build-time and server-side use.
+// Passes cache: 'no-store' so Next.js 14 data cache never stales article queries.
 export function createBuildClient() {
   return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        fetch: (url: RequestInfo | URL, options: RequestInit = {}) =>
+          fetch(url, { ...options, cache: "no-store" }),
+      },
+    }
   );
 }
 
