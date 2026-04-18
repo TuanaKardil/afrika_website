@@ -70,9 +70,10 @@ class BbcAfricaSpider(scrapy.Spider):
             or ""
         ).strip()
 
-        # Featured image
+        # BBC lazy-loads images; og:image is server-rendered with the real URL
         featured_image_url = (
-            response.css("figure img::attr(src)").get()
+            response.css("meta[property='og:image']::attr(content)").get()
+            or response.css("figure img[src*='ichef.bbci']::attr(src)").get()
             or response.css("[data-testid='hero-image'] img::attr(src)").get()
             or ""
         )
