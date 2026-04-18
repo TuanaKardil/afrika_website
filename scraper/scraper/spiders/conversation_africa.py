@@ -12,11 +12,11 @@ _CUTOFF_DAYS = 30
 
 # Section URL -> category_slug mapping per CLAUDE.md
 _SECTION_CATEGORY: dict[str, str] = {
-    "business-economy": "ekonomi",
+    "business": "ekonomi",
     "politics": "siyaset",
     "health": "saglik",
-    "science-technology": "bilim-teknoloji",
-    "environment-energy": "cevre-enerji",
+    "technology": "bilim-teknoloji",
+    "environment": "cevre-enerji",
 }
 
 _BASE = "https://theconversation.com"

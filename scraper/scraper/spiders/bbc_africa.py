@@ -20,11 +20,6 @@ class BbcAfricaSpider(scrapy.Spider):
 
     start_urls = [
         "https://www.bbc.com/news/world/africa",
-        "https://www.bbc.com/news/world/africa/northern_africa",
-        "https://www.bbc.com/news/world/africa/eastern_africa",
-        "https://www.bbc.com/news/world/africa/western_africa",
-        "https://www.bbc.com/news/world/africa/central_africa",
-        "https://www.bbc.com/news/world/africa/southern_africa",
     ]
 
     def parse(self, response: Response):
