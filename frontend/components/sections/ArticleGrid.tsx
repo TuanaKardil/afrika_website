@@ -21,7 +21,7 @@ export default function ArticleGrid({ articles, loading = false }: ArticleGridPr
   if (articles.length === 0) {
     return (
       <div className="py-16 text-center">
-        <p className="font-body text-on-surface/50">Haber bulunamadi.</p>
+        <p className="font-body text-on-surface/50">Haber bulunamadı.</p>
       </div>
     );
   }

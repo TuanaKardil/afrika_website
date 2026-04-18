@@ -5,12 +5,19 @@ import Link from "next/link";
 
 const NAV_LINKS = [
   { href: "/kategori/siyaset", label: "Siyaset" },
-  { href: "/kategori/ekonomi", label: "Ekonomi" },
-  { href: "/kategori/saglik", label: "Saglik" },
+  { href: "/kategori/ekonomi", label: "İş Dünyası ve Ekonomi" },
+  { href: "/kategori/saglik", label: "Sağlık" },
   { href: "/kategori/bilim-teknoloji", label: "Bilim ve Teknoloji" },
-  { href: "/kategori/cevre-enerji", label: "Cevre ve Enerji" },
-  { href: "/kategori/genel", label: "Genel" },
-  { href: "/arama", label: "Ara" },
+  { href: "/kategori/cevre-enerji", label: "Çevre ve Enerji" },
+];
+
+const REGION_LINKS = [
+  { href: "/bolge/afrika", label: "Tüm Afrika" },
+  { href: "/bolge/kuzey-afrika", label: "Kuzey Afrika" },
+  { href: "/bolge/bati-afrika", label: "Batı Afrika" },
+  { href: "/bolge/orta-afrika", label: "Orta Afrika" },
+  { href: "/bolge/dogu-afrika", label: "Doğu Afrika" },
+  { href: "/bolge/guney-afrika", label: "Güney Afrika" },
 ];
 
 export default function MobileMenu() {
@@ -20,7 +27,7 @@ export default function MobileMenu() {
     <div className="md:hidden">
       <button
         onClick={() => setOpen((prev) => !prev)}
-        aria-label={open ? "Menuyu kapat" : "Menuyu ac"}
+        aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
         aria-expanded={open}
         className="p-2 text-on-surface hover:text-primary transition-colors"
       >
@@ -38,7 +45,24 @@ export default function MobileMenu() {
       {open && (
         <div className="absolute top-full left-0 right-0 bg-surface border-b border-outline-variant shadow-card z-50">
           <ul className="container mx-auto px-4 py-4 flex flex-col gap-1">
+            <li className="pb-1">
+              <span className="font-body text-xs font-semibold text-on-surface/40 uppercase tracking-wider">Kategoriler</span>
+            </li>
             {NAV_LINKS.map(({ href, label }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  onClick={() => setOpen(false)}
+                  className="block py-2.5 font-body text-sm font-medium text-on-surface hover:text-primary transition-colors"
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+            <li className="pt-3 pb-1 border-t border-outline-variant mt-1">
+              <span className="font-body text-xs font-semibold text-on-surface/40 uppercase tracking-wider">Bölgeler</span>
+            </li>
+            {REGION_LINKS.map(({ href, label }) => (
               <li key={href}>
                 <Link
                   href={href}
@@ -55,7 +79,7 @@ export default function MobileMenu() {
                 onClick={() => setOpen(false)}
                 className="block py-2.5 font-body text-sm font-medium text-primary"
               >
-                Giris Yap
+                Giriş Yap
               </Link>
             </li>
           </ul>

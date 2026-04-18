@@ -20,7 +20,7 @@ export default function CategoryFilter({ categories, activeSlug }: CategoryFilte
             : "bg-surface-container text-on-surface/70 hover:text-primary hover:bg-primary/10"
         }`}
       >
-        Tumü
+        Tümü
       </Link>
       {categories.map((cat) => (
         <Link
