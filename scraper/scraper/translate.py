@@ -166,7 +166,8 @@ def translate_articles(articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        raise EnvironmentError("ANTHROPIC_API_KEY is not set")
+        logger.warning("ANTHROPIC_API_KEY not set, skipping translation")
+        return skipped + to_translate  # return untranslated so pipeline can apply fallback
 
     async def _run() -> list[dict[str, Any]]:
         client = anthropic.AsyncAnthropic(api_key=api_key)

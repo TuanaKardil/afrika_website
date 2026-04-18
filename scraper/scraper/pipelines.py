@@ -68,7 +68,7 @@ class DeduplicationPipeline:
             logger.error("Dedup query failed for %s: %s", source_url, exc)
             return item
 
-        if result.data:
+        if result and result.data:
             stored_hash = result.data.get("content_hash", "")
             if stored_hash == new_hash:
                 raise DropItem(f"Unchanged content, skipping: {source_url}")
@@ -163,6 +163,14 @@ class StoragePipeline:
             item["title_tr"] = t.get("title_tr")
             item["excerpt_tr"] = t.get("excerpt_tr")
             item["content_tr"] = t.get("content_tr")
+
+        # Fallback: use original content when translation is unavailable
+        if not item.get("title_tr"):
+            item["title_tr"] = item.get("title_original")
+        if not item.get("excerpt_tr"):
+            item["excerpt_tr"] = item.get("excerpt_original")
+        if not item.get("content_tr"):
+            item["content_tr"] = item.get("content_original")
 
         # Content hash (of sanitized original)
         content_hash = _md5(item.get("content_original") or "")

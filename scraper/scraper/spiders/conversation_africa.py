@@ -39,9 +39,9 @@ class ConversationAfricaSpider(scrapy.Spider):
         cutoff = datetime.now(timezone.utc) - timedelta(days=_CUTOFF_DAYS)
         category_slug: str = response.meta["category_slug"]
 
-        for link in response.css("article a.article-link::attr(href), h2 a::attr(href), h3 a::attr(href)").getall():
+        for link in response.css("a[href]::attr(href)").getall():
             url = urljoin(_BASE, link)
-            if "/africa/" in url or theconversation_is_article(url):
+            if theconversation_is_article(url):
                 yield response.follow(
                     url,
                     callback=self.parse_article,
@@ -75,30 +75,29 @@ class ConversationAfricaSpider(scrapy.Spider):
         if published_at < cutoff:
             return
 
-        title = (
-            response.css("h1.entry-title::text").get()
-            or response.css("h1::text").get()
-            or ""
-        ).strip()
+        title = " ".join(
+            response.css("h1.entry-title *::text, h1[itemprop='headline'] *::text").getall()
+        ).strip() or " ".join(response.css("h1 *::text").getall()).strip()
         if not title:
             return
 
         author = (
-            response.css(".author-name a::text").get()
-            or response.css("[itemprop='author'] [itemprop='name']::text").get()
+            response.css(".fn.author-name::text").get()
+            or response.css("[itemprop='name']::text").get()
+            or response.css(".author-name a::text").get()
             or ""
         ).strip()
 
         featured_image_url = (
-            response.css(".entry-featured-image img::attr(src)").get()
-            or response.css("figure.lead img::attr(src)").get()
-            or response.css("article img::attr(src)").get()
+            response.css("meta[property='og:image']::attr(content)").get()
+            or response.css(".ultra-wide-lead-image picture img::attr(src)").get()
+            or response.css("figure img::attr(src)").get()
             or ""
         )
 
         image_credit = (
-            response.css(".entry-featured-image figcaption::text").get()
-            or response.css("figure.lead figcaption::text").get()
+            response.css(".ultra-wide-lead-image figcaption::text").get()
+            or response.css("figure figcaption::text").get()
             or ""
         ).strip()
 
