@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, timezone, timedelta
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, urlunparse
 import xml.etree.ElementTree as ET
 
 import scrapy
@@ -42,12 +42,11 @@ class BbcAfricaSpider(scrapy.Spider):
             root = ET.fromstring(response.text)
         except ET.ParseError:
             return
-        ns = {"atom": "http://www.w3.org/2005/Atom"}
         for item in root.iter("item"):
             link_el = item.find("link")
             if link_el is None or not link_el.text:
                 continue
-            url = link_el.text.strip()
+            url = _clean_url(link_el.text.strip())
             if _ARTICLE_RE.search(url):
                 yield response.follow(url, callback=self.parse_article, meta={"cutoff": cutoff})
 
@@ -110,7 +109,7 @@ class BbcAfricaSpider(scrapy.Spider):
 
         yield ArticleItem(
             source="bbc",
-            source_url=response.url,
+            source_url=_clean_url(response.url),
             title_original=title,
             excerpt_original=excerpt,
             content_original=content_html,
@@ -122,3 +121,9 @@ class BbcAfricaSpider(scrapy.Spider):
             region_slug="afrika",
             is_update=False,
         )
+
+
+def _clean_url(url: str) -> str:
+    """Strip tracking query params so RSS and hub page URLs deduplicate correctly."""
+    parsed = urlparse(url)
+    return urlunparse(parsed._replace(query="", fragment=""))
