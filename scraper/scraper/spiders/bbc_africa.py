@@ -11,7 +11,7 @@ from scraper.items import ArticleItem
 # Article URL pattern for BBC Africa
 _ARTICLE_RE = re.compile(r"/news/(?:world-africa|articles)/[\w-]+-\d+|/news/articles/[\w-]+")
 
-_CUTOFF_DAYS = 30
+_CUTOFF_DAYS = 60
 
 
 class BbcAfricaSpider(scrapy.Spider):

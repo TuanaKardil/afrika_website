@@ -8,7 +8,7 @@ from scrapy.http import Response
 from scraper.extractors import extract_content
 from scraper.items import ArticleItem
 
-_CUTOFF_DAYS = 30
+_CUTOFF_DAYS = 60
 
 # Section URL -> category_slug mapping per CLAUDE.md
 _SECTION_CATEGORY: dict[str, str] = {

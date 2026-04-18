@@ -40,40 +40,54 @@ _CATEGORY_KEYWORDS: dict[str, list[str]] = {
 
 _REGION_KEYWORDS: dict[str, list[str]] = {
     "kuzey-afrika": [
-        "egypt", "libya", "tunisia", "algeria", "morocco", "sudan",
-        "cairo", "tripoli", "tunis", "algiers", "rabat", "khartoum",
-        "north africa", "northern africa", "sahara", "nile",
+        "egypt", "egyptian", "libya", "libyan", "tunisia", "tunisian",
+        "algeria", "algerian", "morocco", "moroccan", "sudan", "sudanese",
+        "western sahara", "cairo", "tripoli", "tunis", "algiers", "rabat",
+        "khartoum", "omdurman", "benghazi", "alexandria", "casablanca",
+        "north africa", "northern africa", "sahara", "nile", "maghreb",
+        "darfur", "sinai",
     ],
     "bati-afrika": [
-        "nigeria", "ghana", "senegal", "mali", "guinea", "ivory coast",
-        "burkina faso", "niger", "togo", "benin", "sierra leone", "liberia",
-        "gambia", "cape verde", "mauritania", "lagos", "accra", "dakar",
-        "bamako", "conakry", "abidjan", "ouagadougou", "niamey",
-        "west africa", "western africa", "ecowas",
+        "nigeria", "nigerian", "ghana", "ghanaian", "senegal", "senegalese",
+        "mali", "malian", "guinea", "guinean", "ivory coast", "cote d'ivoire",
+        "ivorian", "burkina faso", "burkinabe", "niger", "togolese", "togo",
+        "benin", "beninese", "sierra leone", "liberia", "liberian",
+        "gambia", "gambian", "cape verde", "mauritania", "mauritanian",
+        "guinea-bissau", "lagos", "abuja", "accra", "dakar", "bamako",
+        "conakry", "abidjan", "ouagadougou", "niamey", "lome", "cotonou",
+        "freetown", "monrovia", "banjul", "nouakchott",
+        "west africa", "western africa", "ecowas", "sahel",
     ],
     "orta-afrika": [
-        "congo", "drc", "democratic republic", "cameroon", "chad",
-        "central african republic", "car", "gabon", "equatorial guinea",
-        "sao tome", "kinshasa", "yaounde", "ndjamena", "bangui",
-        "central africa",
+        "congo", "drc", "democratic republic of the congo",
+        "republic of the congo", "brazzaville", "cameroon", "cameroonian",
+        "chad", "chadian", "central african republic", "car", "gabon",
+        "gabonese", "equatorial guinea", "sao tome", "principe",
+        "kinshasa", "yaounde", "ndjamena", "bangui", "libreville",
+        "malabo", "bata", "central africa", "congo basin",
+        "angola", "angolan", "luanda",
     ],
     "dogu-afrika": [
-        "kenya", "ethiopia", "tanzania", "uganda", "rwanda", "somalia",
-        "burundi", "south sudan", "eritrea", "djibouti", "comoros",
-        "madagascar", "mauritius", "seychelles", "nairobi", "addis ababa",
-        "dar es salaam", "kampala", "kigali", "mogadishu", "juba",
+        "kenya", "kenyan", "ethiopia", "ethiopian", "tanzania", "tanzanian",
+        "uganda", "ugandan", "rwanda", "rwandan", "somalia", "somali",
+        "burundi", "burundian", "south sudan", "eritrea", "eritrean",
+        "djibouti", "comoros", "madagascar", "malagasy", "mauritius",
+        "seychelles", "nairobi", "addis ababa", "dar es salaam", "kampala",
+        "kigali", "mogadishu", "juba", "asmara", "antananarivo",
         "east africa", "eastern africa", "horn of africa", "great lakes",
+        "lake victoria", "rift valley",
     ],
     "guney-afrika": [
-        "south africa", "zimbabwe", "zambia", "mozambique", "botswana",
-        "namibia", "angola", "malawi", "lesotho", "swaziland", "eswatini",
-        "johannesburg", "cape town", "pretoria", "harare", "lusaka",
-        "maputo", "gaborone", "windhoek", "luanda",
-        "southern africa", "sadc",
+        "south africa", "south african", "zimbabwe", "zimbabwean",
+        "zambia", "zambian", "mozambique", "mozambican", "botswana",
+        "namibia", "namibian", "malawi", "malawian", "lesotho", "basotho",
+        "swaziland", "eswatini", "swazi",
+        "johannesburg", "cape town", "pretoria", "durban", "harare",
+        "bulawayo", "lusaka", "maputo", "gaborone", "windhoek", "blantyre",
+        "maseru", "mbabane",
+        "southern africa", "sadc", "anc", "malema", "zuma", "ramaphosa",
     ],
 }
-
-_WORD_RE = re.compile(r"\b[\w\s-]{3,}\b")
 
 
 def _score(text: str, keywords: list[str]) -> int:
@@ -82,14 +96,18 @@ def _score(text: str, keywords: list[str]) -> int:
 
 
 def classify_article(title: str, content: str) -> tuple[str, str]:
-    """Return (category_slug, region_slug) based on keyword scoring."""
-    combined = f"{title} {content}"
+    """Return (category_slug, region_slug) based on keyword scoring.
+
+    Title matches count 3x to prioritize the article's primary subject.
+    """
+    title_low = title.lower()
+    content_low = content.lower()
 
     # Category
     best_cat = "genel"
     best_cat_score = 0
     for slug, keywords in _CATEGORY_KEYWORDS.items():
-        score = _score(combined, keywords)
+        score = _score(title_low, keywords) * 3 + _score(content_low, keywords)
         if score > best_cat_score:
             best_cat_score = score
             best_cat = slug
@@ -98,7 +116,7 @@ def classify_article(title: str, content: str) -> tuple[str, str]:
     best_region = "afrika"
     best_region_score = 0
     for slug, keywords in _REGION_KEYWORDS.items():
-        score = _score(combined, keywords)
+        score = _score(title_low, keywords) * 3 + _score(content_low, keywords)
         if score > best_region_score:
             best_region_score = score
             best_region = slug
