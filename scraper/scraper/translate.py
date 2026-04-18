@@ -11,7 +11,7 @@ import anthropic
 logger = logging.getLogger(__name__)
 
 MODEL = "claude-haiku-4-5-20251001"
-MAX_TOKENS = 4096
+MAX_TOKENS = 8192
 BATCH_SIZE = 4
 MAX_CONCURRENCY = 5
 MAX_RETRIES = 2
@@ -41,10 +41,9 @@ Translate the following news article to Turkish.
 <excerpt>{excerpt}</excerpt>
 <body>{body}</body>"""
 
-_TAG_RE = re.compile(
-    r"<title>(.*?)</title>.*?<excerpt>(.*?)</excerpt>.*?<body>(.*?)</body>",
-    re.DOTALL,
-)
+_TITLE_RE = re.compile(r"<title>(.*?)</title>", re.DOTALL)
+_EXCERPT_RE = re.compile(r"<excerpt>(.*?)</excerpt>", re.DOTALL)
+_BODY_RE = re.compile(r"<body>(.*?)</body>", re.DOTALL)
 
 
 def _md5(text: str) -> str:
@@ -55,13 +54,18 @@ def _strip_em_dashes(text: str) -> str:
     return _EM_DASH_RE.sub(",", text)
 
 
-def _parse_response(text: str) -> tuple[str, str, str] | None:
-    match = _TAG_RE.search(text)
-    if not match:
+def _parse_response(text: str, original: dict) -> tuple[str, str, str] | None:
+    title_m = _TITLE_RE.search(text)
+    if not title_m:
         return None
-    title = _strip_em_dashes(match.group(1).strip())
-    excerpt = _strip_em_dashes(match.group(2).strip())
-    body = _strip_em_dashes(match.group(3).strip())
+    title = _strip_em_dashes(title_m.group(1).strip())
+
+    excerpt_m = _EXCERPT_RE.search(text)
+    excerpt = _strip_em_dashes(excerpt_m.group(1).strip()) if excerpt_m else (original.get("excerpt_original") or "")
+
+    body_m = _BODY_RE.search(text)
+    body = _strip_em_dashes(body_m.group(1).strip()) if body_m else (original.get("content_original") or "")
+
     return title, excerpt, body
 
 
@@ -90,7 +94,7 @@ async def _translate_one(
                     messages=[{"role": "user", "content": user_message}],
                 )
             raw = response.content[0].text
-            parsed = _parse_response(raw)
+            parsed = _parse_response(raw, article)
             if parsed is None:
                 logger.warning(
                     "Could not parse translation response for %s, raw: %.200s",
