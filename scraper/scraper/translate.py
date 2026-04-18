@@ -1,4 +1,5 @@
 import asyncio
+import concurrent.futures
 import hashlib
 import logging
 import os
@@ -183,5 +184,11 @@ def translate_articles(articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
         await client.close()
         return results
 
-    translated = asyncio.run(_run())
+    # Run in a dedicated thread to avoid conflicts with Scrapy's event loop
+    def _run_in_thread() -> list[dict[str, Any]]:
+        return asyncio.run(_run())
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        translated = executor.submit(_run_in_thread).result()
+
     return translated + skipped
