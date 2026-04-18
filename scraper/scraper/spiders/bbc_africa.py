@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urljoin
+import xml.etree.ElementTree as ET
 
 import scrapy
 from scrapy.http import Response
@@ -13,34 +14,53 @@ _ARTICLE_RE = re.compile(r"/news/(?:world-africa|articles)/[\w-]+-\d+|/news/arti
 
 _CUTOFF_DAYS = 60
 
+# BBC Africa RSS feeds covering the full region
+_RSS_FEEDS = [
+    "https://feeds.bbci.co.uk/news/world/africa/rss.xml",
+]
+
 
 class BbcAfricaSpider(scrapy.Spider):
     name = "bbc_africa"
-    allowed_domains = ["bbc.com", "bbc.co.uk"]
+    allowed_domains = ["bbc.com", "bbc.co.uk", "feeds.bbci.co.uk"]
 
-    start_urls = [
-        "https://www.bbc.com/news/world/africa",
-    ]
-
-    def parse(self, response: Response):
+    def start_requests(self):
         cutoff = datetime.now(timezone.utc) - timedelta(days=_CUTOFF_DAYS)
+        # RSS feeds first (reliable, no JS needed)
+        for feed_url in _RSS_FEEDS:
+            yield scrapy.Request(feed_url, callback=self.parse_rss, meta={"cutoff": cutoff})
+        # Main Africa hub page as fallback for articles not in RSS
+        yield scrapy.Request(
+            "https://www.bbc.com/news/world/africa",
+            callback=self.parse_hub,
+            meta={"cutoff": cutoff},
+        )
 
+    def parse_rss(self, response: Response):
+        cutoff: datetime = response.meta["cutoff"]
+        try:
+            root = ET.fromstring(response.text)
+        except ET.ParseError:
+            return
+        ns = {"atom": "http://www.w3.org/2005/Atom"}
+        for item in root.iter("item"):
+            link_el = item.find("link")
+            if link_el is None or not link_el.text:
+                continue
+            url = link_el.text.strip()
+            if _ARTICLE_RE.search(url):
+                yield response.follow(url, callback=self.parse_article, meta={"cutoff": cutoff})
+
+    def parse_hub(self, response: Response):
+        cutoff: datetime = response.meta["cutoff"]
         for href in response.css("a::attr(href)").getall():
             if href and _ARTICLE_RE.search(href):
                 url = urljoin("https://www.bbc.com", href)
-                yield response.follow(url, callback=self.parse_article,
-                                      meta={"cutoff": cutoff})
-
-        # Follow pagination links if present
-        next_page = response.css("a.lx-pagination__next::attr(href)").get()
-        if next_page:
-            yield response.follow(next_page, callback=self.parse,
-                                  meta={"cutoff": cutoff})
+                yield response.follow(url, callback=self.parse_article, meta={"cutoff": cutoff})
 
     def parse_article(self, response: Response):
         cutoff: datetime = response.meta["cutoff"]
 
-        # Published date
         datetime_str = (
             response.css("time[datetime]::attr(datetime)").get()
             or response.css("[data-testid='timestamp'] time::attr(datetime)").get()
@@ -70,7 +90,6 @@ class BbcAfricaSpider(scrapy.Spider):
             or ""
         ).strip()
 
-        # BBC lazy-loads images; og:image is server-rendered with the real URL
         featured_image_url = (
             response.css("meta[property='og:image']::attr(content)").get()
             or response.css("figure img[src*='ichef.bbci']::attr(src)").get()
@@ -86,11 +105,10 @@ class BbcAfricaSpider(scrapy.Spider):
 
         content_html = extract_content(response, source="bbc")
 
-        # First 200 chars of plain text as excerpt
         plain_text = re.sub(r"<[^>]+>", "", content_html)
         excerpt = plain_text[:200].strip()
 
-        item = ArticleItem(
+        yield ArticleItem(
             source="bbc",
             source_url=response.url,
             title_original=title,
@@ -100,8 +118,7 @@ class BbcAfricaSpider(scrapy.Spider):
             published_at=published_at.isoformat(),
             featured_image_source_url=featured_image_url,
             image_credit=image_credit,
-            category_slug=None,  # classified in Phase 4
-            region_slug="afrika",  # refined in Phase 4
+            category_slug=None,
+            region_slug="afrika",
             is_update=False,
         )
-        yield item
