@@ -100,7 +100,6 @@ class StoragePipeline:
     def process_item(self, item, spider):
         from scraper.classify import classify_article
         from scraper.storage import upload_image, rewrite_image_srcs
-        from scraper.translate import translate_articles
 
         source = item.get("source", "bbc")
         title = item.get("title_original", "")
@@ -154,23 +153,11 @@ class StoragePipeline:
         if url_map:
             item["content_original"] = rewrite_image_srcs(content, url_map)
 
-        # Translate
-        article_dict: dict = dict(item)
-        article_dict["content_hash_stored"] = None  # force translation on new articles
-        translated = translate_articles([article_dict])
-        if translated:
-            t = translated[0]
-            item["title_tr"] = t.get("title_tr")
-            item["excerpt_tr"] = t.get("excerpt_tr")
-            item["content_tr"] = t.get("content_tr")
-
-        # Fallback: use original content when translation is unavailable
-        if not item.get("title_tr"):
-            item["title_tr"] = item.get("title_original")
-        if not item.get("excerpt_tr"):
-            item["excerpt_tr"] = item.get("excerpt_original")
-        if not item.get("content_tr"):
-            item["content_tr"] = item.get("content_original")
+        # Translation runs as a separate step (retranslate.py) after all spiders finish.
+        # Store originals as fallback so the article is immediately visible on the site.
+        item["title_tr"] = item.get("title_original")
+        item["excerpt_tr"] = item.get("excerpt_original")
+        item["content_tr"] = item.get("content_original")
 
         # Content hash (of sanitized original)
         content_hash = _md5(item.get("content_original") or "")
