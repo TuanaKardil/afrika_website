@@ -9,7 +9,7 @@ from scraper.extractors import extract_content
 from scraper.items import ArticleItem
 
 _CUTOFF_DAYS = 60
-_MAX_PAGES = 15  # safety cap per section
+_MAX_PAGES = 8  # ~80 articles per section covers 60 days comfortably
 
 # Section URL -> category_slug mapping
 _SECTION_CATEGORY: dict[str, str] = {
