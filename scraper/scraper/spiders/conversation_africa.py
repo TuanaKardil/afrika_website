@@ -31,9 +31,6 @@ class ConversationAfricaSpider(scrapy.Spider):
             url = f"{_BASE}/africa/{section}"
             yield scrapy.Request(url, callback=self.parse_section,
                                  meta={"category_slug": category})
-        # Generic Africa page for genel category
-        yield scrapy.Request(f"{_BASE}/africa", callback=self.parse_section,
-                             meta={"category_slug": "genel"})
 
     def parse_section(self, response: Response):
         cutoff = datetime.now(timezone.utc) - timedelta(days=_CUTOFF_DAYS)
