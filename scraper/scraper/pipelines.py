@@ -195,9 +195,10 @@ class StoragePipeline:
 
         try:
             if item.get("is_update"):
-                # Update existing row, preserve id and view_count
+                # Update existing row; preserve translations and view_count
                 update_fields = {k: v for k, v in row.items()
-                                 if k not in ("id", "view_count", "is_featured")}
+                                 if k not in ("id", "view_count", "is_featured",
+                                              "title_tr", "excerpt_tr", "content_tr")}
                 update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
                 (
                     self._supabase.table("articles")
