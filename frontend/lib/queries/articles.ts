@@ -7,17 +7,24 @@ export type Article = Database["public"]["Tables"]["articles"]["Row"];
 export const PAGE_SIZE = 12;
 
 export async function getLatestArticles(
-  page = 1
+  page = 1,
+  excludeId?: string
 ): Promise<{ articles: Article[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
-  const { data, count } = await supabase
+  let query = supabase
     .from("articles")
     .select("*", { count: "exact" })
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
+
+  if (excludeId) {
+    query = query.neq("id", excludeId);
+  }
+
+  const { data, count } = await query;
 
   return { articles: data ?? [], count: count ?? 0 };
 }

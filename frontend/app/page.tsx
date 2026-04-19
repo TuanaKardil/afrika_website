@@ -18,9 +18,9 @@ interface HomePageProps {
 export default async function HomePage({ searchParams }: HomePageProps) {
   const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
 
-  const [featured, { articles, count }, categories] = await Promise.all([
-    getFeaturedArticle(),
-    getLatestArticles(page),
+  const featured = await getFeaturedArticle();
+  const [{ articles, count }, categories] = await Promise.all([
+    getLatestArticles(page, featured?.id ?? undefined),
     getCategories(),
   ]);
 
