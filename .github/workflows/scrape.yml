@@ -80,4 +80,6 @@ jobs:
           cd scraper
           echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Retranslating untranslated articles"
           python3 -m scraper.retranslate
+          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Applying post-processing fixes"
+          python3 -m scraper.postprocess_db
           echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Translation complete"

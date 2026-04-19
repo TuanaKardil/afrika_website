@@ -18,20 +18,82 @@ MAX_RETRIES = 2
 
 _EM_DASH_RE = re.compile(r"[\u2014\u2013]|(?<!\-)\-\-(?!\-)")
 
+# Word-level post-processing corrections (case-insensitive, whole-word match)
+# Applied to title, excerpt and body after translation.
+_WORD_FIXES: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"\bsedate\b", re.I), "anestezi uygulamak"),
+    (re.compile(r"\bsedate edildi\b", re.I), "anestezi uygulandı"),
+    (re.compile(r"\bsedate etti\b", re.I), "anestezi uyguladı"),
+    (re.compile(r"\bpontif\b", re.I), "Papa"),
+    (re.compile(r"\bpopemobil\b", re.I), "Papamobil"),
+    (re.compile(r"\bfirebrand\b", re.I), "kışkırtıcı"),
+    (re.compile(r"\bBrut[ae]l\b"), "Acımasız"),
+    # "Kütle" meaning Catholic Mass (Kutsal Ayin) -- only in religious context
+    (re.compile(r"\bKütlesini\b"), "Ayinini"),
+    (re.compile(r"\bKütle ile\b"), "Ayin ile"),
+    (re.compile(r"\baçık hava Kütlesini\b", re.I), "açık hava Ayinini"),
+]
+
+# Apostrophe rule: Turkish proper nouns followed directly by a case suffix
+# e.g. "Kamerunda" -> "Kamerun'da", "Afrikada" -> "Afrika'da", "ABDden" -> "ABD'den"
+# Pattern: capital-starting word (3+ chars) + vowel harmony suffix without apostrophe
+_APOSTROPHE_RE = re.compile(
+    r"\b([A-ZÇŞİĞÖÜ][a-zA-ZçşığöüÇŞİĞÖÜ]{2,})"
+    r"(d[ae]n?|t[ae]n?|y[ae]|n[ıiuü]n|n[ıiuü]|[ıiuü]n|[ae]|'[a-z])"
+    r"(?=[^a-zA-ZçşığöüÇŞİĞÖÜ]|$)"
+)
+
+# Known proper nouns that should take apostrophe (all-caps acronyms always get one)
+_PROPER_NOUN_SUFFIXES = re.compile(
+    r"\b([A-ZÇŞİĞÖÜ]{2,})(d[ae]n?|t[ae]n?|y[ae]|n[ıiuü]n|n[ıiuü]|[ıiuü]n)"
+    r"(?=[^a-zA-ZçşığöüÇŞİĞÖÜ]|$)"
+)
+
+
+def _apply_word_fixes(text: str) -> str:
+    for pattern, replacement in _WORD_FIXES:
+        text = pattern.sub(replacement, text)
+    return text
+
+
+def _fix_apostrophes(text: str) -> str:
+    # Fix acronym suffixes: "ABDden" -> "ABD'den", "ABDnin" -> "ABD'nin"
+    def insert_apostrophe(m: re.Match) -> str:
+        word, suffix = m.group(1), m.group(2)
+        return f"{word}'{suffix}"
+
+    text = _PROPER_NOUN_SUFFIXES.sub(insert_apostrophe, text)
+    return text
+
+
+def postprocess(text: str) -> str:
+    """Apply word fixes and apostrophe corrections to translated Turkish text."""
+    text = _apply_word_fixes(text)
+    text = _fix_apostrophes(text)
+    return text
+
+
 _SYSTEM_PROMPT = """\
-You are a professional news translator specializing in African affairs. \
-Translate the provided content from English to Turkish.
+You are a professional Turkish news translator specializing in African affairs. \
+Translate the provided content from English to Turkish using natural, journalistic Turkish.
 
 Rules:
 - Preserve all HTML tags exactly as they appear. Do not add, remove, or modify any HTML tags.
-- Do not use em dashes (-- or the Unicode em dash or en dash characters) anywhere in the output. \
-Use commas or rephrase instead.
-- Preserve proper nouns in their Turkish-accepted forms \
-(e.g., "Nigeria" becomes "Nijerya", "Kenya" stays "Kenya", "Cairo" becomes "Kahire", \
-"Ethiopia" becomes "Etiyopya", "Egypt" becomes "Misir", "Ghana" stays "Gana", \
-"Sudan" stays "Sudan", "Somalia" becomes "Somali").
+- Do not use em dashes (-- or Unicode em dash/en dash) anywhere. Use commas or rephrase instead.
+- Preserve proper nouns in Turkish-accepted forms: \
+Nigeria->Nijerya, Kenya->Kenya, Cairo->Kahire, Ethiopia->Etiyopya, Egypt->Mısır, \
+Ghana->Gana, Sudan->Sudan, Somalia->Somali, Cameroon->Kamerun, Congo->Kongo, \
+Zimbabwe->Zimbabve, Tanzania->Tanzanya, Uganda->Uganda, Rwanda->Ruanda.
+- When adding Turkish case suffixes to proper nouns, ALWAYS use an apostrophe: \
+Kamerun'da (not "Kamerunda"), Afrika'da (not "Afrikada"), ABD'den (not "ABDden"), \
+Nijerya'da (not "Nijeryada"), Kenya'da (not "Kenyada").
+- Translate "Mass" (Catholic religious service) as "Ayin" not "Kütle".
+- Translate "pontiff" as "Papa", "Popemobile" as "Papamobil".
+- Translate "firebrand" as "kışkırtıcı" or "ateşli muhalefet figürü", NOT "ateşböceği".
+- Translate "sedated" as "uyuşturuldu" or "anestezi uygulandı", not the English word.
+- Do not leave any English words untranslated in the output.
 - Do not summarize, condense, or omit any content. Translate the full text faithfully.
-- Do not add any commentary, notes, or translator remarks.
+- Do not add commentary, notes, or translator remarks.
 - Output only the translated content using the exact delimiter tags provided."""
 
 _USER_TEMPLATE = """\
@@ -58,13 +120,15 @@ def _parse_response(text: str, original: dict) -> tuple[str, str, str] | None:
     title_m = _TITLE_RE.search(text)
     if not title_m:
         return None
-    title = _strip_em_dashes(title_m.group(1).strip())
+    title = postprocess(_strip_em_dashes(title_m.group(1).strip()))
 
     excerpt_m = _EXCERPT_RE.search(text)
-    excerpt = _strip_em_dashes(excerpt_m.group(1).strip()) if excerpt_m else (original.get("excerpt_original") or "")
+    excerpt_raw = excerpt_m.group(1).strip() if excerpt_m else (original.get("excerpt_original") or "")
+    excerpt = postprocess(_strip_em_dashes(excerpt_raw))
 
     body_m = _BODY_RE.search(text)
-    body = _strip_em_dashes(body_m.group(1).strip()) if body_m else (original.get("content_original") or "")
+    body_raw = body_m.group(1).strip() if body_m else (original.get("content_original") or "")
+    body = postprocess(_strip_em_dashes(body_raw))
 
     return title, excerpt, body
 
