@@ -26,7 +26,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           />
         ) : (
           <div className="w-full h-full bg-outline-variant flex items-center justify-center">
-            <span className="text-on-surface/30 font-body text-sm">Gorsel yok</span>
+            <span className="text-on-surface/30 font-body text-sm">Görsel yok</span>
           </div>
         )}
       </Link>

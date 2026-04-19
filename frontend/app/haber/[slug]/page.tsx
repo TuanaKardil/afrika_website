@@ -2,6 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getAllSlugs, getArticleBySlug } from "@/lib/queries/articles";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  siyaset: "Siyaset",
+  ekonomi: "İş Dünyası ve Ekonomi",
+  saglik: "Sağlık",
+  "bilim-teknoloji": "Bilim ve Teknoloji",
+  "cevre-enerji": "Çevre ve Enerji",
+  genel: "Genel",
+};
 import { sanitizeArticleContent } from "@/lib/sanitize";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import RegionBadge from "@/components/ui/RegionBadge";
@@ -50,13 +59,13 @@ export default async function HaberPage({ params }: HaberPageProps) {
       <ViewCountIncrementer articleId={article.id} />
 
       {/* Breadcrumb */}
-      <nav aria-label="Ekmek kirintisi" className="mb-6 flex items-center gap-2 font-body text-sm text-on-surface/50">
+      <nav aria-label="Sayfa yolu" className="mb-6 flex items-center gap-2 font-body text-sm text-on-surface/50">
         <a href="/" className="hover:text-primary transition-colors">Ana Sayfa</a>
         <span>/</span>
         {article.category_slug && (
           <>
-            <a href={`/kategori/${article.category_slug}`} className="hover:text-primary transition-colors capitalize">
-              {article.category_slug.replace("-", " ")}
+            <a href={`/kategori/${article.category_slug}`} className="hover:text-primary transition-colors">
+              {CATEGORY_LABELS[article.category_slug] ?? article.category_slug}
             </a>
             <span>/</span>
           </>

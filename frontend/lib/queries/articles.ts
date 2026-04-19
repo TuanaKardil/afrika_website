@@ -90,13 +90,19 @@ export async function getArticlesByRegion(
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
-  const { data, count } = await supabase
+  // 'afrika' is the catch-all: show all articles regardless of region_slug
+  let query = supabase
     .from("articles")
     .select("*", { count: "exact" })
-    .eq("region_slug", regionSlug)
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
+
+  if (regionSlug !== "afrika") {
+    query = query.eq("region_slug", regionSlug);
+  }
+
+  const { data, count } = await query;
 
   return { articles: data ?? [], count: count ?? 0 };
 }

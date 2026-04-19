@@ -12,7 +12,7 @@ function SubmitButton() {
       disabled={pending}
       className="w-full bg-primary text-white font-body font-medium py-2.5 rounded-lg hover:bg-tertiary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      {pending ? "Giris yapiliyor..." : "Giris Yap"}
+      {pending ? "Giriş yapılıyor..." : "Giriş Yap"}
     </button>
   );
 }
@@ -56,7 +56,7 @@ export default function LoginForm({ redirectTo = "/panel" }: LoginFormProps) {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="font-body text-sm font-medium text-on-surface">
-          Sifre
+          Şifre
         </label>
         <input
           id="password"

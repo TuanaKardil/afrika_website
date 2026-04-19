@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 const REGION_LABELS: Record<string, string> = {
-  afrika: "Afrika",
+  afrika: "Tüm Afrika",
   "kuzey-afrika": "Kuzey Afrika",
-  "bati-afrika": "Bati Afrika",
+  "bati-afrika": "Batı Afrika",
   "orta-afrika": "Orta Afrika",
-  "dogu-afrika": "Dogu Afrika",
-  "guney-afrika": "Guney Afrika",
+  "dogu-afrika": "Doğu Afrika",
+  "guney-afrika": "Güney Afrika",
 };
 
 interface RegionBadgeProps {

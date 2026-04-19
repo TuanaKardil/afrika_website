@@ -2,10 +2,10 @@ import Link from "next/link";
 
 const CATEGORY_LABELS: Record<string, string> = {
   siyaset: "Siyaset",
-  ekonomi: "Ekonomi",
-  saglik: "Saglik",
+  ekonomi: "İş Dünyası ve Ekonomi",
+  saglik: "Sağlık",
   "bilim-teknoloji": "Bilim ve Teknoloji",
-  "cevre-enerji": "Cevre ve Enerji",
+  "cevre-enerji": "Çevre ve Enerji",
   genel: "Genel",
 };
 

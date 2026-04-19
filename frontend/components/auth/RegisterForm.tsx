@@ -12,7 +12,7 @@ function SubmitButton() {
       disabled={pending}
       className="w-full bg-primary text-white font-body font-medium py-2.5 rounded-lg hover:bg-tertiary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      {pending ? "Kayit yapiliyor..." : "Kayit Ol"}
+      {pending ? "Kayıt yapılıyor..." : "Kayıt Ol"}
     </button>
   );
 }
@@ -61,7 +61,7 @@ export default function RegisterForm() {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="font-body text-sm font-medium text-on-surface">
-          Sifre
+          Şifre
         </label>
         <input
           id="password"
@@ -77,7 +77,7 @@ export default function RegisterForm() {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="confirm" className="font-body text-sm font-medium text-on-surface">
-          Sifre Tekrar
+          Şifre Tekrar
         </label>
         <input
           id="confirm"

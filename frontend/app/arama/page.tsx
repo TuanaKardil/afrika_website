@@ -42,7 +42,7 @@ export default async function AramaPage({ searchParams }: AramaPageProps) {
       {query.length < 2 && (
         <div className="py-16 text-center">
           <p className="font-body text-on-surface/50">
-            Aramak istediginiz konuyu yaziniz.
+            Aramak istediğiniz konuyu yazınız.
           </p>
         </div>
       )}

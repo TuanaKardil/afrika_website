@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: BolgePageProps): Promise<Meta
   if (!region) return {};
   return {
     title: `${region.name_tr} Haberleri`,
-    description: `${region.name_tr} bolgesinden haberler Turkce olarak.`,
+    description: `${region.name_tr} bölgesinden haberler Türkçe olarak.`,
   };
 }
 

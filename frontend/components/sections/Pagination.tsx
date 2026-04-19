@@ -41,11 +41,11 @@ export default function Pagination({
           href={buildUrl(basePath, page - 1)}
           className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-lg hover:bg-surface-container transition-colors"
         >
-          Onceki
+          Önceki
         </Link>
       ) : (
         <span className="px-3 py-2 font-body text-sm text-on-surface/30 cursor-not-allowed">
-          Onceki
+          Önceki
         </span>
       )}
 
