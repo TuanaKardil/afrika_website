@@ -30,15 +30,23 @@ def _storage_path(source: str, published_at: datetime, article_id: str, filename
     return f"{source}/{published_at.year}/{published_at.month:02d}/{article_id}/{safe_name}"
 
 
-def _blur_bbc_watermark(img: Image.Image) -> Image.Image:
-    """Blur the bottom-left corner where BBC places its watermark on branded images."""
+def _remove_bbc_watermark(img: Image.Image) -> Image.Image:
+    """Remove BBC watermark by cloning the region just above it downward."""
     w, h = img.size
-    wm_w = int(w * 0.22)
-    wm_h = int(h * 0.10)
-    box = (0, h - wm_h, wm_w, h)
-    region = img.crop(box)
-    blurred = region.filter(ImageFilter.GaussianBlur(radius=18))
-    img.paste(blurred, box)
+    wm_w = int(w * 0.32)
+    wm_h = int(h * 0.14)
+    top = h - wm_h
+
+    # Clone the strip just above the watermark and paste it over the watermark area
+    source = img.crop((0, top - wm_h, wm_w, top))
+    source_resized = source.resize((wm_w, wm_h), Image.LANCZOS)
+    img.paste(source_resized, (0, top))
+
+    # Blend the seam with a narrow blur strip
+    seam_box = (0, top - 6, wm_w + 6, top + 10)
+    seam = img.crop(seam_box)
+    img.paste(seam.filter(ImageFilter.GaussianBlur(radius=5)), seam_box)
+
     return img
 
 
@@ -46,7 +54,7 @@ def _to_jpeg_bytes(raw_bytes: bytes, source: str = "") -> bytes:
     buf = io.BytesIO(raw_bytes)
     img = Image.open(buf).convert("RGB")
     if source == "bbc":
-        img = _blur_bbc_watermark(img)
+        img = _remove_bbc_watermark(img)
     out = io.BytesIO()
     img.save(out, format="JPEG", quality=85, optimize=True)
     return out.getvalue()

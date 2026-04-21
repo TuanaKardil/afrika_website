@@ -5,6 +5,7 @@ anthropic>=0.30
 supabase>=2.4
 python-dotenv>=1.0
 Pillow>=10.0
+numpy>=1.26
 requests>=2.31
 beautifulsoup4>=4.12
 lxml>=4.9
