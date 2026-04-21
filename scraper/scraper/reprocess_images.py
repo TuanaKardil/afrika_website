@@ -4,6 +4,7 @@ import os
 import re as _re
 import requests as _requests
 from datetime import datetime, timezone
+import time as _time
 
 from dotenv import load_dotenv
 
@@ -78,8 +79,9 @@ def main() -> None:
         except (ValueError, TypeError):
             published_at = datetime.now(timezone.utc)
 
-        # Use a fresh path to avoid upsert RLS conflict on existing objects
-        clean_filename = f"{stem}-clean.jpg"
+        # Use a unique path each run to avoid upsert RLS conflict on existing objects
+        ts = int(_time.time())
+        clean_filename = f"{stem}-wf{ts}.jpg"
         path = _storage_path("bbc", published_at, row["id"], clean_filename)
         public_url = f"{supabase_url}/storage/v1/object/public/{_BUCKET}/{path}"
 
