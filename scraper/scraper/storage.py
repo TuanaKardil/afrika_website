@@ -7,7 +7,7 @@ from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
-from PIL import Image
+from PIL import Image, ImageFilter
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +30,23 @@ def _storage_path(source: str, published_at: datetime, article_id: str, filename
     return f"{source}/{published_at.year}/{published_at.month:02d}/{article_id}/{safe_name}"
 
 
-def _to_jpeg_bytes(raw_bytes: bytes, content_type: str) -> bytes:
+def _blur_bbc_watermark(img: Image.Image) -> Image.Image:
+    """Blur the bottom-left corner where BBC places its watermark on branded images."""
+    w, h = img.size
+    wm_w = int(w * 0.22)
+    wm_h = int(h * 0.10)
+    box = (0, h - wm_h, wm_w, h)
+    region = img.crop(box)
+    blurred = region.filter(ImageFilter.GaussianBlur(radius=18))
+    img.paste(blurred, box)
+    return img
+
+
+def _to_jpeg_bytes(raw_bytes: bytes, source: str = "") -> bytes:
     buf = io.BytesIO(raw_bytes)
     img = Image.open(buf).convert("RGB")
+    if source == "bbc":
+        img = _blur_bbc_watermark(img)
     out = io.BytesIO()
     img.save(out, format="JPEG", quality=85, optimize=True)
     return out.getvalue()
@@ -87,7 +101,7 @@ def upload_image(
     jpeg_filename = f"{stem}.jpg"
 
     try:
-        jpeg_bytes = _to_jpeg_bytes(raw_bytes, "")
+        jpeg_bytes = _to_jpeg_bytes(raw_bytes, source)
     except Exception as exc:
         logger.warning("Failed to convert image to JPEG for %s: %s", image_url, exc)
         return None
