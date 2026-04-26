@@ -64,7 +64,8 @@ class BusinessInsiderAfricaSpider(scrapy.Spider):
 
         title = (
             response.css("h1.post-title::text, h1[data-e2e='article-title']::text").get()
-            or response.css("h1::text").get()
+            or " ".join(response.css("h1 *::text").getall()).strip()
+            or " ".join(response.css("h1::text").getall()).strip()
             or ""
         ).strip()
         if not title:
