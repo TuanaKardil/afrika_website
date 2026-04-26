@@ -71,6 +71,9 @@ class ConversationAfricaSpider(scrapy.Spider):
         except ValueError:
             return
 
+        if published_at.tzinfo is None:
+            published_at = published_at.replace(tzinfo=timezone.utc)
+
         if published_at < cutoff:
             return
 
