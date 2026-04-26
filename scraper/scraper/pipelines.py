@@ -74,6 +74,14 @@ class DeduplicationPipeline:
                 raise DropItem(f"Unchanged content, skipping: {source_url}")
             item["is_update"] = True
 
+        # AI semantic duplicate check (new articles only)
+        if not item.get("is_update"):
+            from scraper.duplicate import is_duplicate
+            title = item.get("title_original", "")
+            excerpt = item.get("excerpt_original", "")
+            if is_duplicate(title, excerpt, self._supabase):
+                raise DropItem(f"AI duplicate detected, skipping: {source_url}")
+
         return item
 
 
@@ -99,21 +107,28 @@ class StoragePipeline:
 
     def process_item(self, item, spider):
         from scraper.classify import classify_article
+        from scraper.hashtags import assign_hashtags
+        from scraper.turkey_filter import should_suppress
         from scraper.storage import upload_image, rewrite_image_srcs
 
-        source = item.get("source", "bbc")
+        source = item.get("source", "")
         title = item.get("title_original", "")
         content = item.get("content_original", "")
         source_url = item.get("source_url", "")
 
-        # Classify -- The Conversation category already set; only classify region
-        if source == "the_conversation":
-            _, region_slug = classify_article(title, content)
-            item["region_slug"] = region_slug
-        else:
-            category_slug, region_slug = classify_article(title, content)
-            item["category_slug"] = category_slug
-            item["region_slug"] = region_slug
+        # Turkey filter runs first -- if suppressed, still store but mark suppressed
+        is_suppressed = should_suppress(title, content)
+        item["is_suppressed"] = is_suppressed
+
+        # AI classification: nav_tab_slug, sector_slugs, region_slug
+        nav_tab_slug, sector_slugs, region_slug = classify_article(title, content)
+        item["nav_tab_slug"] = nav_tab_slug
+        item["sector_slugs"] = sector_slugs
+        item["region_slug"] = region_slug
+
+        # Hashtag assignment
+        hashtags = assign_hashtags(title, content)
+        item["hashtags"] = hashtags
 
         # Parse published_at
         try:
@@ -123,7 +138,6 @@ class StoragePipeline:
         except (ValueError, TypeError):
             published_at = datetime.now(timezone.utc)
 
-        # Generate article ID for storage path (stable across updates)
         article_id = str(uuid.uuid4())
 
         # Upload featured image
@@ -153,16 +167,12 @@ class StoragePipeline:
         if url_map:
             item["content_original"] = rewrite_image_srcs(content, url_map)
 
-        # Translation runs as a separate step (retranslate.py) after all spiders finish.
-        # Store originals as fallback so the article is immediately visible on the site.
+        # Store originals as fallback until async retranslate.py runs
         item["title_tr"] = item.get("title_original")
         item["excerpt_tr"] = item.get("excerpt_original")
         item["content_tr"] = item.get("content_original")
 
-        # Content hash (of sanitized original)
         content_hash = _md5(item.get("content_original") or "")
-
-        # Slug
         slug = _make_slug(title, self._known_slugs)
         self._known_slugs.add(slug)
 
@@ -181,8 +191,11 @@ class StoragePipeline:
             "featured_image_url": featured_image_url,
             "featured_image_source_url": item.get("featured_image_source_url"),
             "image_credit": item.get("image_credit"),
-            "category_slug": item.get("category_slug"),
-            "region_slug": item.get("region_slug"),
+            "nav_tab_slug": nav_tab_slug,
+            "sector_slugs": sector_slugs,
+            "region_slug": region_slug,
+            "hashtags": hashtags,
+            "is_suppressed": is_suppressed,
             "published_at": published_at.isoformat(),
             "author_original": item.get("author_original"),
             "view_count": 0,
@@ -195,7 +208,6 @@ class StoragePipeline:
 
         try:
             if item.get("is_update"):
-                # Update existing row; preserve translations and view_count
                 update_fields = {k: v for k, v in row.items()
                                  if k not in ("id", "view_count", "is_featured",
                                               "title_tr", "excerpt_tr", "content_tr")}

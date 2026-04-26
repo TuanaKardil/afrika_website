@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        logger.warning("ANTHROPIC_API_KEY not set, skipping retranslation")
+        logger.warning("OPENROUTER_API_KEY not set, skipping retranslation")
         return
 
     from supabase import create_client

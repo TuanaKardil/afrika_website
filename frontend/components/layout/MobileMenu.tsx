@@ -3,12 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 
-const NAV_LINKS = [
-  { href: "/kategori/siyaset", label: "Siyaset" },
-  { href: "/kategori/ekonomi", label: "İş Dünyası ve Ekonomi" },
-  { href: "/kategori/saglik", label: "Sağlık" },
-  { href: "/kategori/bilim-teknoloji", label: "Bilim ve Teknoloji" },
-  { href: "/kategori/cevre-enerji", label: "Çevre ve Enerji" },
+const NAV_TABS = [
+  { href: "/firsatlar", label: "Fırsatlar" },
+  { href: "/pazarlar-ekonomi", label: "Pazarlar & Ekonomi" },
+  { href: "/ticaret-ihracat", label: "Ticaret & İhracat" },
+  { href: "/sektorler", label: "Sektörler" },
+  { href: "/turk-is-dunyasi", label: "Türk İş Dünyası Afrika'da" },
+  { href: "/etkinlikler-fuarlar", label: "Etkinlikler & Fuarlar" },
+  { href: "/ulkeler", label: "Ülkeler" },
+  { href: "/diger", label: "Diğer" },
 ];
 
 const REGION_LINKS = [
@@ -46,9 +49,11 @@ export default function MobileMenu() {
         <div className="absolute top-full left-0 right-0 bg-surface border-b border-outline-variant shadow-card z-50">
           <ul className="container mx-auto px-4 py-4 flex flex-col gap-1">
             <li className="pb-1">
-              <span className="font-body text-xs font-semibold text-on-surface/40 uppercase tracking-wider">Kategoriler</span>
+              <span className="font-body text-xs font-semibold text-on-surface/40 uppercase tracking-wider">
+                Kategoriler
+              </span>
             </li>
-            {NAV_LINKS.map(({ href, label }) => (
+            {NAV_TABS.map(({ href, label }) => (
               <li key={href}>
                 <Link
                   href={href}
@@ -60,7 +65,9 @@ export default function MobileMenu() {
               </li>
             ))}
             <li className="pt-3 pb-1 border-t border-outline-variant mt-1">
-              <span className="font-body text-xs font-semibold text-on-surface/40 uppercase tracking-wider">Bölgeler</span>
+              <span className="font-body text-xs font-semibold text-on-surface/40 uppercase tracking-wider">
+                Bölgeler
+              </span>
             </li>
             {REGION_LINKS.map(({ href, label }) => (
               <li key={href}>

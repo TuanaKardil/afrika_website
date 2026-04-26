@@ -8,17 +8,10 @@ from scrapy.http import Response
 from scraper.extractors import extract_content
 from scraper.items import ArticleItem
 
-_CUTOFF_DAYS = 60
-_MAX_PAGES = 8  # ~80 articles per section covers 60 days comfortably
+_CUTOFF_DAYS = 2
+_MAX_PAGES = 3
 
-# Section URL -> category_slug mapping
-_SECTION_CATEGORY: dict[str, str] = {
-    "business": "ekonomi",
-    "politics": "siyaset",
-    "health": "saglik",
-    "technology": "bilim-teknoloji",
-    "environment": "cevre-enerji",
-}
+_SECTIONS = ["business", "politics", "health", "technology", "environment"]
 
 _BASE = "https://theconversation.com"
 
@@ -29,51 +22,41 @@ class ConversationAfricaSpider(scrapy.Spider):
 
     def start_requests(self):
         cutoff = datetime.now(timezone.utc) - timedelta(days=_CUTOFF_DAYS)
-        for section, category in _SECTION_CATEGORY.items():
+        for section in _SECTIONS:
             url = f"{_BASE}/africa/{section}"
             yield scrapy.Request(
                 url,
                 callback=self.parse_section,
-                meta={"category_slug": category, "cutoff": cutoff, "page": 1, "section": section},
+                meta={"cutoff": cutoff, "page": 1, "section": section},
             )
 
     def parse_section(self, response: Response):
         cutoff: datetime = response.meta["cutoff"]
-        category_slug: str = response.meta["category_slug"]
         page: int = response.meta["page"]
         section: str = response.meta["section"]
 
         found_any = False
-        all_old = True
 
         for link in response.css("a[href]::attr(href)").getall():
             url = urljoin(_BASE, link)
             if theconversation_is_article(url):
                 found_any = True
-                all_old = False  # can't know age until we fetch the article
                 yield response.follow(
                     url,
                     callback=self.parse_article,
-                    meta={"cutoff": cutoff, "category_slug": category_slug},
+                    meta={"cutoff": cutoff},
                 )
 
-        # Move to next page if this page had articles and we haven't hit the cap
         if found_any and page < _MAX_PAGES:
             next_url = f"{_BASE}/africa/{section}?page={page + 1}"
             yield scrapy.Request(
                 next_url,
                 callback=self.parse_section,
-                meta={
-                    "category_slug": category_slug,
-                    "cutoff": cutoff,
-                    "page": page + 1,
-                    "section": section,
-                },
+                meta={"cutoff": cutoff, "page": page + 1, "section": section},
             )
 
     def parse_article(self, response: Response):
         cutoff: datetime = response.meta["cutoff"]
-        category_slug: str = response.meta["category_slug"]
 
         datetime_str = (
             response.css("time.entry-date::attr(datetime)").get()
@@ -132,8 +115,6 @@ class ConversationAfricaSpider(scrapy.Spider):
             published_at=published_at.isoformat(),
             featured_image_source_url=featured_image_url,
             image_credit=image_credit,
-            category_slug=category_slug,
-            region_slug="afrika",
             is_update=False,
         )
 

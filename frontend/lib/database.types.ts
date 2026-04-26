@@ -15,7 +15,6 @@ export type Database = {
       articles: {
         Row: {
           author_original: string | null
-          category_slug: string | null
           content_hash: string
           content_original: string | null
           content_tr: string | null
@@ -23,13 +22,17 @@ export type Database = {
           excerpt_tr: string | null
           featured_image_source_url: string | null
           featured_image_url: string | null
+          hashtags: string[]
           id: string
           image_credit: string | null
           is_featured: boolean
+          is_suppressed: boolean
+          nav_tab_slug: string | null
           published_at: string
           reading_time_minutes: number | null
           region_slug: string | null
           scraped_at: string
+          sector_slugs: string[]
           slug: string
           source: string
           source_url: string
@@ -40,7 +43,6 @@ export type Database = {
         }
         Insert: {
           author_original?: string | null
-          category_slug?: string | null
           content_hash: string
           content_original?: string | null
           content_tr?: string | null
@@ -48,13 +50,17 @@ export type Database = {
           excerpt_tr?: string | null
           featured_image_source_url?: string | null
           featured_image_url?: string | null
+          hashtags?: string[]
           id?: string
           image_credit?: string | null
           is_featured?: boolean
+          is_suppressed?: boolean
+          nav_tab_slug?: string | null
           published_at: string
           reading_time_minutes?: number | null
           region_slug?: string | null
           scraped_at?: string
+          sector_slugs?: string[]
           slug: string
           source: string
           source_url: string
@@ -65,7 +71,6 @@ export type Database = {
         }
         Update: {
           author_original?: string | null
-          category_slug?: string | null
           content_hash?: string
           content_original?: string | null
           content_tr?: string | null
@@ -73,13 +78,17 @@ export type Database = {
           excerpt_tr?: string | null
           featured_image_source_url?: string | null
           featured_image_url?: string | null
+          hashtags?: string[]
           id?: string
           image_credit?: string | null
           is_featured?: boolean
+          is_suppressed?: boolean
+          nav_tab_slug?: string | null
           published_at?: string
           reading_time_minutes?: number | null
           region_slug?: string | null
           scraped_at?: string
+          sector_slugs?: string[]
           slug?: string
           source?: string
           source_url?: string
@@ -90,10 +99,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "articles_category_slug_fkey"
-            columns: ["category_slug"]
+            foreignKeyName: "articles_nav_tab_slug_fkey"
+            columns: ["nav_tab_slug"]
             isOneToOne: false
-            referencedRelation: "categories"
+            referencedRelation: "nav_tabs"
             referencedColumns: ["slug"]
           },
           {
@@ -105,7 +114,7 @@ export type Database = {
           },
         ]
       }
-      categories: {
+      nav_tabs: {
         Row: {
           display_order: number
           name_tr: string
@@ -118,6 +127,27 @@ export type Database = {
         }
         Update: {
           display_order?: number
+          name_tr?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      sectors: {
+        Row: {
+          display_order: number
+          is_dropdown_featured: boolean
+          name_tr: string
+          slug: string
+        }
+        Insert: {
+          display_order?: number
+          is_dropdown_featured?: boolean
+          name_tr: string
+          slug: string
+        }
+        Update: {
+          display_order?: number
+          is_dropdown_featured?: boolean
           name_tr?: string
           slug?: string
         }
@@ -174,7 +204,6 @@ export type Database = {
         Args: { lim?: number; off?: number; query: string }
         Returns: {
           author_original: string | null
-          category_slug: string | null
           content_hash: string
           content_original: string | null
           content_tr: string | null
@@ -182,13 +211,17 @@ export type Database = {
           excerpt_tr: string | null
           featured_image_source_url: string | null
           featured_image_url: string | null
+          hashtags: string[]
           id: string
           image_credit: string | null
           is_featured: boolean
+          is_suppressed: boolean
+          nav_tab_slug: string | null
           published_at: string
           reading_time_minutes: number | null
           region_slug: string | null
           scraped_at: string
+          sector_slugs: string[]
           slug: string
           source: string
           source_url: string

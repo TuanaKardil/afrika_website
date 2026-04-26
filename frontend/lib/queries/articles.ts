@@ -40,7 +40,6 @@ export async function getFeaturedArticle(): Promise<Article | null> {
     .limit(1)
     .maybeSingle();
 
-  // Fall back to the most recent translated article if none is marked featured
   if (!data) {
     const { data: fallback } = await supabase
       .from("articles")
@@ -65,8 +64,8 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
   return data;
 }
 
-export async function getArticlesByCategory(
-  categorySlug: string,
+export async function getArticlesByNavTab(
+  navTabSlug: string,
   page = 1
 ): Promise<{ articles: Article[]; count: number }> {
   const supabase = createClient();
@@ -75,7 +74,25 @@ export async function getArticlesByCategory(
   const { data, count } = await supabase
     .from("articles")
     .select("*", { count: "exact" })
-    .eq("category_slug", categorySlug)
+    .eq("nav_tab_slug", navTabSlug)
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  return { articles: data ?? [], count: count ?? 0 };
+}
+
+export async function getArticlesBySector(
+  sectorSlug: string,
+  page = 1
+): Promise<{ articles: Article[]; count: number }> {
+  const supabase = createClient();
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const { data, count } = await supabase
+    .from("articles")
+    .select("*", { count: "exact" })
+    .contains("sector_slugs", [sectorSlug])
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
@@ -90,7 +107,6 @@ export async function getArticlesByRegion(
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
-  // 'afrika' is the catch-all: show all articles regardless of region_slug
   let query = supabase
     .from("articles")
     .select("*", { count: "exact" })

@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticlesByRegion } from "@/lib/queries/articles";
 import { getRegionBySlug, getRegions } from "@/lib/queries/regions";
-import { getCategories } from "@/lib/queries/categories";
 import ArticleGrid from "@/components/sections/ArticleGrid";
-import CategoryFilter from "@/components/sections/CategoryFilter";
 import Pagination from "@/components/sections/Pagination";
 
 interface BolgePageProps {
@@ -27,10 +25,7 @@ export async function generateMetadata({ params }: BolgePageProps): Promise<Meta
 }
 
 export default async function BolgePage({ params, searchParams }: BolgePageProps) {
-  const [region, categories] = await Promise.all([
-    getRegionBySlug(params.slug),
-    getCategories(),
-  ]);
+  const region = await getRegionBySlug(params.slug);
 
   if (!region) notFound();
 
@@ -40,16 +35,12 @@ export default async function BolgePage({ params, searchParams }: BolgePageProps
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <CategoryFilter categories={categories} activeSlug={null} />
-
       <header className="mb-6">
         <h1 className="font-headline text-3xl text-on-surface">
           {region.name_tr} Haberleri
         </h1>
         {count > 0 && (
-          <p className="font-body text-sm text-on-surface/50 mt-1">
-            {count} haber bulundu
-          </p>
+          <p className="font-body text-sm text-on-surface/50 mt-1">{count} haber</p>
         )}
       </header>
 

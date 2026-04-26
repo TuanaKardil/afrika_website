@@ -2,15 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getAllSlugs, getArticleBySlug } from "@/lib/queries/articles";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  siyaset: "Siyaset",
-  ekonomi: "İş Dünyası ve Ekonomi",
-  saglik: "Sağlık",
-  "bilim-teknoloji": "Bilim ve Teknoloji",
-  "cevre-enerji": "Çevre ve Enerji",
-  genel: "Genel",
-};
 import { sanitizeArticleContent } from "@/lib/sanitize";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import RegionBadge from "@/components/ui/RegionBadge";
@@ -18,6 +9,14 @@ import ReadingTime from "@/components/ui/ReadingTime";
 import ViewCountIncrementer from "./ViewCountIncrementer";
 import SaveButton from "@/components/ui/SaveButton";
 import { formatDate } from "@/lib/utils";
+
+const SOURCE_NAMES: Record<string, string> = {
+  business_insider: "Business Insider Africa",
+  cnbc_africa: "CNBC Africa",
+  africa_report: "The Africa Report",
+  aa_africa: "Anadolu Agency Africa",
+  the_conversation: "The Conversation Africa",
+};
 
 export const revalidate = 3600;
 
@@ -46,13 +45,10 @@ export async function generateMetadata({ params }: HaberPageProps): Promise<Meta
 
 export default async function HaberPage({ params }: HaberPageProps) {
   const article = await getArticleBySlug(params.slug);
-  if (!article || !article.title_tr) notFound();
+  if (!article || !article.title_tr || article.is_suppressed) notFound();
 
-  // Second sanitization layer before dangerouslySetInnerHTML
   const safeContent = sanitizeArticleContent(article.content_tr ?? "");
-
-  const sourceName =
-    article.source === "bbc" ? "BBC Africa" : "The Conversation Africa";
+  const sourceName = SOURCE_NAMES[article.source] ?? article.source;
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-3xl">
@@ -62,10 +58,10 @@ export default async function HaberPage({ params }: HaberPageProps) {
       <nav aria-label="Sayfa yolu" className="mb-6 flex items-center gap-2 font-body text-sm text-on-surface/50">
         <a href="/" className="hover:text-primary transition-colors">Ana Sayfa</a>
         <span>/</span>
-        {article.category_slug && (
+        {article.nav_tab_slug && (
           <>
-            <a href={`/kategori/${article.category_slug}`} className="hover:text-primary transition-colors">
-              {CATEGORY_LABELS[article.category_slug] ?? article.category_slug}
+            <a href={`/${article.nav_tab_slug}`} className="hover:text-primary transition-colors capitalize">
+              {article.nav_tab_slug.replace(/-/g, " ")}
             </a>
             <span>/</span>
           </>
@@ -75,7 +71,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
 
       {/* Badges */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {article.category_slug && <CategoryBadge slug={article.category_slug} />}
+        {article.nav_tab_slug && <CategoryBadge slug={article.nav_tab_slug} />}
         {article.region_slug && <RegionBadge slug={article.region_slug} />}
       </div>
 
@@ -122,9 +118,23 @@ export default async function HaberPage({ params }: HaberPageProps) {
         dangerouslySetInnerHTML={{ __html: safeContent }}
       />
 
+      {/* Hashtags */}
+      {article.hashtags && article.hashtags.length > 0 && (
+        <div className="mt-8 pt-6 border-t border-outline-variant flex flex-wrap gap-2">
+          {article.hashtags.map((tag) => (
+            <span
+              key={tag}
+              className="font-body text-xs text-on-surface/60 bg-surface-container px-2.5 py-1 rounded-full"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Source link */}
       {article.source_url && (
-        <div className="mt-10 pt-6 border-t border-outline-variant">
+        <div className="mt-6 pt-6 border-t border-outline-variant">
           <a
             href={article.source_url}
             target="_blank"

@@ -6,10 +6,25 @@ _MIN_LENGTH = 200
 
 # Per-source CSS selector fallbacks
 _FALLBACK_SELECTORS: dict[str, list[str]] = {
-    "bbc": [
-        "[data-component='text-block']",
-        ".article__body-content",
-        "#main-content article",
+    "business_insider": [
+        ".content-lock-content",
+        ".post-content",
+        "article .content",
+    ],
+    "cnbc_africa": [
+        ".entry-content",
+        ".article-body",
+        "article .content",
+    ],
+    "africa_report": [
+        ".article-content",
+        ".entry-content",
+        "article .content",
+    ],
+    "aa_africa": [
+        ".article-content",
+        ".news-body",
+        "article .content",
     ],
     "the_conversation": [
         ".content-body",

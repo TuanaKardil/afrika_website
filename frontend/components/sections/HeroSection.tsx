@@ -36,8 +36,8 @@ export default function HeroSection({ article }: HeroSectionProps) {
           {/* Text */}
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
-              {article.category_slug && (
-                <CategoryBadge slug={article.category_slug} linkable={false} />
+              {article.nav_tab_slug && (
+                <CategoryBadge slug={article.nav_tab_slug} linkable={false} />
               )}
               {article.region_slug && article.region_slug !== "afrika" && (
                 <RegionBadge slug={article.region_slug} linkable={false} />

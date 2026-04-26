@@ -60,7 +60,13 @@
       "WebFetch(domain:feeds.bbci.co.uk)",
       "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --screenshot=/tmp/afrika_translated.png --window-size=1280,900 \"https://afrika-website.vercel.app\")",
       "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --screenshot=/tmp/afrika_ekonomi.png --window-size=1280,900 \"https://afrika-website.vercel.app/kategori/ekonomi\")",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(curl *)",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(npm run *)",
+      "Bash(echo \"EXIT_CODE:$?\")",
+      "Bash(git add *)",
+      "Bash(git rm *)"
     ]
   }
 }

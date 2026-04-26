@@ -35,8 +35,8 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       <div className="flex flex-col flex-1 p-4 gap-3">
         {/* Badges */}
         <div className="flex flex-wrap gap-1.5">
-          {article.category_slug && (
-            <CategoryBadge slug={article.category_slug} />
+          {article.nav_tab_slug && (
+            <CategoryBadge slug={article.nav_tab_slug} />
           )}
         </div>
 
