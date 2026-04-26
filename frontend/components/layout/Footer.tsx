@@ -1,12 +1,12 @@
 import Link from "next/link";
 
-const CATEGORY_LINKS = [
-  { href: "/kategori/siyaset", label: "Siyaset" },
-  { href: "/kategori/ekonomi", label: "İş Dünyası ve Ekonomi" },
-  { href: "/kategori/saglik", label: "Sağlık" },
-  { href: "/kategori/bilim-teknoloji", label: "Bilim ve Teknoloji" },
-  { href: "/kategori/cevre-enerji", label: "Çevre ve Enerji" },
-  { href: "/kategori/genel", label: "Genel" },
+const NAV_TAB_LINKS = [
+  { href: "/firsatlar", label: "Fırsatlar" },
+  { href: "/pazarlar-ekonomi", label: "Pazarlar & Ekonomi" },
+  { href: "/ticaret-ihracat", label: "Ticaret & İhracat" },
+  { href: "/sektorler", label: "Sektörler" },
+  { href: "/turk-is-dunyasi", label: "Türk İş Dünyası Afrika'da" },
+  { href: "/etkinlikler-fuarlar", label: "Etkinlikler & Fuarlar" },
 ];
 
 const REGION_LINKS = [
@@ -33,13 +33,13 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Categories */}
+          {/* Nav Tabs */}
           <div>
             <h3 className="font-body text-sm font-semibold text-on-surface uppercase tracking-wide mb-3">
               Kategoriler
             </h3>
             <ul className="space-y-2">
-              {CATEGORY_LINKS.map(({ href, label }) => (
+              {NAV_TAB_LINKS.map(({ href, label }) => (
                 <li key={href}>
                   <Link
                     href={href}
