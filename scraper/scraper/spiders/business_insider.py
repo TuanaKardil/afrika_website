@@ -105,4 +105,4 @@ class BusinessInsiderAfricaSpider(scrapy.Spider):
 
 
 def _is_article(url: str) -> bool:
-    return bool(re.search(r"africa\.businessinsider\.com/[a-z0-9-]+/[a-z0-9-]+", url))
+    return bool(re.search(r"africa\.businessinsider\.com/local/[a-z-]+/[a-z0-9-]+/[a-z0-9]+$", url))

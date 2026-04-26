@@ -23,9 +23,11 @@ class AfricaReportSpider(scrapy.Spider):
     allowed_domains = ["theafricareport.com"]
 
     def start_requests(self):
-        cutoff = datetime.now(timezone.utc) - timedelta(days=_CUTOFF_DAYS)
-        for url in _START_URLS:
-            yield scrapy.Request(url, callback=self.parse_index, meta={"cutoff": cutoff})
+        # theafricareport.com returns 403 for all automated requests.
+        # Yield a dummy request that will be dropped rather than crashing the run.
+        self.logger.warning("africa_report spider: site returns 403, skipping")
+        return
+        yield  # make this a generator
 
     def parse_index(self, response: Response):
         cutoff: datetime = response.meta["cutoff"]

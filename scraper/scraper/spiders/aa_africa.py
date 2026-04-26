@@ -101,4 +101,4 @@ class AnadoluAgencyAfricaSpider(scrapy.Spider):
 
 
 def _is_article(url: str) -> bool:
-    return bool(re.search(r"aa\.com\.tr/en/africa/[\w-]+-/\d+", url))
+    return bool(re.search(r"aa\.com\.tr/en/africa/[\w-]+/\d+$", url))

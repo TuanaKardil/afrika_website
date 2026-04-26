@@ -11,13 +11,6 @@ from scraper.items import ArticleItem
 _CUTOFF_DAYS = 2
 _BASE = "https://www.cnbcafrica.com"
 
-_START_URLS = [
-    f"{_BASE}/economy/",
-    f"{_BASE}/business/",
-    f"{_BASE}/technology/",
-    f"{_BASE}/markets/",
-]
-
 
 class CNBCAfricaSpider(scrapy.Spider):
     name = "cnbc_africa"
@@ -25,8 +18,7 @@ class CNBCAfricaSpider(scrapy.Spider):
 
     def start_requests(self):
         cutoff = datetime.now(timezone.utc) - timedelta(days=_CUTOFF_DAYS)
-        for url in _START_URLS:
-            yield scrapy.Request(url, callback=self.parse_index, meta={"cutoff": cutoff})
+        yield scrapy.Request(_BASE, callback=self.parse_index, meta={"cutoff": cutoff})
 
     def parse_index(self, response: Response):
         cutoff: datetime = response.meta["cutoff"]
@@ -109,4 +101,4 @@ class CNBCAfricaSpider(scrapy.Spider):
 
 
 def _is_article(url: str) -> bool:
-    return bool(re.search(r"cnbcafrica\.com/\d{4}/\d{2}/\d{2}/", url))
+    return bool(re.search(r"cnbcafrica\.com/20\d{2}/[a-z0-9-]+/?$", url))
