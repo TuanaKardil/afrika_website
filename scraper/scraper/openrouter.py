@@ -8,7 +8,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 _BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = "google/gemini-flash-1.5"
+MODEL = "google/gemini-2.0-flash-001"
 _SITE_URL = "https://github.com/TuanaKardil/afrika_website"
 MAX_RETRIES = 3
 
