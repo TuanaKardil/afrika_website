@@ -97,6 +97,7 @@ interface ArticleCardProps {
 
 export default function ArticleCard({ article }: ArticleCardProps) {
   const href = `/haber/${article.slug}`;
+  const hashtags = Array.from(new Set((article.hashtags as string[] | null) ?? []));
 
   return (
     <article className="group flex flex-col rounded-xl shadow-card bg-surface-container overflow-hidden hover:shadow-md transition-shadow duration-300">
@@ -141,6 +142,20 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           <p className="font-body text-sm text-on-surface/70 line-clamp-2 leading-relaxed">
             {article.excerpt_tr}
           </p>
+        )}
+
+        {/* Hashtags */}
+        {hashtags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {hashtags.slice(0, 10).map((tag) => (
+              <span
+                key={tag}
+                className="font-body text-[10px] text-on-surface/50 bg-outline-variant/60 px-2 py-0.5 rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         )}
 
         {/* Footer */}
