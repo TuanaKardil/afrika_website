@@ -24,8 +24,20 @@ def _load_hashtags() -> list[str]:
         if os.path.exists(resolved):
             with open(resolved, encoding="utf-8") as f:
                 text = f.read()
-            # Extract tokens that look like hashtags (word chars, no spaces)
-            tags = re.findall(r"#[\wÀ-ɏĀ-žİıİığüşöçıÇŞÖÜĞ]+", text)
+            tags = []
+            for line in text.splitlines():
+                line = line.strip()
+                # Skip markdown headers and empty lines
+                if not line or line.startswith("#"):
+                    continue
+                for token in line.split(","):
+                    token = token.strip()
+                    # Drop parenthetical explanations: "AfCFTA (açıklama)" → "AfCFTA"
+                    token = re.sub(r"\s*\(.*?\)", "", token).strip()
+                    # Drop bold markers and stray asterisks
+                    token = token.replace("**", "").strip()
+                    if token and len(token) > 1:
+                        tags.append(token)
             _HASHTAG_CACHE = list(dict.fromkeys(tags))  # deduplicate, preserve order
             logger.info("Loaded %d hashtags from %s", len(_HASHTAG_CACHE), resolved)
             return _HASHTAG_CACHE
@@ -45,9 +57,9 @@ Rank them by relevance to the article content (most relevant first).
 
 Rules:
 - Only choose from the canonical list. Do not invent new hashtags.
-- Return exactly 10 hashtags, no more, no less.
+- Return exactly 10 tags, no more, no less.
 - Do not use em dashes anywhere.
-- Return ONLY a JSON array of 10 strings, e.g. ["#Tag1", "#Tag2", ...]. No explanation.
+- Return ONLY a JSON array of 10 strings where each string is copied verbatim from the canonical list. Example: ["Nijerya", "Yatırım", "Enerji"]. No explanation.
 
 Canonical hashtag list:
 {canonical}"""

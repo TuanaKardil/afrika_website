@@ -5,6 +5,76 @@ import CategoryBadge from "./CategoryBadge";
 import ReadingTime from "./ReadingTime";
 import { formatDateShort } from "@/lib/utils";
 
+const SECTOR_LABELS: Record<string, string> = {
+  "insaat-muteahhitlik": "İnşaat",
+  "enerji": "Enerji",
+  "savunma-sanayi": "Savunma",
+  "madencilik": "Madencilik",
+  "tekstil-hazir-giyim": "Tekstil",
+  "kozmetik-hijyen": "Kozmetik",
+  "demir-celik-sanayi": "Demir-Çelik",
+  "tarim-gida": "Tarım & Gıda",
+  "otomotiv": "Otomotiv",
+  "ambalaj-geri-donusum": "Ambalaj",
+  "bankacilik-finans": "Bankacılık",
+  "beyaz-esya-ev-aletleri": "Beyaz Eşya",
+  "cimento-insaat-malzemeleri": "Çimento",
+  "ev-tekstili-hali": "Ev Tekstili",
+  "fintech-dijital-odeme": "Fintech",
+  "fuarcilik-etkinlik": "Fuarcılık",
+  "gayrimenkul-konut": "Gayrimenkul",
+  "havacilik-sivil-havacilik": "Havacılık",
+  "hvac-r": "HVAC-R",
+  "ilac-tibbi-cihaz": "İlaç",
+  "kimya-petrokimya": "Kimya",
+  "lojistik-tasimaci": "Lojistik",
+  "makine-yedek-parca": "Makine",
+  "mobilya-dekorasyon": "Mobilya",
+  "perakende-e-ticaret": "Perakende",
+  "saglik-saglik-turizmi": "Sağlık",
+  "teknoloji-yazilim": "Teknoloji",
+  "telekomunikasyon": "Telekomünikasyon",
+  "turizm-otelcilik": "Turizm",
+  "yenilenebilir-enerji": "Yenilenebilir Enerji",
+};
+
+const REGION_LABELS: Record<string, string> = {
+  "afrika": "Afrika",
+  "kuzey-afrika": "Kuzey Afrika",
+  "bati-afrika": "Batı Afrika",
+  "orta-afrika": "Orta Afrika",
+  "dogu-afrika": "Doğu Afrika",
+  "guney-afrika": "Güney Afrika",
+};
+
+function getBadgeLabel(article: Article): { label: string; href: string } | null {
+  const nav = article.nav_tab_slug;
+  const sectors = (article.sector_slugs as string[] | null) ?? [];
+  const region = article.region_slug;
+
+  if (nav === "sektorler" && sectors.length > 0) {
+    const slug = sectors[0];
+    return { label: SECTOR_LABELS[slug] ?? slug, href: `/sektorler/${slug}` };
+  }
+  if (nav === "ulkeler" && region && region !== "afrika") {
+    return { label: REGION_LABELS[region] ?? region, href: `/bolge/${region}` };
+  }
+  if (nav) {
+    const NAV_LABELS: Record<string, string> = {
+      firsatlar: "Fırsatlar",
+      "pazarlar-ekonomi": "Pazarlar & Ekonomi",
+      "ticaret-ihracat": "Ticaret & İhracat",
+      sektorler: "Sektörler",
+      "turk-is-dunyasi": "Türk İş Dünyası",
+      "etkinlikler-fuarlar": "Etkinlikler & Fuarlar",
+      ulkeler: "Ülkeler",
+      diger: "Diğer",
+    };
+    return { label: NAV_LABELS[nav] ?? nav, href: `/${nav}` };
+  }
+  return null;
+}
+
 interface ArticleCardProps {
   article: Article;
 }
@@ -33,11 +103,14 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
       {/* Content */}
       <div className="flex flex-col flex-1 p-4 gap-3">
-        {/* Badges */}
+        {/* Badge */}
         <div className="flex flex-wrap gap-1.5">
-          {article.nav_tab_slug && (
-            <CategoryBadge slug={article.nav_tab_slug} />
-          )}
+          {(() => {
+            const badge = getBadgeLabel(article);
+            if (!badge) return null;
+            const classes = "inline-block text-xs font-body font-semibold uppercase tracking-wide text-primary bg-primary/10 px-2.5 py-1 rounded-full";
+            return <Link href={badge.href} className={classes}>{badge.label}</Link>;
+          })()}
         </div>
 
         {/* Title */}
