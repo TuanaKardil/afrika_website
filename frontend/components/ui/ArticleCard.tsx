@@ -47,17 +47,33 @@ const REGION_LABELS: Record<string, string> = {
   "guney-afrika": "Güney Afrika",
 };
 
+const AFRICAN_COUNTRIES = new Set([
+  "Mısır","Fas","Cezayir","Tunus","Libya","Sudan","Moritanya",
+  "Nijerya","Gana","Senegal","Fildişi Sahili","Mali","Burkina Faso","Benin","Togo","Gine","Sierra Leone","Liberya","Gambiya","Gine-Bissau","Yeşil Burun Adaları","Nijer",
+  "Kenya","Etiyopya","Tanzanya","Uganda","Ruanda","Burundi","Somali","Cibuti","Eritre","Güney Sudan","Komorlar","Seyşeller","Madagaskar","Mauritius",
+  "DR Kongo","Kongo Cumhuriyeti","Kamerun","Çad","Orta Afrika Cumhuriyeti","Gabon","Ekvator Ginesi","Sao Tome ve Principe","Angola",
+  "Güney Afrika Cumhuriyeti","Zimbabve","Botsvana","Namibya","Mozambik","Zambiya","Malavi","Lesoto","Esvatini",
+]);
+
 function getBadgeLabel(article: Article): { label: string; href: string } | null {
   const nav = article.nav_tab_slug;
   const sectors = (article.sector_slugs as string[] | null) ?? [];
   const region = article.region_slug;
+  const hashtags = (article.hashtags as string[] | null) ?? [];
 
   if (nav === "sektorler" && sectors.length > 0) {
     const slug = sectors[0];
     return { label: SECTOR_LABELS[slug] ?? slug, href: `/sektorler/${slug}` };
   }
-  if (nav === "ulkeler" && region && region !== "afrika") {
-    return { label: REGION_LABELS[region] ?? region, href: `/bolge/${region}` };
+  if (nav === "ulkeler") {
+    const country = hashtags.find(t => AFRICAN_COUNTRIES.has(t));
+    if (country) {
+      const regionHref = region && region !== "afrika" ? `/bolge/${region}` : "/ulkeler";
+      return { label: country, href: regionHref };
+    }
+    if (region && region !== "afrika") {
+      return { label: REGION_LABELS[region] ?? region, href: `/bolge/${region}` };
+    }
   }
   if (nav) {
     const NAV_LABELS: Record<string, string> = {

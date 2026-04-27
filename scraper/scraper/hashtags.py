@@ -48,7 +48,7 @@ def _load_hashtags() -> list[str]:
 
 
 def _build_system(tag_list: list[str]) -> str:
-    canonical = " ".join(tag_list)
+    canonical = "\n".join(tag_list)
     return f"""\
 You are a hashtag selector for an Africa-focused Turkish business news site.
 
@@ -56,12 +56,13 @@ Given an article title and body, select EXACTLY 10 hashtags from the canonical l
 Rank them by relevance to the article content (most relevant first).
 
 Rules:
-- Only choose from the canonical list. Do not invent new hashtags.
+- Only choose from the canonical list (one tag per line). Do not invent new hashtags.
+- Copy each chosen tag VERBATIM, character for character, from the canonical list.
 - Return exactly 10 tags, no more, no less.
 - Do not use em dashes anywhere.
-- Return ONLY a JSON array of 10 strings where each string is copied verbatim from the canonical list. Example: ["Nijerya", "Yatırım", "Enerji"]. No explanation.
+- Return ONLY a JSON array of 10 strings. Example: ["Nijerya", "Yatırım", "Enerji"]. No explanation.
 
-Canonical hashtag list:
+Canonical hashtag list (one tag per line):
 {canonical}"""
 
 
