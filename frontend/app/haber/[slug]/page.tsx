@@ -10,13 +10,6 @@ import ViewCountIncrementer from "./ViewCountIncrementer";
 import SaveButton from "@/components/ui/SaveButton";
 import { formatDate } from "@/lib/utils";
 
-const SOURCE_NAMES: Record<string, string> = {
-  business_insider: "Business Insider Africa",
-  cnbc_africa: "CNBC Africa",
-  africa_report: "The Africa Report",
-  aa_africa: "Anadolu Agency Africa",
-  the_conversation: "The Conversation Africa",
-};
 
 export const revalidate = 3600;
 
@@ -48,7 +41,6 @@ export default async function HaberPage({ params }: HaberPageProps) {
   if (!article || !article.title_tr || article.is_suppressed) notFound();
 
   const safeContent = sanitizeArticleContent(article.content_tr ?? "");
-  const sourceName = SOURCE_NAMES[article.source] ?? article.source;
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-3xl">
@@ -88,7 +80,6 @@ export default async function HaberPage({ params }: HaberPageProps) {
           {formatDate(article.published_at)}
         </time>
         <ReadingTime minutes={article.reading_time_minutes} />
-        <span className="text-on-surface/40">Kaynak: {sourceName}</span>
       </div>
 
       {/* Featured image */}
@@ -132,19 +123,6 @@ export default async function HaberPage({ params }: HaberPageProps) {
         </div>
       )}
 
-      {/* Source link */}
-      {article.source_url && (
-        <div className="mt-6 pt-6 border-t border-outline-variant">
-          <a
-            href={article.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-body text-sm text-primary hover:text-tertiary transition-colors"
-          >
-            Orijinal haberi oku ({sourceName})
-          </a>
-        </div>
-      )}
     </main>
   );
 }
