@@ -28,6 +28,7 @@ const NAV_TABS = [
   { href: "/etkinlikler-fuarlar", label: "Etkinlikler & Fuarlar" },
   { href: "/ulkeler", label: "Ülkeler" },
   { href: "/diger", label: "Diğer" },
+  { href: "/ihaleler", label: "İhaleler" },
 ];
 
 interface NavigationProps {
