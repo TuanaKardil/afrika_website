@@ -16,6 +16,7 @@ Usage (from the scraper/ directory):
 import argparse
 import logging
 import os
+import re
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -56,6 +57,20 @@ class _FakeResponse:
     """Minimal stub so extract_inline_images() works without a live Scrapy response."""
     def __init__(self, text: str):
         self.text = text
+
+
+def _image_stem(url: str) -> str:
+    """Extract a normalised stem for duplicate-detection across CDN domains and size variants.
+
+    e.g. https://cdn.cnbc.africa/.../rand2.jpg  ->  'rand2'
+         https://cnbcafrica.com/.../rand2-820x615.jpg  ->  'rand2'
+         https://example.com/.../3I3A-scaled.jpg  ->  '3i3a'
+    """
+    basename = os.path.basename(url.split("?")[0])
+    stem = os.path.splitext(basename)[0]
+    stem = re.sub(r"-\d+x\d+$", "", stem)   # remove -WxH suffix
+    stem = re.sub(r"-scaled$", "", stem, flags=re.I)
+    return stem.lower()
 
 
 def _parse_dt(raw: str | None) -> datetime:
@@ -137,10 +152,14 @@ def main() -> None:
         fake_resp = _FakeResponse(html)
         inline_urls = extract_inline_images(fake_resp)
 
-        # Remove the featured image from inline list (shown separately as hero)
+        # Remove images that are the same as the featured image
+        # (compare by stem to catch different CDN domains and size variants)
         featured_src = row.get("featured_image_source_url") or ""
-        if featured_src in inline_urls:
-            inline_urls.remove(featured_src)
+        featured_stem = _image_stem(featured_src) if featured_src else ""
+        inline_urls = [
+            u for u in inline_urls
+            if u != featured_src and _image_stem(u) != featured_stem
+        ]
 
         if not inline_urls:
             logger.info("  No editorial inline images found")
