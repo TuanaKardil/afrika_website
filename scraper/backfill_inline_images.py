@@ -92,7 +92,7 @@ def main() -> None:
 
     from supabase import create_client
     from scraper.extractors import extract_inline_images
-    from scraper.storage import upload_image, rewrite_image_srcs
+    from scraper.storage import upload_image, rewrite_image_srcs, compute_image_fingerprint
 
     sb = create_client(
         os.environ["SUPABASE_URL"],
@@ -152,14 +152,27 @@ def main() -> None:
         fake_resp = _FakeResponse(html)
         inline_urls = extract_inline_images(fake_resp)
 
-        # Remove images that are the same as the featured image
-        # (compare by stem to catch different CDN domains and size variants)
+        # Remove images matching the featured image — first by stem (fast), then
+        # by perceptual fingerprint (catches same-image-different-filename cases)
         featured_src = row.get("featured_image_source_url") or ""
         featured_stem = _image_stem(featured_src) if featured_src else ""
         inline_urls = [
             u for u in inline_urls
             if u != featured_src and _image_stem(u) != featured_stem
         ]
+
+        # Fingerprint-based deduplication against featured image
+        if inline_urls and featured_src:
+            featured_fp = compute_image_fingerprint(featured_src)
+            if featured_fp:
+                deduped = []
+                for u in inline_urls:
+                    fp = compute_image_fingerprint(u)
+                    if fp and fp == featured_fp:
+                        logger.info("  Skipping visually identical image: %s", u[:80])
+                    else:
+                        deduped.append(u)
+                inline_urls = deduped
 
         if not inline_urls:
             logger.info("  No editorial inline images found")

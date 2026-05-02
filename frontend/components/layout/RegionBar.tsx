@@ -18,23 +18,26 @@ export default function RegionBar() {
   const activeSlug = (() => {
     const match = pathname.match(/^\/bolge\/([\w-]+)/);
     if (match) return match[1];
-    return "afrika";
+    return null;
   })();
 
   return (
-    <div className="bg-surface-container border-b border-outline-variant">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-none">
+    <div className="bg-white border-b border-outline-variant">
+      <div className="max-w-container mx-auto px-6 h-10 flex items-center gap-3.5">
+        <span className="text-[11px] font-bold tracking-[0.08em] text-navy uppercase shrink-0 pr-3.5 border-r border-outline-variant">
+          BÖLGE
+        </span>
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none flex-1">
           {REGIONS.map(({ slug, label, href }) => {
             const isActive = slug === activeSlug;
             return (
               <Link
                 key={slug}
                 href={href}
-                className={`shrink-0 px-4 py-1 rounded-full font-body text-sm font-medium transition-colors ${
+                className={`shrink-0 px-3 py-[5px] text-xs font-semibold tracking-[-0.005em] border rounded-sm whitespace-nowrap transition-colors duration-[120ms] ${
                   isActive
-                    ? "bg-primary text-white"
-                    : "text-on-surface/70 hover:text-primary hover:bg-primary/10"
+                    ? "bg-navy text-white border-navy"
+                    : "bg-transparent text-on-surface border-outline-variant hover:border-navy hover:text-navy"
                 }`}
               >
                 {label}

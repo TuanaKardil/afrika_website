@@ -9,6 +9,7 @@ import ReadingTime from "@/components/ui/ReadingTime";
 import ViewCountIncrementer from "./ViewCountIncrementer";
 import SaveButton from "@/components/ui/SaveButton";
 import { formatDate } from "@/lib/utils";
+import { resolveCategory } from "@/lib/labels";
 
 const SOURCE_LABELS: Record<string, string> = {
   business_insider: "Business Insider Africa",
@@ -57,20 +58,30 @@ export default async function HaberPage({ params }: HaberPageProps) {
       <nav aria-label="Sayfa yolu" className="mb-6 flex items-center gap-2 font-body text-sm text-on-surface/50">
         <a href="/" className="hover:text-primary transition-colors">Ana Sayfa</a>
         <span>/</span>
-        {article.nav_tab_slug && (
-          <>
-            <a href={`/${article.nav_tab_slug}`} className="hover:text-primary transition-colors capitalize">
-              {article.nav_tab_slug.replace(/-/g, " ")}
-            </a>
-            <span>/</span>
-          </>
-        )}
+        {(() => {
+          const crumbLabel = article.nav_tab_slug
+            ? resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [])
+            : null;
+          return crumbLabel ? (
+            <>
+              <a href={`/${article.nav_tab_slug}`} className="hover:text-primary transition-colors capitalize">
+                {crumbLabel}
+              </a>
+              <span>/</span>
+            </>
+          ) : null;
+        })()}
         <span className="text-on-surface/30 truncate max-w-[200px]">{article.title_tr}</span>
       </nav>
 
       {/* Badges */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {article.nav_tab_slug && <CategoryBadge slug={article.nav_tab_slug} />}
+        {article.nav_tab_slug && (
+          <CategoryBadge
+            slug={article.nav_tab_slug}
+            sectorSlugs={article.sector_slugs ?? []}
+          />
+        )}
         {article.region_slug && <RegionBadge slug={article.region_slug} />}
       </div>
 
@@ -97,7 +108,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
       {/* Featured image */}
       {article.featured_image_url && (
         <figure className="mb-8">
-          <div className="relative aspect-video rounded-xl overflow-hidden">
+          <div className="relative aspect-video rounded-sm overflow-hidden">
             <Image
               src={article.featured_image_url}
               alt={article.title_tr ?? ""}
@@ -127,7 +138,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
           {article.hashtags.map((tag) => (
             <span
               key={tag}
-              className="font-body text-xs text-on-surface/60 bg-surface-container px-2.5 py-1 rounded-full"
+              className="font-body text-xs text-on-surface/60 bg-surface-container px-2.5 py-1 rounded-sm"
             >
               {tag}
             </span>

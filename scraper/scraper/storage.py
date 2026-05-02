@@ -1,3 +1,4 @@
+import hashlib
 import io
 import logging
 import os
@@ -128,6 +129,24 @@ def upload_image(
     except Exception as exc:
         logger.error("Failed to upload image to Storage (path=%s): %s", path, exc)
         return None
+
+
+def _image_fingerprint(img_bytes: bytes) -> str:
+    """16x16 grayscale perceptual fingerprint — catches same-image-different-filename."""
+    try:
+        buf = io.BytesIO(img_bytes)
+        img = Image.open(buf).convert("L").resize((16, 16), Image.LANCZOS)
+        return hashlib.md5(img.tobytes()).hexdigest()
+    except Exception:
+        return ""
+
+
+def compute_image_fingerprint(url: str) -> str:
+    """Download image at url and return its perceptual fingerprint. Empty string on failure."""
+    result = _download_image(url)
+    if result is None:
+        return ""
+    return _image_fingerprint(result[0])
 
 
 def rewrite_image_srcs(html: str, url_map: dict[str, str]) -> str:

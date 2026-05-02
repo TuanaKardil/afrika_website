@@ -39,7 +39,7 @@ export default function Pagination({
       {hasPrev ? (
         <Link
           href={buildUrl(basePath, page - 1)}
-          className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-lg hover:bg-surface-container transition-colors"
+          className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-sm hover:bg-surface-container transition-colors"
         >
           Önceki
         </Link>
@@ -53,7 +53,7 @@ export default function Pagination({
         <>
           <Link
             href={buildUrl(basePath, 1)}
-            className="w-9 h-9 flex items-center justify-center font-body text-sm rounded-lg hover:bg-surface-container text-on-surface/70 hover:text-primary transition-colors"
+            className="w-9 h-9 flex items-center justify-center font-body text-sm rounded-sm hover:bg-surface-container text-on-surface/70 hover:text-primary transition-colors"
           >
             1
           </Link>
@@ -68,7 +68,7 @@ export default function Pagination({
           key={p}
           href={buildUrl(basePath, p)}
           aria-current={p === page ? "page" : undefined}
-          className={`w-9 h-9 flex items-center justify-center font-body text-sm rounded-lg transition-colors ${
+          className={`w-9 h-9 flex items-center justify-center font-body text-sm rounded-sm transition-colors ${
             p === page
               ? "bg-primary text-white font-semibold"
               : "hover:bg-surface-container text-on-surface/70 hover:text-primary"
@@ -85,7 +85,7 @@ export default function Pagination({
           )}
           <Link
             href={buildUrl(basePath, totalPages)}
-            className="w-9 h-9 flex items-center justify-center font-body text-sm rounded-lg hover:bg-surface-container text-on-surface/70 hover:text-primary transition-colors"
+            className="w-9 h-9 flex items-center justify-center font-body text-sm rounded-sm hover:bg-surface-container text-on-surface/70 hover:text-primary transition-colors"
           >
             {totalPages}
           </Link>
@@ -95,7 +95,7 @@ export default function Pagination({
       {hasNext ? (
         <Link
           href={buildUrl(basePath, page + 1)}
-          className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-lg hover:bg-surface-container transition-colors"
+          className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-sm hover:bg-surface-container transition-colors"
         >
           Sonraki
         </Link>

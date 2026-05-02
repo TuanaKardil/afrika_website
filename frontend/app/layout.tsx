@@ -1,20 +1,12 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Manrope } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
-const ebGaramond = EB_Garamond({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-headline",
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  display: "swap",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -23,17 +15,13 @@ export const metadata: Metadata = {
     default: "Afrika Haberleri",
     template: "%s | Afrika Haberleri",
   },
-  description: "Afrika'dan son dakika haberleri Turkce olarak.",
+  description: "Afrika'dan son dakika haberleri Türkçe olarak.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={`${ebGaramond.variable} ${manrope.variable}`}>
-      <body className="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <html lang="tr" className={inter.variable}>
+      <body className="bg-background text-on-surface font-sans min-h-screen flex flex-col antialiased">
         <Header />
         <div className="flex-1">{children}</div>
         <Footer />

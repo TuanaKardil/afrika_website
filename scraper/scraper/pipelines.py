@@ -219,6 +219,8 @@ class StoragePipeline:
 
         # Hashtag assignment
         hashtags = assign_hashtags(title, content)
+        if not hashtags:
+            logger.warning("assign_hashtags returned empty for %s", source_url)
         item["hashtags"] = hashtags
 
         # Parse published_at
@@ -257,6 +259,20 @@ class StoragePipeline:
                 if featured_image_url:
                     self._used_image_urls.add(featured_image_url)
 
+        # Compute featured image fingerprint for dedup against inline images
+        featured_fp = ""
+        featured_src_url = item.get("featured_image_source_url") or ""
+        if featured_src_url:
+            from scraper.storage import compute_image_fingerprint
+            featured_fp = compute_image_fingerprint(featured_src_url)
+
+        def _is_featured_duplicate(src: str) -> bool:
+            if not featured_fp or not src:
+                return False
+            from scraper.storage import compute_image_fingerprint as _cfp
+            fp = _cfp(src)
+            return bool(fp and fp == featured_fp)
+
         # Build full image URL list: inline imgs already in content HTML + explicit inline_image_urls
         url_map: dict[str, str] = {}
         from bs4 import BeautifulSoup
@@ -264,6 +280,9 @@ class StoragePipeline:
         for i, img in enumerate(soup.find_all("img")):
             src = img.get("src", "")
             if src and src not in url_map:
+                if _is_featured_duplicate(src):
+                    logger.info("Skipping visually identical inline image: %s", src[:80])
+                    continue
                 new_url = upload_image(
                     image_url=src,
                     article_id=f"{article_id}-img{i}",
@@ -276,6 +295,9 @@ class StoragePipeline:
         # Also upload explicit inline_image_urls (handles lazy-loaded images not in content HTML)
         for j, src in enumerate(item.get("inline_image_urls") or []):
             if src and src not in url_map:
+                if _is_featured_duplicate(src):
+                    logger.info("Skipping visually identical inline image: %s", src[:80])
+                    continue
                 new_url = upload_image(
                     image_url=src,
                     article_id=f"{article_id}-body{j}",
