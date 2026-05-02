@@ -28,12 +28,6 @@ export default async function SektorlerPage({
       {/* Sector grid */}
       <section className="mb-10">
         <div className="flex flex-wrap gap-2">
-          <Link
-            href="/sektorler"
-            className="shrink-0 px-4 py-1.5 rounded-full font-body text-sm font-medium bg-primary text-white"
-          >
-            Tüm Sektörler
-          </Link>
           {sectors.map((sector) => (
             <Link
               key={sector.slug}
