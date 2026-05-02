@@ -169,16 +169,25 @@ export async function getArticlesBySector(
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
-  const { data, count } = await supabase
+  let query = supabase
     .from("articles")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", 5)
-    .contains("sector_slugs", [sectorSlug])
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
 
+  if (sectorSlug === "diger-sektor") {
+    // Include articles explicitly tagged diger-sektor OR in sektorler nav with no sector
+    query = query.or(
+      "sector_slugs.cs.{diger-sektor},and(nav_tab_slug.eq.sektorler,sector_slugs.eq.{})"
+    );
+  } else {
+    query = query.contains("sector_slugs", [sectorSlug]);
+  }
+
+  const { data, count } = await query;
   return { articles: data ?? [], count: count ?? 0 };
 }
 
