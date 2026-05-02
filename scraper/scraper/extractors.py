@@ -46,17 +46,39 @@ _FALLBACK_SELECTORS: dict[str, list[str]] = {
     ],
 }
 
-# Selectors for article body container (used when extracting inline images)
+# Selectors for article body container (tried in order, first match wins)
 _ARTICLE_BODY_SELECTORS = [
-    "article",
+    # Specific content containers (preferred)
+    ".article__body",
+    ".article-body",
     ".article-content",
     ".entry-content",
     ".post-content",
     ".content-body",
-    ".article__body",
+    ".content-lock-content",
     ".news-body",
+    # Generic fallbacks
+    "article",
     "main",
 ]
+
+# Class/ID fragments that identify non-editorial noise sections
+_NOISE_PATTERN = re.compile(
+    r"recommend|relat|sidebar|trending|widget|advertisement|"
+    r"promo|social|share|comment|newsletter|subscribe|"
+    r"moreLike|section-element|author-bio|byline-block|"
+    r"tag-list|breadcrumb|pagination|footer|header|"
+    r"banner|popup|modal|overlay|sticky|ad-slot|"
+    r"also-read|read-more|you-may|see-also|explore-more",
+    re.I,
+)
+
+# URL fragments that indicate non-editorial images
+_NOISE_URL_PATTERN = re.compile(
+    r"(logo|icon|avatar|spinner|placeholder|pixel|tracking|"
+    r"1x1|spacer|author|profile|headshot|badge|flag)",
+    re.I,
+)
 
 
 def _real_src(img_tag) -> str:
@@ -93,6 +115,27 @@ def _fix_lazy_images(html: str) -> str:
     return str(soup) if changed else html
 
 
+def _remove_noise_elements(container) -> None:
+    """Strip non-editorial sub-elements (related articles, sidebars, widgets) in-place."""
+    # Remove structural noise tags unconditionally
+    for tag in container.find_all(["aside", "nav", "footer", "header", "script", "style", "noscript"]):
+        tag.decompose()
+
+    # Collect noise elements by class/id pattern (iterate separately to avoid mutation issues)
+    to_remove = []
+    for tag in container.find_all(True):
+        classes = " ".join(tag.get("class") or [])
+        tag_id = tag.get("id") or ""
+        if _NOISE_PATTERN.search(classes) or _NOISE_PATTERN.search(tag_id):
+            to_remove.append(tag)
+
+    for tag in to_remove:
+        try:
+            tag.decompose()
+        except Exception:
+            pass
+
+
 def extract_content(response: Response, source: str = "") -> str:
     html = _fix_lazy_images(response.text)
 
@@ -118,27 +161,33 @@ def extract_content(response: Response, source: str = "") -> str:
     return f"<p>{response.css('body').xpath('string()').get('').strip()}</p>"
 
 
-def extract_inline_images(response: Response) -> list[str]:
-    """Extract all real image URLs from the article body, handling lazy loading.
+def extract_inline_images(response) -> list[str]:
+    """Extract editorial inline image URLs from the article body only.
 
-    Returns a deduplicated list of absolute HTTP URLs, smallest/tracker images excluded.
+    Strips related-article widgets, sidebars, author bios, and other noise
+    before scanning so only content images are returned.
+    Returns a deduplicated list of absolute HTTP URLs.
     """
     soup = BeautifulSoup(response.text, "lxml")
 
-    article = None
+    # Find the most specific article body container
+    container = None
     for sel in _ARTICLE_BODY_SELECTORS:
-        article = soup.select_one(sel)
-        if article:
+        container = soup.select_one(sel)
+        if container:
             break
-    if article is None:
-        article = soup.find("body")
-    if article is None:
+    if container is None:
+        container = soup.find("body")
+    if container is None:
         return []
+
+    # Remove noise sections (related articles, sidebars, widgets, etc.)
+    _remove_noise_elements(container)
 
     urls: list[str] = []
     seen: set[str] = set()
 
-    for img in article.find_all("img"):
+    for img in container.find_all("img"):
         src = _real_src(img)
         if not src or not src.startswith("http") or src in seen:
             continue
@@ -152,8 +201,8 @@ def extract_inline_images(response: Response) -> list[str]:
         except (ValueError, TypeError):
             pass
 
-        # Skip common non-editorial patterns
-        if re.search(r"(logo|icon|avatar|spinner|placeholder|pixel|tracking|1x1|spacer)", src, re.I):
+        # Skip non-editorial URLs (logos, avatars, author photos, etc.)
+        if _NOISE_URL_PATTERN.search(src):
             continue
 
         seen.add(src)
