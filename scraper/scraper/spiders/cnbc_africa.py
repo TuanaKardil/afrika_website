@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urljoin
@@ -5,11 +6,17 @@ from urllib.parse import urljoin
 import scrapy
 from scrapy.http import Response
 
-from scraper.extractors import extract_content
 from scraper.items import ArticleItem
 
 _CUTOFF_DAYS = 1
 _BASE = "https://www.cnbcafrica.com"
+_START_URLS = [
+    f"{_BASE}/",
+    f"{_BASE}/tag/africa/",
+    f"{_BASE}/tag/economy/",
+]
+
+_MIN_DESC_LEN = 80
 
 
 class CNBCAfricaSpider(scrapy.Spider):
@@ -18,7 +25,8 @@ class CNBCAfricaSpider(scrapy.Spider):
 
     def start_requests(self):
         cutoff = datetime.now(timezone.utc) - timedelta(days=_CUTOFF_DAYS)
-        yield scrapy.Request(_BASE, callback=self.parse_index, meta={"cutoff": cutoff})
+        for url in _START_URLS:
+            yield scrapy.Request(url, callback=self.parse_index, meta={"cutoff": cutoff})
 
     def parse_index(self, response: Response):
         cutoff: datetime = response.meta["cutoff"]
@@ -39,16 +47,18 @@ class CNBCAfricaSpider(scrapy.Spider):
     def parse_article(self, response: Response):
         cutoff: datetime = response.meta["cutoff"]
 
-        datetime_str = (
+        ld_json = _extract_ld_json(response)
+
+        pub_time_str = (
             response.css("meta[property='article:published_time']::attr(content)").get()
+            or (ld_json.get("uploadDate") if ld_json else None)
             or response.css("time[datetime]::attr(datetime)").get()
-            or response.css("time::attr(datetime)").get()
         )
-        if not datetime_str:
+        if not pub_time_str:
             return
 
         try:
-            published_at = datetime.fromisoformat(datetime_str.replace("Z", "+00:00"))
+            published_at = datetime.fromisoformat(pub_time_str.replace("Z", "+00:00"))
         except ValueError:
             return
 
@@ -59,35 +69,31 @@ class CNBCAfricaSpider(scrapy.Spider):
             return
 
         title = (
-            response.css("h1.entry-title::text, h1.post-title::text").get()
+            response.css("meta[property='og:title']::attr(content)").get()
+            or (ld_json.get("name") if ld_json else None)
             or response.css("h1::text").get()
             or ""
         ).strip()
         if not title:
             return
 
-        author = (
-            response.css(".author-name a::text, .byline__author-name::text").get()
-            or response.css("[rel='author']::text").get()
+        description = (
+            response.css("meta[property='og:description']::attr(content)").get()
+            or (ld_json.get("description") if ld_json else None)
             or ""
         ).strip()
+
+        if len(description) < _MIN_DESC_LEN:
+            return
 
         featured_image_url = (
             response.css("meta[property='og:image']::attr(content)").get()
-            or response.css(".featured-image img::attr(src)").get()
-            or response.css("figure img::attr(src)").get()
+            or (ld_json.get("thumbnailUrl") if ld_json else None)
             or ""
         )
 
-        image_credit = (
-            response.css(".wp-caption-text::text, figcaption::text").get()
-            or ""
-        ).strip()
-
-        content_html = extract_content(response, source="cnbc_africa")
-
-        plain = re.sub(r"<[^>]+>", "", content_html)
-        excerpt = plain[:200].strip()
+        excerpt = description[:200]
+        content_html = f"<p>{description}</p>"
 
         yield ArticleItem(
             source="cnbc_africa",
@@ -95,13 +101,29 @@ class CNBCAfricaSpider(scrapy.Spider):
             title_original=title,
             excerpt_original=excerpt,
             content_original=content_html,
-            author_original=author,
+            author_original="",
             published_at=published_at.isoformat(),
             featured_image_source_url=featured_image_url,
-            image_credit=image_credit,
+            image_credit="",
             is_update=False,
         )
 
 
+def _extract_ld_json(response: Response) -> dict:
+    for script in response.css("script[type='application/ld+json']::text").getall():
+        try:
+            data = json.loads(script)
+            if isinstance(data, list):
+                data = data[0]
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+    return {}
+
+
 def _is_article(url: str) -> bool:
-    return bool(re.search(r"cnbcafrica\.com/20\d{2}/[a-z0-9-]+/?$", url))
+    return bool(
+        re.search(r"cnbcafrica\.com/media/\d+/[a-z0-9-]+/?$", url)
+        or re.search(r"cnbcafrica\.com/20\d{2}/[a-z0-9-]+/?$", url)
+    )

@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, timezone, timedelta
+from email.utils import parsedate_to_datetime
 from urllib.parse import urljoin
 
 import scrapy
@@ -8,14 +9,8 @@ from scrapy.http import Response
 from scraper.extractors import extract_content
 from scraper.items import ArticleItem
 
-_CUTOFF_DAYS = 1
-_BASE = "https://www.theafricareport.com"
-
-_START_URLS = [
-    f"{_BASE}/economy/",
-    f"{_BASE}/business/",
-    f"{_BASE}/politics/",
-]
+_CUTOFF_DAYS = 7
+_RSS_URL = "https://www.theafricareport.com/feed/"
 
 
 class AfricaReportSpider(scrapy.Spider):
@@ -23,46 +18,59 @@ class AfricaReportSpider(scrapy.Spider):
     allowed_domains = ["theafricareport.com"]
 
     def start_requests(self):
-        # theafricareport.com returns 403 for all automated requests.
-        # Yield a dummy request that will be dropped rather than crashing the run.
-        self.logger.warning("africa_report spider: site returns 403, skipping")
-        return
-        yield  # make this a generator
+        cutoff = datetime.now(timezone.utc) - timedelta(days=_CUTOFF_DAYS)
+        yield scrapy.Request(
+            _RSS_URL,
+            callback=self.parse_rss,
+            meta={"cutoff": cutoff},
+        )
 
-    def parse_index(self, response: Response):
+    def parse_rss(self, response: Response):
         cutoff: datetime = response.meta["cutoff"]
-        seen: set[str] = set()
 
-        for href in response.css("article a[href]::attr(href), h2 a[href]::attr(href), h3 a[href]::attr(href)").getall():
-            url = urljoin(_BASE, href)
-            if url in seen:
+        for item in response.xpath("//item"):
+            link = item.xpath("link/text()").get("").strip()
+            if not link:
+                link = item.xpath("guid/text()").get("").strip()
+            if not link or not link.startswith("http"):
                 continue
-            if _is_article(url):
-                seen.add(url)
-                yield response.follow(
-                    url,
-                    callback=self.parse_article,
-                    meta={"cutoff": cutoff},
-                )
+
+            pub_date_str = item.xpath("pubDate/text()").get("").strip()
+            try:
+                pub_dt = parsedate_to_datetime(pub_date_str)
+                if pub_dt.tzinfo is None:
+                    pub_dt = pub_dt.replace(tzinfo=timezone.utc)
+                if pub_dt < cutoff:
+                    continue
+            except Exception:
+                pass
+
+            yield scrapy.Request(
+                link,
+                callback=self.parse_article,
+                meta={"published_at_rss": pub_date_str},
+            )
 
     def parse_article(self, response: Response):
-        cutoff: datetime = response.meta["cutoff"]
-
         datetime_str = (
             response.css("meta[property='article:published_time']::attr(content)").get()
             or response.css("time[datetime]::attr(datetime)").get()
             or response.css("time::attr(datetime)").get()
         )
-        if not datetime_str:
+
+        if datetime_str:
+            try:
+                published_at = datetime.fromisoformat(datetime_str.replace("Z", "+00:00"))
+            except ValueError:
+                published_at = _parse_rss_fallback(response.meta.get("published_at_rss", ""))
+        else:
+            published_at = _parse_rss_fallback(response.meta.get("published_at_rss", ""))
+
+        if published_at is None:
             return
 
-        try:
-            published_at = datetime.fromisoformat(datetime_str.replace("Z", "+00:00"))
-        except ValueError:
-            return
-
-        if published_at < cutoff:
-            return
+        if published_at.tzinfo is None:
+            published_at = published_at.replace(tzinfo=timezone.utc)
 
         title = (
             response.css("h1.entry-title::text, h1.article-title::text").get()
@@ -107,6 +115,18 @@ class AfricaReportSpider(scrapy.Spider):
             image_credit=image_credit,
             is_update=False,
         )
+
+
+def _parse_rss_fallback(pub_date_str: str) -> datetime | None:
+    if not pub_date_str:
+        return None
+    try:
+        dt = parsedate_to_datetime(pub_date_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
 
 
 def _is_article(url: str) -> bool:
