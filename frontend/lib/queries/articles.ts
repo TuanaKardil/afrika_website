@@ -1,0 +1,148 @@
+import { createBuildClient } from "@/lib/supabase/server";
+const createClient = createBuildClient;
+import type { Database } from "@/lib/database.types";
+
+export type Article = Database["public"]["Tables"]["articles"]["Row"];
+
+export const PAGE_SIZE = 12;
+
+export async function getLatestArticles(
+  page = 1,
+  excludeId?: string
+): Promise<{ articles: Article[]; count: number }> {
+  const supabase = createClient();
+  const offset = (page - 1) * PAGE_SIZE;
+
+  let query = supabase
+    .from("articles")
+    .select("*", { count: "exact" })
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  if (excludeId) {
+    query = query.neq("id", excludeId);
+  }
+
+  const { data, count } = await query;
+
+  return { articles: data ?? [], count: count ?? 0 };
+}
+
+export async function getFeaturedArticle(): Promise<Article | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("articles")
+    .select("*")
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .eq("is_featured", true)
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) {
+    const { data: fallback } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("is_suppressed", false)
+      .gte("score", 5)
+      .not("title_tr", "is", null)
+      .order("published_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return fallback;
+  }
+
+  return data;
+}
+
+export async function getArticleBySlug(slug: string): Promise<Article | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("articles")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  return data;
+}
+
+export async function getArticlesByNavTab(
+  navTabSlug: string,
+  page = 1
+): Promise<{ articles: Article[]; count: number }> {
+  const supabase = createClient();
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const { data, count } = await supabase
+    .from("articles")
+    .select("*", { count: "exact" })
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .eq("nav_tab_slug", navTabSlug)
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  return { articles: data ?? [], count: count ?? 0 };
+}
+
+export async function getArticlesBySector(
+  sectorSlug: string,
+  page = 1
+): Promise<{ articles: Article[]; count: number }> {
+  const supabase = createClient();
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const { data, count } = await supabase
+    .from("articles")
+    .select("*", { count: "exact" })
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .contains("sector_slugs", [sectorSlug])
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  return { articles: data ?? [], count: count ?? 0 };
+}
+
+export async function getArticlesByRegion(
+  regionSlug: string,
+  page = 1
+): Promise<{ articles: Article[]; count: number }> {
+  const supabase = createClient();
+  const offset = (page - 1) * PAGE_SIZE;
+
+  let query = supabase
+    .from("articles")
+    .select("*", { count: "exact" })
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  if (regionSlug !== "afrika") {
+    query = query.eq("region_slug", regionSlug);
+  }
+
+  const { data, count } = await query;
+
+  return { articles: data ?? [], count: count ?? 0 };
+}
+
+export async function getAllSlugs(): Promise<string[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("articles")
+    .select("id, slug")
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .order("published_at", { ascending: false })
+    .limit(1000);
+  return (data ?? []).map((r) => (r as Article).slug);
+}
