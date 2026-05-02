@@ -13,7 +13,7 @@ MAX_RETRIES = 3
 
 # Model aliases — update here to change models project-wide
 GEMINI_FLASH_LITE = "google/gemini-2.5-flash-lite"   # score, translate, hashtags
-GPT5_NANO        = "openai/gpt-4o-mini"               # turkey_filter, classify
+GPT5_NANO        = "openai/gpt-5-nano"                 # turkey_filter, classify
 
 
 def chat(
@@ -50,7 +50,8 @@ def chat(
             resp = requests.post(_BASE_URL, json=payload, headers=headers, timeout=60)
             resp.raise_for_status()
             data = resp.json()
-            return data["choices"][0]["message"]["content"]
+            msg = data["choices"][0]["message"]
+            return msg.get("content") or msg.get("reasoning") or None
         except requests.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 429:
                 wait = 2 ** attempt

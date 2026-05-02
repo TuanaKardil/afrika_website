@@ -97,7 +97,7 @@ def classify_article(title: str, content: str) -> tuple[str, list[str], str]:
         model=GPT5_NANO,
         system=_SYSTEM,
         temperature=0.0,
-        max_tokens=200,
+        max_tokens=2000,
     )
 
     if not raw:
