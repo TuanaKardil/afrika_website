@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 import scrapy
 from scrapy.http import Response
 
-from scraper.extractors import extract_content
+from scraper.extractors import extract_content, extract_inline_images
 from scraper.items import ArticleItem
 
 _CUTOFF_DAYS = 1
@@ -90,6 +90,7 @@ class BusinessInsiderAfricaSpider(scrapy.Spider):
         ).strip()
 
         content_html = extract_content(response, source="business_insider")
+        inline_images = extract_inline_images(response)
 
         plain = re.sub(r"<[^>]+>", "", content_html)
         excerpt = plain[:200].strip()
@@ -104,6 +105,7 @@ class BusinessInsiderAfricaSpider(scrapy.Spider):
             published_at=published_at.isoformat(),
             featured_image_source_url=featured_image_url,
             image_credit=image_credit,
+            inline_image_urls=inline_images,
             is_update=False,
         )
 

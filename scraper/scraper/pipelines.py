@@ -257,7 +257,7 @@ class StoragePipeline:
                 if featured_image_url:
                     self._used_image_urls.add(featured_image_url)
 
-        # Upload inline images and rewrite srcs
+        # Build full image URL list: inline imgs already in content HTML + explicit inline_image_urls
         url_map: dict[str, str] = {}
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(content, "lxml")
@@ -273,10 +273,35 @@ class StoragePipeline:
                 if new_url:
                     url_map[src] = new_url
 
+        # Also upload explicit inline_image_urls (handles lazy-loaded images not in content HTML)
+        for j, src in enumerate(item.get("inline_image_urls") or []):
+            if src and src not in url_map:
+                new_url = upload_image(
+                    image_url=src,
+                    article_id=f"{article_id}-body{j}",
+                    source=source,
+                    published_at=published_at,
+                )
+                if new_url:
+                    url_map[src] = new_url
+
         if url_map:
             item["content_original"] = rewrite_image_srcs(item.get("content_original", ""), url_map)
-            if item.get("content_tr"):
-                item["content_tr"] = rewrite_image_srcs(item["content_tr"], url_map)
+            content_tr = item.get("content_tr") or ""
+            if content_tr:
+                item["content_tr"] = rewrite_image_srcs(content_tr, url_map)
+
+            # Inject images that are not yet present in content_tr as <figure> blocks
+            content_tr_final = item.get("content_tr") or item.get("content_original") or ""
+            figures = ""
+            for orig_src, supabase_url in url_map.items():
+                if supabase_url and supabase_url not in content_tr_final:
+                    figures += f'<figure><img src="{supabase_url}" alt="" /></figure>\n'
+            if figures:
+                if item.get("content_tr"):
+                    item["content_tr"] = item["content_tr"] + "\n" + figures
+                if item.get("content_original"):
+                    item["content_original"] = item["content_original"] + "\n" + figures
 
         # Fallback: if pipeline translation didn't run (score < 5 or API failure),
         # keep the None values so retranslate.py can pick them up later

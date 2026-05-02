@@ -20,6 +20,7 @@ class ArticleItem(scrapy.Item):
     hashtags = scrapy.Field()
     is_suppressed = scrapy.Field()
     is_update = scrapy.Field()
+    inline_image_urls = scrapy.Field()   # list[str] of image URLs from article body
     # Pipeline-assigned fields (not set by spiders)
     score = scrapy.Field()              # 1-10 Africa relevance score
     turkey_filter_result = scrapy.Field()  # "PASS" or "SUPPRESS"
