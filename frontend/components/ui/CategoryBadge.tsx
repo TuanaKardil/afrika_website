@@ -4,6 +4,7 @@ import { resolveCategory } from "@/lib/labels";
 interface CategoryBadgeProps {
   slug: string;
   sectorSlugs?: string[];
+  hashtags?: string[] | null;
   linkable?: boolean;
   className?: string;
 }
@@ -11,10 +12,11 @@ interface CategoryBadgeProps {
 export default function CategoryBadge({
   slug,
   sectorSlugs = [],
+  hashtags,
   linkable = true,
   className = "",
 }: CategoryBadgeProps) {
-  const label = resolveCategory(slug, sectorSlugs);
+  const label = resolveCategory(slug, sectorSlugs, hashtags);
   if (!label) return null;
   const classes = `inline-block text-xs font-semibold uppercase tracking-wide text-primary bg-primary/10 px-2.5 py-1 rounded-sm ${className}`;
 

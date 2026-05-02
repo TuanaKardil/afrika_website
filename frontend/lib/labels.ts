@@ -41,11 +41,14 @@ export const SECTOR_LABELS: Record<string, string> = {
 
 export function resolveCategory(
   navTabSlug: string | null,
-  sectorSlugs: string[]
+  sectorSlugs: string[],
+  hashtags?: string[] | null,
 ): string | null {
   if (!navTabSlug) return null;
   if (navTabSlug === "diger") {
-    return sectorSlugs.length > 0 ? (SECTOR_LABELS[sectorSlugs[0]] ?? null) : null;
+    const specificSector = sectorSlugs.find((s) => s !== "diger-sektor");
+    if (specificSector) return SECTOR_LABELS[specificSector] ?? null;
+    return hashtags?.[0] ?? null;
   }
   return NAV_LABELS[navTabSlug] ?? null;
 }

@@ -16,7 +16,7 @@ export default function HeroSection({
   topArticles = [],
 }: HeroSectionProps) {
   const href = `/haber/${article.slug}`;
-  const category = resolveCategory(article.nav_tab_slug, article.sector_slugs ?? []);
+  const category = resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags);
 
   const hasTop = topArticles.length > 0;
 
@@ -117,7 +117,7 @@ export default function HeroSection({
               {/* Ranked list */}
               <ol className="flex flex-col divide-y divide-outline-variant">
                 {topArticles.slice(0, 5).map((top, idx) => {
-                  const topCategory = resolveCategory(top.nav_tab_slug, top.sector_slugs ?? []);
+                  const topCategory = resolveCategory(top.nav_tab_slug, top.sector_slugs ?? [], top.hashtags);
                   return (
                     <li key={top.id}>
                       <Link

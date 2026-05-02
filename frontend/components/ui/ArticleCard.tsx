@@ -10,7 +10,7 @@ interface ArticleCardProps {
 
 export default function ArticleCard({ article }: ArticleCardProps) {
   const href = `/haber/${article.slug}`;
-  const category = resolveCategory(article.nav_tab_slug, article.sector_slugs ?? []);
+  const category = resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags);
 
   return (
     <article className="group flex flex-col border border-outline-variant bg-surface transition-[border-color] duration-[120ms] hover:border-border-strong">

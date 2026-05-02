@@ -60,7 +60,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
         <span>/</span>
         {(() => {
           const crumbLabel = article.nav_tab_slug
-            ? resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [])
+            ? resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags)
             : null;
           return crumbLabel ? (
             <>
@@ -80,6 +80,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
           <CategoryBadge
             slug={article.nav_tab_slug}
             sectorSlugs={article.sector_slugs ?? []}
+            hashtags={article.hashtags}
           />
         )}
         {article.region_slug && <RegionBadge slug={article.region_slug} />}
