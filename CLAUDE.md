@@ -5,7 +5,7 @@
 
 ## 1. Project Summary
 
-A Turkish-language, Africa-focused business and economy news platform. News is pulled daily from English sources (BBC Africa, The Conversation Africa, Africa Report, CNBC Africa, AA Africa, Business Insider Africa). Items are translated to Turkish via AI, scored (1-10), classified, tagged with 8-15 hashtags, and published.
+A Turkish-language, Africa-focused business and economy news platform. News is pulled daily from English sources (The Conversation Africa, Africa Report, CNBC Africa, AA Africa, Business Insider Africa). Items are translated to Turkish via AI, scored (1-10), classified, tagged with 8-15 hashtags, and published.
 
 - **Update time:** 06:00 TST (n8n cron `0 6 * * *`)
 - **Fetch window:** Last 24 hours
