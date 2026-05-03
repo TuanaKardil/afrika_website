@@ -39,6 +39,43 @@ export const SECTOR_LABELS: Record<string, string> = {
   "diger-sektor":            "Diğer Sektörler",
 };
 
+// Hashtags that are geographic (countries, regions, cities) or personal names —
+// these are not meaningful as article category labels.
+const GEO_SKIP = new Set([
+  // 54 African countries
+  "Angola","Benin","Botsvana","Burkina Faso","Burundi","Cezayir","Cibuti","Çad",
+  "DR Kongo","Ekvator Ginesi","Eritre","Esvatini","Etiyopya","Fas","Fildişi Sahili",
+  "Gabon","Gambiya","Gana","Gine","Gine-Bissau","Güney Afrika Cumhuriyeti",
+  "Güney Sudan","Kamerun","Kenya","Komorlar","Kongo Cumhuriyeti","Lesoto",
+  "Liberya","Libya","Madagaskar","Malavi","Mali","Mauritius","Mısır","Moritanya",
+  "Mozambik","Namibya","Nijer","Nijerya","Orta Afrika Cumhuriyeti","Ruanda",
+  "Sao Tome ve Principe","Senegal","Seyşeller","Sierra Leone","Somali","Sudan",
+  "Tanzanya","Togo","Tunus","Uganda","Yeşil Burun Adaları","Zambiya","Zimbabve",
+  // Regions & geographic concepts
+  "Sahra Altı Afrika","Sahel","Mağrip","Doğu Afrika","Batı Afrika","Kuzey Afrika",
+  "Güney Afrika","Orta Afrika","Boynuz Afrika","Frankofon Afrika","Anglofon Afrika",
+  "Lusofon Afrika","Frankofon Batı Afrika","Pan-Afrika","MENA","EMEA","Afrika",
+  // Turkish cities
+  "İstanbul","Ankara","İzmir","Bursa","Gaziantep","Mersin","Kayseri",
+  // Person names (Section R of hashtag doc)
+  "Recep Tayyip Erdoğan","Cumhurbaşkanlığı","Cyril Ramaphosa","Bola Tinubu",
+  "Abdülfettah el-Sisi","William Ruto","Macky Sall","Bassirou Diomaye Faye",
+  "Alassane Ouattara","Paul Kagame","Aliko Dangote","Patrice Motsepe",
+  "Mo Ibrahim","Strive Masiyiwa","Tony Elumelu",
+  // Turkey itself (too broad as a category)
+  "Türkiye",
+]);
+
+function pickBestHashtag(hashtags: string[]): string | null {
+  // First pass: skip geographic/personal hashtags and DEİK bilateral councils
+  for (const tag of hashtags) {
+    if (GEO_SKIP.has(tag)) continue;
+    if (tag.startsWith("Türkiye-") && tag.endsWith(" İK")) continue;
+    return tag;
+  }
+  return null;
+}
+
 export function resolveCategory(
   navTabSlug: string | null,
   sectorSlugs: string[],
@@ -48,7 +85,7 @@ export function resolveCategory(
   if (navTabSlug === "diger") {
     const specificSector = sectorSlugs.find((s) => s !== "diger-sektor");
     if (specificSector) return SECTOR_LABELS[specificSector] ?? null;
-    return hashtags?.[0] ?? null;
+    return pickBestHashtag(hashtags ?? []);
   }
   return NAV_LABELS[navTabSlug] ?? null;
 }
