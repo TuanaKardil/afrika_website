@@ -27,7 +27,6 @@ SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl worldbank
 SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl undp_tenders &
 SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl ungm_tenders &
 SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl african_union_tenders &
-SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl dgmarket_tenders &
 SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl mali_tenders &
 SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl burkina_tenders &
 SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl liberia_tenders &

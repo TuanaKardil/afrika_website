@@ -20,7 +20,6 @@ countdown timers, progress bars, and status badges. Architecture mirrors the art
 | `worldbank` | Dünya Bankası | https://projects.worldbank.org/en/projects-operations/procurement |
 | `undp` | UNDP | https://procurement-notices.undp.org/ |
 | `african_union` | Afrika Birliği | https://au.int/en/bids |
-| `dgmarket` | DG Market | https://www.dgmarket.com/tenders/list.do?sub=tenders-in-Africa |
 | `ungm` | BM Global Marketplace | https://www.ungm.org/Public/Notice |
 | `mali` | Mali DGMP | https://dgmp.gouv.ml/?q=node/71 |
 | `burkina` | Burkina Faso joffres.net | https://www.joffres.net/les_appeloffre/filtre?mot_cle= |
@@ -32,6 +31,7 @@ Scrape window: tenders with `deadline_at` in the future OR published within last
 Removed/skipped sources:
 - `afdb` (projectsportal.afdb.org DNS unreachable; www.afdb.org behind Cloudflare)
 - `afreximbank` (Akamai WAF IP block on all paths, 403 everywhere)
+- `dgmarket` (removed by user decision)
 - `benin` (https://www.marches-publics.bj Angular SPA, requires Playwright to render)
 
 ---
@@ -180,7 +180,7 @@ workflow. All 9 spiders run in parallel. Reuses existing env vars (no new secret
 
 ```
 scraper/spiders/  worldbank_tenders.py  undp_tenders.py  ungm_tenders.py
-                  african_union_tenders.py  dgmarket_tenders.py
+                  african_union_tenders.py
                   mali_tenders.py  burkina_tenders.py
                   liberia_tenders.py  ghana_tenders.py
 scraper/          tender_translate.py  tender_classify.py
