@@ -22,12 +22,17 @@ countdown timers, progress bars, and status badges. Architecture mirrors the art
 | `african_union` | Afrika Birliği | https://au.int/en/bids |
 | `dgmarket` | DG Market | https://www.dgmarket.com/tenders/list.do?sub=tenders-in-Africa |
 | `ungm` | BM Global Marketplace | https://www.ungm.org/Public/Notice |
+| `mali` | Mali DGMP | https://dgmp.gouv.ml/?q=node/71 |
+| `burkina` | Burkina Faso joffres.net | https://www.joffres.net/les_appeloffre/filtre?mot_cle= |
+| `liberia` | Liberia PPCC | https://ppcc.gov.lr/opportunities/opportunities/procurement-notices |
+| `ghana` | Ghana GhanEPS | https://www.ghaneps.gov.gh/epps/quickSearchAction.do?searchSelect=6&T01_ps=100 |
 
 Scrape window: tenders with `deadline_at` in the future OR published within last 7 days.
 
-Removed sources:
+Removed/skipped sources:
 - `afdb` (projectsportal.afdb.org DNS unreachable; www.afdb.org behind Cloudflare)
 - `afreximbank` (Akamai WAF IP block on all paths, 403 everywhere)
+- `benin` (https://www.marches-publics.bj Angular SPA, requires Playwright to render)
 
 ---
 
@@ -36,7 +41,7 @@ Removed sources:
 ```sql
 CREATE TABLE tenders (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  source               text NOT NULL CHECK (source IN ('worldbank','undp','african_union','dgmarket','ungm')),
+  source               text NOT NULL CHECK (source IN ('worldbank','undp','african_union','dgmarket','ungm','mali','burkina','liberia','ghana')),
   source_url           text UNIQUE NOT NULL,
   slug                 text UNIQUE NOT NULL,
   reference_number     text,
@@ -167,7 +172,7 @@ max 4 cards). Saved tenders surface in `/panel` under a "Kayıtlı İhaleler" ta
 ## Automation
 
 Second n8n cron at **15:00 Europe/Istanbul** triggers `scrape_tenders.yml` GitHub Actions
-workflow. All 5 spiders run in parallel. Reuses existing env vars (no new secrets needed).
+workflow. All 9 spiders run in parallel. Reuses existing env vars (no new secrets needed).
 
 ---
 
@@ -176,6 +181,8 @@ workflow. All 5 spiders run in parallel. Reuses existing env vars (no new secret
 ```
 scraper/spiders/  worldbank_tenders.py  undp_tenders.py  ungm_tenders.py
                   african_union_tenders.py  dgmarket_tenders.py
+                  mali_tenders.py  burkina_tenders.py
+                  liberia_tenders.py  ghana_tenders.py
 scraper/          tender_translate.py  tender_classify.py
                   tender_filter.py     tender_storage.py
 ```
