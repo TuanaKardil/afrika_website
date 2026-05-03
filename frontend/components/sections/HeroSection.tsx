@@ -71,8 +71,8 @@ export default function HeroSection({
             </div>
           </Link>
 
-          {/* Secondary cards */}
-          {secondaryArticles.length > 0 && (
+          {/* Secondary cards — always render column when sidebar present to keep 3-col layout */}
+          {(secondaryArticles.length > 0 || hasTop) && (
             <div className="flex flex-col gap-4 h-full">
               {secondaryArticles.slice(0, 2).map((sec) => (
                 <Link
