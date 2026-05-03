@@ -242,8 +242,7 @@ export async function getTopArticles(limit = 5): Promise<Article[]> {
     .eq("is_suppressed", false)
     .gte("score", 5)
     .not("title_tr", "is", null)
-    .not("view_count", "is", null)
-    .order("view_count", { ascending: false })
+    .order("view_count", { ascending: false, nullsFirst: false })
     .limit(limit);
   return data ?? [];
 }
