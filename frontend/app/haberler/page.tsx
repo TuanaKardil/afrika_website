@@ -73,7 +73,7 @@ export default async function HaberlerPage({ searchParams }: HaberlerPageProps) 
         <h1 className="font-headline text-3xl text-on-surface mb-1">
           {activeKategoriLabel ?? "Tüm Haberler"}
           {bolge && bolge !== "afrika" && (
-            <span className="text-on-surface/40"> &mdash; {activeRegionLabel}</span>
+            <span className="text-on-surface/40">, {activeRegionLabel}</span>
           )}
         </h1>
         {count > 0 && (

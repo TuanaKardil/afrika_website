@@ -42,15 +42,15 @@ export default function HeroSection({
             {/* Dark overlay gradient */}
             <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(10,35,81,0.92)_0%,rgba(10,35,81,0.55)_50%,rgba(10,35,81,0.05)_90%)]" />
             {/* Text content */}
-            <div className="absolute bottom-0 left-0 right-0 px-8 pb-7 pt-4">
-              <div className="flex items-center gap-2 mb-3.5">
+            <div className="absolute bottom-0 left-0 right-0 px-4 pb-5 pt-3 md:px-8 md:pb-7 md:pt-4">
+              <div className="flex items-center gap-2 mb-3">
                 <span className="w-[6px] h-[6px] rounded-full bg-amber shrink-0" />
                 <span className="text-[11px] font-black tracking-[0.1em] uppercase text-amber">
                   {formatDateShort(article.published_at)}
                   {category ? ` • ${category.toLocaleUpperCase("tr-TR")}` : ""}
                 </span>
               </div>
-              <h1 className="text-[30px] font-black leading-[1.12] tracking-[-0.022em] text-white mb-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
+              <h1 className="text-[22px] md:text-[30px] font-black leading-[1.12] tracking-[-0.022em] text-white mb-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
                 {article.title_tr}
               </h1>
               {article.excerpt_tr && (

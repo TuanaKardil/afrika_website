@@ -66,7 +66,7 @@ export default function StatsBar({ stats }: StatsBarProps) {
       className="w-full bg-primary py-6 px-4"
       aria-label="Ihale istatistikleri"
     >
-      <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 divide-y-2 md:divide-y-0 md:divide-x-2 divide-white/20">
+      <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 md:divide-x-2 divide-white/20">
         <StatItem label="Aktif Ihale" value={stats.active} />
         <StatItem label="Bu Hafta Eklenen" value={stats.addedThisWeek} />
         <StatItem label="7 Gunde Bitiyor" value={stats.expiringIn7Days} />

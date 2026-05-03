@@ -101,7 +101,7 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="bg-white border-b border-outline-variant overflow-visible" aria-label="Ana navigasyon">
+    <nav className="hidden md:block bg-white border-b border-outline-variant overflow-visible" aria-label="Ana navigasyon">
       <div className="max-w-container mx-auto px-6 overflow-visible">
         <ul className="flex items-center gap-2 h-[52px] overflow-visible" style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {NAV_TABS.map((tab) => {

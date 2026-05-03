@@ -123,7 +123,7 @@ export default async function IhalelerPage({ searchParams }: IhalelerPageProps) 
         </header>
 
         {/* Sticky filter bar */}
-        <div className="sticky top-0 z-30 bg-background border-b border-outline-variant py-3 mb-6 -mx-4 px-4">
+        <div className="md:sticky md:top-0 z-30 bg-background border-b border-outline-variant py-3 mb-6 -mx-4 px-4">
           <div className="flex flex-wrap items-center gap-3">
             {/* Status tabs */}
             <div className="flex items-center gap-1 bg-surface-container rounded-lg p-0.5">
