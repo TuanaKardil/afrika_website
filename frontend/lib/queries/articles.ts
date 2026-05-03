@@ -88,19 +88,30 @@ export async function getLatestArticles(
   return { articles: data ?? [], count: count ?? 0 };
 }
 
-export async function getTopScoredRecent(limit = 8): Promise<Article[]> {
+export async function getTopScoredRecent(limit = 3): Promise<Article[]> {
   const supabase = createClient();
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  // Try last 48h first, fall back to all-time if not enough results
+  const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
   const { data } = await supabase
     .from("articles")
     .select("*")
     .eq("is_suppressed", false)
     .gte("score", 5)
     .not("title_tr", "is", null)
-    .gte("published_at", since)
+    .gte("published_at", since48h)
     .order("score", { ascending: false })
     .limit(limit);
-  return data ?? [];
+  if ((data ?? []).length >= limit) return data!;
+  // Fallback: most recent high-scored articles regardless of date
+  const { data: fallback } = await supabase
+    .from("articles")
+    .select("*")
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(limit);
+  return fallback ?? [];
 }
 
 export async function getFeaturedArticle(): Promise<Article | null> {
