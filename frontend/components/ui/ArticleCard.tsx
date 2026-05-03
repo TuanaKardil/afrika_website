@@ -21,7 +21,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             src={article.featured_image_url}
             alt={article.title_tr ?? ""}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 1024px) 50vw, 25vw"
             className="object-cover"
           />
         ) : (

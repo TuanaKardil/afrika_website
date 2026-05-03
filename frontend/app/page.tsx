@@ -82,7 +82,7 @@ function ArticlesFeedSkeleton() {
     <div className="animate-pulse">
       <div className="border-t-2 border-primary mb-3" />
       <div className="h-5 w-32 bg-surface-2 rounded mb-5" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-surface-2 rounded h-64" />
         ))}
