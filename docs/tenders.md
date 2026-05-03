@@ -17,16 +17,17 @@ countdown timers, progress bars, and status badges. Architecture mirrors the art
 
 | Key | Name | URL |
 |---|---|---|
-| `afdb` | Afrika Kalkınma Bankası | https://projectsportal.afdb.org/dataportal/VProject/show |
 | `worldbank` | Dünya Bankası | https://projects.worldbank.org/en/projects-operations/procurement |
 | `undp` | UNDP | https://procurement-notices.undp.org/ |
-| `afreximbank` | Afreximbank | https://www.afreximbank.com/tenders/ |
-| `african_union` | Afrika Birliği | https://au.int/en/tenders |
-| `dgmarket` | DG Market | https://www.dgmarket.com/tenders/adminRegion-Africa.do |
+| `african_union` | Afrika Birliği | https://au.int/en/bids |
+| `dgmarket` | DG Market | https://www.dgmarket.com/tenders/list.do?sub=tenders-in-Africa |
 | `ungm` | BM Global Marketplace | https://www.ungm.org/Public/Notice |
 
 Scrape window: tenders with `deadline_at` in the future OR published within last 7 days.
-Spider settings identical to article spiders (ROBOTSTXT_OBEY, DOWNLOAD_DELAY=2, same User-Agent).
+
+Removed sources:
+- `afdb` (projectsportal.afdb.org DNS unreachable; www.afdb.org behind Cloudflare)
+- `afreximbank` (Akamai WAF IP block on all paths, 403 everywhere)
 
 ---
 
@@ -35,7 +36,7 @@ Spider settings identical to article spiders (ROBOTSTXT_OBEY, DOWNLOAD_DELAY=2, 
 ```sql
 CREATE TABLE tenders (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  source               text NOT NULL CHECK (source IN ('afdb','worldbank','undp','afreximbank','african_union','dgmarket','ungm')),
+  source               text NOT NULL CHECK (source IN ('worldbank','undp','african_union','dgmarket','ungm')),
   source_url           text UNIQUE NOT NULL,
   slug                 text UNIQUE NOT NULL,
   reference_number     text,
@@ -166,16 +167,15 @@ max 4 cards). Saved tenders surface in `/panel` under a "Kayıtlı İhaleler" ta
 ## Automation
 
 Second n8n cron at **15:00 Europe/Istanbul** triggers `scrape_tenders.yml` GitHub Actions
-workflow. All 7 spiders run sequentially. Reuses existing env vars (no new secrets needed).
+workflow. All 5 spiders run in parallel. Reuses existing env vars (no new secrets needed).
 
 ---
 
 ## Scraper File Structure
 
 ```
-scraper/spiders/  afdb_tenders.py  worldbank_tenders.py  undp_tenders.py
-                  afreximbank_tenders.py  african_union_tenders.py
-                  dgmarket_tenders.py  ungm_tenders.py
+scraper/spiders/  worldbank_tenders.py  undp_tenders.py  ungm_tenders.py
+                  african_union_tenders.py  dgmarket_tenders.py
 scraper/          tender_translate.py  tender_classify.py
                   tender_filter.py     tender_storage.py
 ```
