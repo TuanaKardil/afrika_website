@@ -36,7 +36,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           <span className="w-[5px] h-[5px] rounded-full bg-amber shrink-0" />
           <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-fg-3">
             {formatDateShort(article.published_at)}
-            {category ? ` • ${category.toUpperCase()}` : ""}
+            {category ? ` • ${category.toLocaleUpperCase("tr-TR")}` : ""}
           </span>
         </div>
 

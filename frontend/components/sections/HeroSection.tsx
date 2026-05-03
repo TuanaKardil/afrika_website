@@ -47,7 +47,7 @@ export default function HeroSection({
                 <span className="w-[6px] h-[6px] rounded-full bg-amber shrink-0" />
                 <span className="text-[11px] font-black tracking-[0.1em] uppercase text-amber">
                   {formatDateShort(article.published_at)}
-                  {category ? ` • ${category.toUpperCase()}` : ""}
+                  {category ? ` • ${category.toLocaleUpperCase("tr-TR")}` : ""}
                 </span>
               </div>
               <h1 className="text-[30px] font-black leading-[1.12] tracking-[-0.022em] text-white mb-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
