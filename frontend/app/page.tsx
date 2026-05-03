@@ -4,6 +4,7 @@ import {
   getLatestArticles,
   getArticlesByNavTab,
   getTopScoredRecent,
+  getTopArticles,
 } from "@/lib/queries/articles";
 import { getNavTabs } from "@/lib/queries/nav_tabs";
 import HeroSection from "@/components/sections/HeroSection";
@@ -28,11 +29,13 @@ interface HomePageProps {
 export default async function HomePage({ searchParams }: HomePageProps) {
   const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
 
-  const topScored = page === 1 ? await getTopScoredRecent(8) : [];
+  const [topScored, sidebarArticles] = page === 1
+    ? await Promise.all([getTopScoredRecent(3), getTopArticles(5)])
+    : [[], []];
+
   const heroArticle = topScored[0] ?? null;
   const heroSecondary = topScored.slice(1, 3);
-  const sidebarArticles = topScored.slice(3, 8);
-  const heroIds = topScored.slice(0, 3).map((a) => a.id);
+  const heroIds = topScored.map((a) => a.id);
 
   const [{ articles, count }, navTabs, { articles: firsatlar }] =
     await Promise.all([
