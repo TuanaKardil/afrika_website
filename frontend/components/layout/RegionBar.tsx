@@ -27,7 +27,7 @@ export default function RegionBar() {
         <span className="text-[11px] font-bold tracking-[0.08em] text-navy uppercase shrink-0 pr-3.5 border-r border-outline-variant">
           BÖLGE
         </span>
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-none flex-1">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none flex-1 min-w-0">
           {REGIONS.map(({ slug, label, href }) => {
             const isActive = slug === activeSlug;
             return (

@@ -12,7 +12,7 @@ export default async function BreakingTicker() {
   const doubled = [...items, ...items];
 
   return (
-    <div className="bg-white border-b border-outline-variant flex items-stretch h-9 overflow-hidden">
+    <div className="bg-white border-b border-outline-variant flex items-stretch h-9 overflow-hidden w-full max-w-full">
       <div
         className="text-white text-[11px] font-black tracking-[0.1em] px-3.5 flex items-center shrink-0 whitespace-nowrap"
         style={{ background: "#c41e3a" }}
