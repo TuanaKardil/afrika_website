@@ -83,12 +83,21 @@ class TenderPipeline:
     def __init__(self):
         self._supabase = None
         self._known_slugs: set[str] = set()
+        self._valid_sector_slugs: set[str] = set()
+        self._valid_region_slugs: set[str] = set()
+        self._valid_category_slugs: set[str] = set()
 
     def open_spider(self, spider):
         try:
             self._supabase = _get_supabase()
             rows = self._supabase.table("tenders").select("slug").execute()
             self._known_slugs = {r["slug"] for r in (rows.data or [])}
+            sectors = self._supabase.table("sectors").select("slug").execute()
+            self._valid_sector_slugs = {r["slug"] for r in (sectors.data or [])}
+            regions = self._supabase.table("regions").select("slug").execute()
+            self._valid_region_slugs = {r["slug"] for r in (regions.data or [])}
+            cats = self._supabase.table("tender_categories").select("slug").execute()
+            self._valid_category_slugs = {r["slug"] for r in (cats.data or [])}
         except Exception as exc:
             logger.warning("Supabase unavailable in TenderPipeline: %s", exc)
 
@@ -127,9 +136,13 @@ class TenderPipeline:
         # AI classification
         from scraper.tender_classify import classify_tender
         classification = classify_tender(title, description)
-        item["sector_slug"] = classification.get("sector_slug")
-        item["region_slug"] = classification.get("region_slug", "afrika")
-        item["category_slug"] = classification.get("category_slug", "diger")
+        sector_slug = classification.get("sector_slug")
+        region_slug = classification.get("region_slug", "afrika")
+        category_slug = classification.get("category_slug", "diger")
+        # Validate against known slugs to prevent FK violations
+        item["sector_slug"] = sector_slug if (not self._valid_sector_slugs or sector_slug in self._valid_sector_slugs) else None
+        item["region_slug"] = region_slug if (not self._valid_region_slugs or region_slug in self._valid_region_slugs) else "afrika"
+        item["category_slug"] = category_slug if (not self._valid_category_slugs or category_slug in self._valid_category_slugs) else "diger"
         item["tender_type"] = classification.get("tender_type", "other")
 
         # Translation
