@@ -25,7 +25,6 @@ export default function Pagination({
   const hasPrev = page > 1;
   const hasNext = page < totalPages;
 
-  // Show at most 5 page numbers centered around current page
   const delta = 2;
   const start = Math.max(1, page - delta);
   const end = Math.min(totalPages, page + delta);
@@ -39,6 +38,7 @@ export default function Pagination({
       {hasPrev ? (
         <Link
           href={buildUrl(basePath, page - 1)}
+          scroll={false}
           className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-sm hover:bg-surface-container transition-colors"
         >
           Önceki
@@ -53,6 +53,7 @@ export default function Pagination({
         <>
           <Link
             href={buildUrl(basePath, 1)}
+            scroll={false}
             className="w-9 h-9 flex items-center justify-center font-body text-sm rounded-sm hover:bg-surface-container text-on-surface/70 hover:text-primary transition-colors"
           >
             1
@@ -67,6 +68,7 @@ export default function Pagination({
         <Link
           key={p}
           href={buildUrl(basePath, p)}
+          scroll={false}
           aria-current={p === page ? "page" : undefined}
           className={`w-9 h-9 flex items-center justify-center font-body text-sm rounded-sm transition-colors ${
             p === page
@@ -85,6 +87,7 @@ export default function Pagination({
           )}
           <Link
             href={buildUrl(basePath, totalPages)}
+            scroll={false}
             className="w-9 h-9 flex items-center justify-center font-body text-sm rounded-sm hover:bg-surface-container text-on-surface/70 hover:text-primary transition-colors"
           >
             {totalPages}
@@ -95,6 +98,7 @@ export default function Pagination({
       {hasNext ? (
         <Link
           href={buildUrl(basePath, page + 1)}
+          scroll={false}
           className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-sm hover:bg-surface-container transition-colors"
         >
           Sonraki

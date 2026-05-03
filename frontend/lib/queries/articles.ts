@@ -258,6 +258,35 @@ export async function getTopArticles(limit = 5): Promise<Article[]> {
   return data ?? [];
 }
 
+export async function getFilteredArticles(
+  page = 1,
+  regionSlug: string | null = null,
+  navTabSlug: string | null = null
+): Promise<{ articles: Article[]; count: number }> {
+  const supabase = createClient();
+  const offset = (page - 1) * PAGE_SIZE;
+
+  let query = supabase
+    .from("articles")
+    .select("*", { count: "exact" })
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  if (regionSlug && regionSlug !== "afrika") {
+    query = query.eq("region_slug", regionSlug);
+  }
+
+  if (navTabSlug) {
+    query = query.eq("nav_tab_slug", navTabSlug);
+  }
+
+  const { data, count } = await query;
+  return { articles: data ?? [], count: count ?? 0 };
+}
+
 export async function getAllSlugs(): Promise<string[]> {
   const supabase = createClient();
   const { data } = await supabase
