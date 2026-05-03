@@ -26,7 +26,7 @@ export default function MobileMenu() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="md:hidden ml-auto">
+    <div className="md:hidden">
       <button
         onClick={() => setOpen((prev) => !prev)}
         aria-label={open ? "Menüyü kapat" : "Menüyü aç"}

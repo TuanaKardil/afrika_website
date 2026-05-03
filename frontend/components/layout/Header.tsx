@@ -17,23 +17,23 @@ export default function Header() {
             <span className="text-white font-black text-xl tracking-[-0.02em] leading-none ml-1.5">{"HABERLERİ"}</span>
           </Link>
 
-          {/* Desktop actions */}
-          <div className="hidden md:flex items-center gap-3.5 ml-auto shrink-0">
+          {/* Actions — visible on all sizes, compact on mobile */}
+          <div className="ml-auto flex items-center gap-2 md:gap-3.5 shrink-0">
             <Link
               href="/kayit"
-              className="bg-amber text-navy text-xs font-black tracking-[0.06em] px-3.5 py-2 rounded-sm hover:bg-amber-dark transition-colors whitespace-nowrap"
+              className="bg-amber text-navy font-black tracking-[0.06em] rounded-sm hover:bg-amber-dark transition-colors whitespace-nowrap text-[10px] px-2.5 py-1.5 md:text-xs md:px-3.5 md:py-2"
             >
-              BÜLTENE ABONE OL
+              <span className="md:hidden">ABONE OL</span>
+              <span className="hidden md:inline">BÜLTENE ABONE OL</span>
             </Link>
             <Link
               href="/giris"
-              className="text-white/90 text-sm font-semibold hover:text-white transition-colors whitespace-nowrap"
+              className="text-white/90 text-xs md:text-sm font-semibold hover:text-white transition-colors whitespace-nowrap"
             >
               {"Giriş Yap"}
             </Link>
+            <MobileMenu />
           </div>
-
-          <MobileMenu />
         </div>
       </div>
 
