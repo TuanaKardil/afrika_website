@@ -101,9 +101,9 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="hidden md:block bg-white border-b border-outline-variant overflow-visible" aria-label="Ana navigasyon">
-      <div className="max-w-container mx-auto px-6 overflow-visible">
-        <ul className="flex items-center gap-2 h-[52px] overflow-visible" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+    <nav className="bg-white border-b border-outline-variant overflow-hidden" aria-label="Ana navigasyon">
+      <div className="max-w-container mx-auto px-4 md:px-6 overflow-x-auto md:overflow-visible scrollbar-none">
+        <ul className="flex items-center gap-1 md:gap-2 h-[44px] md:h-[52px] min-w-max md:min-w-0 md:overflow-visible" style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {NAV_TABS.map((tab) => {
             const isActive =
               pathname === tab.href ||
@@ -120,7 +120,7 @@ export default function Navigation() {
               >
                 <Link
                   href={tab.href}
-                  className={`h-full inline-flex items-center gap-2 px-3.5 text-sm font-bold tracking-[-0.005em] whitespace-nowrap transition-colors duration-[120ms] border-b-2 ${
+                  className={`h-full inline-flex items-center gap-1.5 px-2.5 md:px-3.5 text-xs md:text-sm font-bold tracking-[-0.005em] whitespace-nowrap transition-colors duration-[120ms] border-b-2 ${
                     isActive
                       ? "text-navy border-amber"
                       : isOpen
@@ -152,7 +152,7 @@ export default function Navigation() {
 
                 {/* SECTOR mega-dropdown */}
                 {tab.hasSectorDrop && isOpen && (
-                  <div
+                  <div className="hidden md:block"
                     className="absolute top-full left-0 pt-2 z-[60]"
                     onMouseEnter={() => handleEnter(tab.href)}
                     onMouseLeave={handleLeave}
@@ -197,7 +197,7 @@ export default function Navigation() {
 
                 {/* COUNTRY mega-dropdown */}
                 {tab.hasCountryDrop && isOpen && (
-                  <div
+                  <div className="hidden md:block"
                     className="absolute top-full right-0 pt-2 z-[60]"
                     onMouseEnter={() => handleEnter(tab.href)}
                     onMouseLeave={handleLeave}
