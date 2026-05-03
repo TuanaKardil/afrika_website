@@ -67,11 +67,11 @@ export default function StatsBar({ stats }: StatsBarProps) {
       aria-label="Ihale istatistikleri"
     >
       <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 md:divide-x-2 divide-white/20">
-        <StatItem label="Aktif Ihale" value={stats.active} />
+        <StatItem label="Aktif İhale" value={stats.active} />
         <StatItem label="Bu Hafta Eklenen" value={stats.addedThisWeek} />
-        <StatItem label="7 Gunde Bitiyor" value={stats.expiringIn7Days} />
+        <StatItem label="7 Günde Bitiyor" value={stats.expiringIn7Days} />
         <StatItem
-          label="Toplam Butce"
+          label="Toplam Bütçe"
           value={stats.totalBudgetUsd}
           format={formatBudgetLabel}
         />

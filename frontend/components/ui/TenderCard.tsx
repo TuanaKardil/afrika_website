@@ -134,7 +134,7 @@ export default function TenderCard({ tender, categoryNameTr }: TenderCardProps) 
     (tender.category_slug ? (CATEGORY_LABELS[tender.category_slug] ?? tender.category_slug) : null);
 
   return (
-    <article className="group flex flex-col rounded-xl shadow-card bg-surface-container overflow-hidden hover:scale-[1.02] hover:shadow-lg transition-all duration-250">
+    <article className="group flex flex-col rounded-xl shadow-card bg-surface-container overflow-hidden md:hover:scale-[1.02] md:hover:shadow-lg transition-all duration-250">
       <div className="flex flex-col flex-1 p-4 gap-3">
         {/* Top row: status badge + category chip */}
         <div className="flex flex-wrap items-center gap-2">
