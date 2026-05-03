@@ -18,20 +18,10 @@ export default function HeroSection({
   const href = `/haber/${article.slug}`;
   const category = resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags);
 
-  const hasTop = topArticles.length > 0;
-
   return (
     <section className="bg-white pt-6">
       <div className="max-w-container mx-auto px-6">
-        <div
-          className={`grid gap-5 ${
-            hasTop
-              ? "md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,0.9fr)]"
-              : secondaryArticles.length > 0
-              ? "md:grid-cols-[2fr_1fr]"
-              : "grid-cols-1"
-          }`}
-        >
+        <div className="grid gap-5 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,0.9fr)]">
           {/* Lead card with full overlay */}
           <Link
             href={href}
@@ -71,9 +61,8 @@ export default function HeroSection({
             </div>
           </Link>
 
-          {/* Secondary cards — always render column when sidebar present to keep 3-col layout */}
-          {(secondaryArticles.length > 0 || hasTop) && (
-            <div className="flex flex-col gap-4 h-full">
+          {/* Secondary cards — always render column */}
+          <div className="flex flex-col gap-4 h-full">
               {secondaryArticles.slice(0, 2).map((sec) => (
                 <Link
                   key={sec.id}
@@ -103,11 +92,9 @@ export default function HeroSection({
                 </Link>
               ))}
             </div>
-          )}
 
-          {/* EN ÇOK OKUNANLAR sidebar */}
-          {hasTop && (
-            <div className="flex flex-col">
+          {/* EN ÇOK OKUNANLAR sidebar — always render column */}
+          <div className="flex flex-col">
               {/* Eyebrow */}
               <div className="border-t-2 border-primary mb-3" />
               <div className="text-[13px] font-black tracking-[0.1em] uppercase text-navy mb-3.5">
@@ -143,8 +130,7 @@ export default function HeroSection({
                   );
                 })}
               </ol>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </section>
