@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" fill="#0a2351"></rect>
+  <rect x="8" y="14" width="6" height="36" fill="#f5b800"></rect>
+  <text x="20" y="42" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="28" fill="#ffffff" letter-spacing="-1">AH</text>
+</svg>

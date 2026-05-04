@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Ülke Haberleri — Afrika Haberleri</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="responsive.css"/>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #212529; }
+  @keyframes ahPulse { 0% { box-shadow: 0 0 0 0 rgba(196,30,58,0.7); } 70% { box-shadow: 0 0 0 8px rgba(196,30,58,0); } 100% { box-shadow: 0 0 0 0 rgba(196,30,58,0); } }
+  @keyframes ahMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  input::placeholder { color: rgba(255,255,255,0.55); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js?v=9"></script>
+<script type="text/babel" src="Header.jsx"></script>
+<script type="text/babel" src="Nav.jsx"></script>
+<script type="text/babel" src="BreakingTicker.jsx"></script>
+<script type="text/babel" src="RegionBar.jsx"></script>
+<script type="text/babel" src="ArticleCard.jsx"></script>
+<script type="text/babel" src="Footer.jsx"></script>
+
+<script type="text/babel">
+  const D = window.AH_DATA;
+
+  const COUNTRY_LIST = [
+    { name: "Nijerya", slug: "nijerya", region: "Batı Afrika" },
+    { name: "Senegal", slug: "senegal", region: "Batı Afrika" },
+    { name: "Gana", slug: "gana", region: "Batı Afrika" },
+    { name: "Fildişi Sahili", slug: "fildisi", region: "Batı Afrika" },
+    { name: "Mali", slug: "mali", region: "Batı Afrika" },
+    { name: "Burkina Faso", slug: "burkina-faso", region: "Batı Afrika" },
+    { name: "Nijer", slug: "nijer", region: "Batı Afrika" },
+    { name: "Gine", slug: "gine", region: "Batı Afrika" },
+    { name: "Benin", slug: "benin", region: "Batı Afrika" },
+    { name: "Togo", slug: "togo", region: "Batı Afrika" },
+  ];
+
+  const BASE = [D.LEAD_ARTICLE, ...D.SECONDARY, ...D.SECTOR_BLOCK, ...D.COUNTRY_BLOCK,
+    ...D.SIDEBAR_LIST.map(a => ({ ...a, imgGrad: "linear-gradient(135deg,#143063,#1e6fb8)", excerpt: "Detaylar için habere göz atın." }))];
+  const POOL = [];
+  BASE.forEach((a, i) => {
+    POOL.push({ ...a, country: COUNTRY_LIST[i % COUNTRY_LIST.length].name, id: a.id + "-a" });
+    POOL.push({ ...a, country: COUNTRY_LIST[(i + 4) % COUNTRY_LIST.length].name, id: a.id + "-b" });
+  });
+
+  const getQS = (k) => new URLSearchParams(location.search).get(k);
+
+  const App = () => {
+    const initial = getQS("ulke");
+    const initialSet = new Set();
+    if (initial) {
+      const c = COUNTRY_LIST.find(x => x.slug === initial);
+      if (c) initialSet.add(c.name);
+    }
+    const [selected, setSelected] = React.useState(initialSet);
+    const [q, setQ] = React.useState("");
+
+    const toggle = (name) => {
+      const n = new Set(selected);
+      if (n.has(name)) n.delete(name); else n.add(name);
+      setSelected(n);
+    };
+    const allSelected = selected.size === 0;
+
+    const filtered = POOL.filter(a => {
+      if (!allSelected && !selected.has(a.country)) return false;
+      if (q && !a.title.toLowerCase().includes(q.toLowerCase())) return false;
+      return true;
+    });
+
+    return (
+      <div data-screen-label="Ülke Haberleri">
+        <Header />
+        <Nav />
+        <RegionBar />
+        <BreakingTicker />
+
+        <section style={s.head}>
+          <div style={s.headInner}>
+            <div style={s.crumbs}>
+              <a href="index.html" style={s.crumb}>Anasayfa</a>
+              <span style={s.sep}>/</span>
+              <span style={s.crumbActive}>Ülke Haberleri</span>
+            </div>
+            <div style={s.titleRow}>
+              <div>
+                <div style={s.eyebrow}>ÜLKE ARŞİVİ</div>
+                <h1 style={s.h1}>Ülke Haberleri</h1>
+                <div style={s.sub}>Birden fazla ülke seçerek haberleri kombinleyin · {filtered.length} haber</div>
+              </div>
+              <div style={s.searchBox}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a2351" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ülke haberlerinde ara…" style={s.searchInput}/>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div style={s.filterBar}>
+          <div style={s.filterInner}>
+            <div style={s.filterTop}>
+              <div>
+                <div style={s.filterTitle}>ÜLKE FİLTRESİ</div>
+                <div style={s.filterHelper}>Birden fazla ülke seçebilirsiniz; sonuçlar otomatik kombinlenir.</div>
+              </div>
+              <div style={s.filterMeta}>
+                <span style={s.countBadge}>{selected.size === 0 ? "TÜM ÜLKELER" : `${selected.size} ÜLKE SEÇİLİ`}</span>
+                {selected.size > 0 && (
+                  <a href="#" onClick={(e) => { e.preventDefault(); setSelected(new Set()); }} style={s.clear}>✕ Temizle</a>
+                )}
+              </div>
+            </div>
+
+            <div style={s.chipGrid}>
+              <a href="#" onClick={(e) => { e.preventDefault(); setSelected(new Set()); }}
+                 style={{
+                   ...s.chip,
+                   background: allSelected ? "#0a2351" : "#fff",
+                   color: allSelected ? "#fff" : "#0a2351",
+                   borderColor: "#0a2351",
+                   fontWeight: 800,
+                 }}>
+                {allSelected && <span style={s.tick}>✓ </span>}Tüm Ülkeler
+              </a>
+              {COUNTRY_LIST.map(c => {
+                const on = selected.has(c.name);
+                return (
+                  <a key={c.slug} href="#"
+                     onClick={(e) => { e.preventDefault(); toggle(c.name); }}
+                     style={{
+                       ...s.chip,
+                       background: on ? "#1e6fb8" : "#fff",
+                       color: on ? "#fff" : "#212529",
+                       borderColor: on ? "#1e6fb8" : "#e5e7eb",
+                       fontWeight: on ? 700 : 600,
+                     }}>
+                    {on && <span style={s.tick}>✓ </span>}
+                    {c.name}
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {selected.size > 0 && (
+          <div style={s.activeWrap}>
+            <div style={s.activeInner}>
+              <span style={s.activeLabel}>SEÇİLİ ÜLKELER:</span>
+              {[...selected].map(name => (
+                <span key={name} style={s.activeChip}>
+                  {name}
+                  <span onClick={() => toggle(name)} style={s.x}>✕</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <section style={s.results}>
+          {filtered.length === 0 ? (
+            <div style={s.empty}>
+              <div style={s.emptyIcon}>📭</div>
+              <div style={s.emptyTitle}>Sonuç bulunamadı</div>
+              <div style={s.emptySub}>Farklı bir ülke seçin veya arama terimini değiştirin.</div>
+            </div>
+          ) : (
+            <div className="ah-grid-4" style={s.grid}>
+              {filtered.map(a => (
+                <ArticleCard key={a.id} article={a} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <Footer />
+      </div>
+    );
+  };
+
+  const s = {
+    head: { background: "#f6f7f9", borderBottom: "1px solid #e5e7eb", paddingTop: 28, paddingBottom: 32 },
+    headInner: { maxWidth: 1280, margin: "0 auto", padding: "0 24px" },
+    crumbs: { display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 18 },
+    crumb: { color: "#1e6fb8", textDecoration: "none" },
+    sep: { color: "#9ca3af" },
+    crumbActive: { color: "#6b7280" },
+    titleRow: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 24, flexWrap: "wrap" },
+    eyebrow: { fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", color: "#1e6fb8", marginBottom: 8 },
+    h1: { fontSize: 44, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.025em", color: "#0a2351", margin: 0 },
+    sub: { fontSize: 13, color: "#6b7280", marginTop: 10 },
+    searchBox: { display: "flex", alignItems: "center", gap: 10, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 2, padding: "0 14px", height: 44, width: 320 },
+    searchInput: { background: "transparent", border: 0, outline: 0, flex: 1, fontFamily: "inherit", fontSize: 14, color: "#212529" },
+
+    filterBar: { background: "#fff", borderBottom: "1px solid #e5e7eb" },
+    filterInner: { maxWidth: 1280, margin: "0 auto", padding: "20px 24px" },
+    filterTop: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, gap: 16, flexWrap: "wrap" },
+    filterTitle: { fontSize: 12, fontWeight: 800, letterSpacing: "0.1em", color: "#0a2351" },
+    filterHelper: { fontSize: 12, color: "#6b7280", marginTop: 4 },
+    filterMeta: { display: "flex", alignItems: "center", gap: 12 },
+    countBadge: { fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", padding: "5px 10px", background: "#0a2351", color: "#fff", borderRadius: 2 },
+    clear: { fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: "#c41e3a", textDecoration: "none", textTransform: "uppercase" },
+
+    chipGrid: { display: "flex", flexWrap: "wrap", gap: 6 },
+    chip: { display: "inline-flex", alignItems: "center", gap: 4, padding: "7px 13px", border: "1px solid", fontSize: 12, fontWeight: 600, letterSpacing: "-0.005em", textDecoration: "none", borderRadius: 2, whiteSpace: "nowrap", cursor: "pointer" },
+    tick: { fontWeight: 800, fontSize: 11 },
+
+    activeWrap: { background: "#fff8e0", borderBottom: "1px solid #f5b800" },
+    activeInner: { maxWidth: 1280, margin: "0 auto", padding: "10px 24px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" },
+    activeLabel: { fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#0a2351" },
+    activeChip: { display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600, padding: "4px 10px", background: "#0a2351", color: "#fff", borderRadius: 2 },
+    x: { cursor: "pointer", opacity: 0.7, fontSize: 10 },
+
+    results: { maxWidth: 1280, margin: "0 auto", padding: "32px 24px 0" },
+    grid: { display: "grid", gridTemplateColumns: "repeat(4, minmax(0,1fr))", gap: 20, alignItems: "stretch" },
+    empty: { padding: "80px 24px", textAlign: "center" },
+    emptyIcon: { fontSize: 40, marginBottom: 14 },
+    emptyTitle: { fontSize: 22, fontWeight: 800, color: "#0a2351", marginBottom: 6, letterSpacing: "-0.01em" },
+    emptySub: { fontSize: 14, color: "#6b7280" },
+  };
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

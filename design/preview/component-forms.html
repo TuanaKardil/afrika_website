@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"/>
+<style>
+  body{margin:0;padding:24px;font-family:"Inter",system-ui,sans-serif;background:#fff;color:#212529}
+  .stack{display:flex;flex-direction:column;gap:14px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .lab{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280}
+  .input,.select{font-family:inherit;font-size:14px;height:38px;padding:0 12px;border:1px solid #e5e7eb;border-radius:2px;background:#fff;color:#212529;outline:0}
+  .input:focus,.select:focus{border-color:#1e6fb8;box-shadow:0 0 0 2px rgba(30,111,184,0.20)}
+  .search{display:flex;align-items:center;background:#f7f8fa;border:1px solid #e5e7eb;border-radius:2px;padding:0 12px;height:38px;gap:8px}
+  .search input{border:0;background:transparent;outline:0;flex:1;font-family:inherit;font-size:14px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .check{display:flex;align-items:center;gap:8px;font-size:14px}
+  .box{width:16px;height:16px;border:1px solid #d1d5db;border-radius:2px}
+  .box.on{background:#0a2351;border-color:#0a2351;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800}
+</style></head>
+<body>
+<div class="stack">
+  <div class="search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input placeholder="Haberlerde ara…"/>
+  </div>
+  <div class="row">
+    <div class="field"><label class="lab">Sektör</label><select class="select"><option>Enerji</option><option>İnşaat</option></select></div>
+    <div class="field"><label class="lab">Bölge</label><select class="select"><option>Batı Afrika</option></select></div>
+  </div>
+  <div class="field">
+    <label class="lab">E-posta</label>
+    <input class="input" value="okuyucu@ornek.com"/>
+  </div>
+  <div style="display:flex;gap:18px">
+    <label class="check"><span class="box on">✓</span>Günlük bülten</label>
+    <label class="check"><span class="box"></span>Haftalık özet</label>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"/><link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body{margin:0;padding:20px;font-family:"Inter",system-ui,sans-serif;background:#fff}
+  .row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .item{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #e5e7eb;border-radius:2px}
+  .num{font-size:20px;font-weight:700;font-feature-settings:"tnum";letter-spacing:-0.01em}
+  .label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280}
+  .name{font-size:13px;color:#212529;font-weight:600}
+  .arrow{font-size:14px;font-weight:700}
+</style></head>
+<body>
+<div class="row">
+  <div class="item">
+    <div style="width:32px;height:32px;background:#2e8b3d;border-radius:2px;display:flex;align-items:center;justify-content:center;color:#fff" class="arrow">↑</div>
+    <div>
+      <div class="label">Pozitif / Yükseliş</div>
+      <div class="num" style="color:#2e8b3d">+%4,2</div>
+    </div>
+  </div>
+  <div class="item">
+    <div style="width:32px;height:32px;background:#c41e3a;border-radius:2px;display:flex;align-items:center;justify-content:center;color:#fff" class="arrow">↓</div>
+    <div>
+      <div class="label">Negatif / Düşüş</div>
+      <div class="num" style="color:#c41e3a">−%2,1</div>
+    </div>
+  </div>
+  <div class="item">
+    <div style="width:32px;height:32px;background:#f5b800;border-radius:2px;display:flex;align-items:center;justify-content:center;color:#0a2351;font-weight:800">!</div>
+    <div>
+      <div class="label">Uyarı / Canlı</div>
+      <div class="num" style="color:#0a2351">CANLI</div>
+    </div>
+  </div>
+  <div class="item">
+    <div style="width:32px;height:32px;background:#1e6fb8;border-radius:2px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800">i</div>
+    <div>
+      <div class="label">Bilgi / Link</div>
+      <div class="num" style="color:#1e6fb8">DEVAMI</div>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Haber — Afrika Haberleri</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="responsive.css"/>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #212529; }
+  @keyframes ahPulse { 0% { box-shadow: 0 0 0 0 rgba(196,30,58,0.7); } 70% { box-shadow: 0 0 0 8px rgba(196,30,58,0); } 100% { box-shadow: 0 0 0 0 rgba(196,30,58,0); } }
+  @keyframes ahMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .article-body p { font-size: 17px; line-height: 1.75; color: #212529; margin: 0 0 18px; letter-spacing: -0.005em; }
+  .article-body p.lead { font-size: 20px; line-height: 1.55; color: #0a2351; font-weight: 600; margin-bottom: 26px; }
+  .article-body h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.015em; color: #0a2351; margin: 32px 0 14px; }
+  .article-body blockquote { margin: 28px 0; padding: 18px 22px; border-left: 4px solid #f5b800; background: #f6f7f9; font-size: 18px; line-height: 1.55; font-weight: 600; color: #0a2351; }
+  .article-body ul { padding-left: 22px; margin: 0 0 22px; }
+  .article-body li { font-size: 16px; line-height: 1.7; margin-bottom: 8px; }
+  .article-body ::selection,
+  .article-body::selection { background: #fff2a8; color: #0a2351; }
+  .article-body ::-moz-selection,
+  .article-body::-moz-selection { background: #fff2a8; color: #0a2351; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js?v=10"></script>
+<script type="text/babel" src="Header.jsx"></script>
+<script type="text/babel" src="Nav.jsx"></script>
+<script type="text/babel" src="BreakingTicker.jsx"></script>
+<script type="text/babel" src="RegionBar.jsx"></script>
+<script type="text/babel" src="ArticleCard.jsx"></script>
+<script type="text/babel" src="Footer.jsx"></script>
+
+<script type="text/babel">
+  const D = window.AH_DATA;
+
+  // Build a flat lookup of every article in the demo
+  const ALL = [
+    D.LEAD_ARTICLE,
+    ...D.SECONDARY,
+    ...D.SECTOR_BLOCK,
+    ...D.COUNTRY_BLOCK,
+    ...D.SIDEBAR_LIST.map(a => ({ ...a, imgGrad: "linear-gradient(135deg,#143063,#1e6fb8)" })),
+    ...D.POPULAR.map(a => ({ ...a, ago: "1 GÜN ÖNCE", imgGrad: "linear-gradient(135deg,#0a2351,#1e6fb8)" })),
+  ];
+  const findArticle = (id) => {
+    if (!id) return D.LEAD_ARTICLE;
+    // ?ulke= and ?sektor= pages append -a / -b suffixes
+    const baseId = id.replace(/-[ab]$/, "");
+    return ALL.find(a => a.id === id) || ALL.find(a => a.id === baseId) || D.LEAD_ARTICLE;
+  };
+
+  const getQS = (k) => new URLSearchParams(location.search).get(k);
+
+  // Generic body content (the same boilerplate works for every demo article)
+  const Body = ({ a }) => (
+    <div className="article-body">
+      <p className="lead">{a.excerpt || "Detaylar için makaleyi okumaya devam edin."}</p>
+
+      <p>İlgili sektör temsilcileri, gelişmenin Afrika pazarında Türk şirketleri için stratejik bir dönüm noktası olduğunu belirtti. Konsorsiyumun kazandığı ihale, hem yerel istihdam yaratma kapasitesi hem de yan sanayide yaratacağı katma değer açısından bölge ekonomisi için önemli görülüyor.</p>
+
+      <p>Söz konusu projenin finansman yapısı, Türkiye İhracat Kredi Bankası (Türk Eximbank) ile yerel finans kuruluşları arasında yapılan işbirliğiyle şekillendirildi. Anlaşmaya göre proje teslim takvimi 18 ila 24 ay arasında değişecek.</p>
+
+      <h2>Bölgesel etki</h2>
+      <p>Proje sahasının yer aldığı bölge, son beş yılda yıllık ortalama yüzde 6,4 büyüme kaydetti. Yetkililer, altyapı yatırımlarının önümüzdeki dönemde de aynı ivmeyle süreceğini belirtti. Türk müteahhitlik sektörü, yalnızca son on iki ayda bölgede toplam 8,7 milyar dolarlık iş hacmine ulaşmış durumda.</p>
+
+      <blockquote>"Bu anlaşma, Türk firmalarının Afrika kıtasında uzun vadeli iş ortaklıkları kurma kapasitesinin somut bir göstergesidir."</blockquote>
+
+      <h2>Sırada ne var?</h2>
+      <p>Önümüzdeki haftalarda proje sahasında ön incelemeler tamamlanacak ve ilk kazma vuruş töreninin yıl bitmeden gerçekleştirilmesi bekleniyor. Yetkililer ayrıca, projenin tamamlanmasının ardından bölgedeki diğer ülkelerde benzer ihalelere katılım planlandığını duyurdu.</p>
+
+      <ul>
+        <li>Proje süresi: 18-24 ay</li>
+        <li>Toplam istihdam: 4.200 doğrudan, 12.000 dolaylı</li>
+        <li>Yerel tedarikçi katılımı: en az %35</li>
+        <li>İlk teslim: 2027 üçüncü çeyrek</li>
+      </ul>
+
+      <p>Sektör analistleri, anlaşmanın benzer projeler için referans değer taşıdığını ve özellikle Türk demir-çelik, çimento ve makine üreticileri için ek ihracat fırsatları yaratacağını ifade etti.</p>
+    </div>
+  );
+
+  const RelatedCard = ({ a }) => (
+    <a href={`haber.html?id=${encodeURIComponent(a.id)}`} style={rs.related}>
+      <div style={{...rs.relImg, background: a.imgGrad || "linear-gradient(135deg,#143063,#1e6fb8)"}}></div>
+      <div style={rs.relBody}>
+        <div style={rs.relMeta}><span style={rs.relDot}></span>{a.ago} • {a.category}</div>
+        <div style={rs.relTitle}>{a.title}</div>
+      </div>
+    </a>
+  );
+
+  const App = () => {
+    const id = getQS("id");
+    const a = findArticle(id);
+
+    // Pick 4 related (anything but current)
+    const related = ALL.filter(x => x.id !== a.id).slice(0, 4);
+
+    return (
+      <div data-screen-label="Haber">
+        <Header />
+        <Nav />
+        <RegionBar />
+        <BreakingTicker />
+
+        {/* Hero */}
+        <section style={rs.hero}>
+          <div style={rs.heroInner}>
+            <div style={rs.crumbs}>
+              <a href="index.html" style={rs.crumb}>Anasayfa</a>
+              <span style={rs.sep}>/</span>
+              <a href="sektor-haberleri.html" style={rs.crumb}>{a.category}</a>
+              <span style={rs.sep}>/</span>
+              <span style={rs.crumbActive}>Haber</span>
+            </div>
+            <div style={rs.kicker}>
+              <span style={rs.kickDot}></span>
+              {a.ago} • {a.category}
+            </div>
+            <h1 style={rs.h1}>{a.title}</h1>
+            <p style={rs.subhead}>{a.excerpt || "Detayları yazıda bulabilirsiniz."}</p>
+
+            <div style={rs.byline}>
+              <div style={rs.avatar}>AH</div>
+              <div>
+                <div style={rs.byName}>Afrika Haberleri Masası</div>
+                <div style={rs.byMeta}>1 Mayıs 2026 • 4 dk okuma</div>
+              </div>
+              <div style={rs.shareGroup}>
+                <a href="#" style={rs.shareBtn} aria-label="Paylaş">↗ Paylaş</a>
+                <a href="#" style={rs.shareBtn} aria-label="Kaydet">☆ Kaydet</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Hero image */}
+        <div style={rs.imgWrap}>
+          <div style={{...rs.heroImg, background: a.imgGrad || "linear-gradient(135deg,#143063,#1e6fb8)"}}></div>
+          <div style={rs.caption}>Foto: {a.category} muhabirimiz</div>
+        </div>
+
+        {/* Body + Sidebar */}
+        <section style={rs.bodyWrap}>
+          <div className="ah-article-grid" style={rs.bodyGrid}>
+            <article style={rs.article}>
+              <Body a={a} />
+
+              {/* Tags */}
+              <div style={rs.tags}>
+                <span style={rs.tagsLabel}>ETİKETLER</span>
+                {[a.category, "Afrika", "Türkiye", "İhale", "Yatırım"].map(t => (
+                  <a key={t} href="#" style={rs.tag}>{t}</a>
+                ))}
+              </div>
+            </article>
+
+            <aside style={rs.sidebar}>
+              <div style={rs.sideBlock}>
+                <div style={rs.sideRule}></div>
+                <div style={rs.sideHead}>EN ÇOK OKUNANLAR</div>
+                <ul style={rs.popList}>
+                  {D.POPULAR.slice(0, 4).map((p, i) => (
+                    <li key={p.id} style={rs.popLi}>
+                      <a href={`haber.html?id=${encodeURIComponent(p.id)}`} style={rs.popLk}>
+                        <span style={rs.popNum}>{String(i + 1).padStart(2, "0")}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={rs.popMeta}>
+                            <span style={rs.popDot}></span>
+                            {p.ago || "2 SAAT ÖNCE"} • {p.category}
+                          </div>
+                          <div style={rs.popTitle}>{p.title}</div>
+                        </div>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div style={rs.newsletter}>
+                <div style={rs.nlEyebrow}>BÜLTEN</div>
+                <div style={rs.nlTitle}>Sabahları 5 dakikada Afrika gündemi</div>
+                <div style={rs.nlForm}>
+                  <input placeholder="E-posta adresiniz" style={rs.nlInput}/>
+                  <button style={rs.nlBtn}>ABONE OL</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        {/* Related */}
+        <section style={rs.relatedWrap}>
+          <div style={rs.relatedInner}>
+            <div style={rs.relatedHead}>
+              <div style={rs.relatedEyebrow}>İLGİLİ HABERLER</div>
+              <div style={rs.relatedTitle}>Bunları da okuyun</div>
+            </div>
+            <div style={rs.relatedGrid}>
+              {related.map(r => <RelatedCard key={r.id} a={r} />)}
+            </div>
+          </div>
+        </section>
+
+        <Footer />
+      </div>
+    );
+  };
+
+  const rs = {
+    hero: { background: "#f6f7f9", borderBottom: "1px solid #e5e7eb", paddingTop: 32, paddingBottom: 28 },
+    heroInner: { maxWidth: 880, margin: "0 auto", padding: "0 24px" },
+    crumbs: { display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 22 },
+    crumb: { color: "#1e6fb8", textDecoration: "none" },
+    sep: { color: "#9ca3af" },
+    crumbActive: { color: "#6b7280" },
+    kicker: { display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", color: "#c41e3a", marginBottom: 18 },
+    kickDot: { width: 8, height: 8, borderRadius: "50%", background: "#c41e3a", animation: "ahPulse 1.6s infinite" },
+    h1: { fontSize: 48, fontWeight: 800, lineHeight: 1.08, letterSpacing: "-0.025em", color: "#0a2351", margin: "0 0 18px" },
+    subhead: { fontSize: 19, lineHeight: 1.55, color: "#4a5159", margin: "0 0 28px", fontWeight: 500 },
+
+    byline: { display: "flex", alignItems: "center", gap: 12, paddingTop: 18, borderTop: "1px solid #e5e7eb", flexWrap: "wrap" },
+    avatar: { width: 40, height: 40, borderRadius: "50%", background: "#0a2351", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, letterSpacing: "0.04em" },
+    byName: { fontSize: 13, fontWeight: 700, color: "#0a2351" },
+    byMeta: { fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", color: "#6b7280", textTransform: "uppercase", marginTop: 2 },
+    shareGroup: { marginLeft: "auto", display: "flex", gap: 8 },
+    shareBtn: { fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", padding: "8px 14px", border: "1px solid #d1d5db", color: "#0a2351", textDecoration: "none", textTransform: "uppercase", borderRadius: 2 },
+
+    imgWrap: { maxWidth: 760, margin: "0 auto", padding: "24px 24px 0" },
+    heroImg: { width: "100%", aspectRatio: "16/9" },
+    caption: { fontSize: 12, color: "#6b7280", marginTop: 8, fontStyle: "italic" },
+
+    bodyWrap: { padding: "40px 0 48px" },
+    bodyGrid: { maxWidth: 1100, margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "minmax(0, 640px) 1fr", gap: 56, alignItems: "start" },
+    article: { minWidth: 0 },
+
+    tags: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, paddingTop: 28, marginTop: 28, borderTop: "1px solid #e5e7eb" },
+    tagsLabel: { fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#0a2351", marginRight: 4 },
+    tag: { fontSize: 12, fontWeight: 600, padding: "5px 11px", border: "1px solid #e5e7eb", color: "#212529", textDecoration: "none", borderRadius: 2 },
+
+    sidebar: { position: "sticky", top: 120, display: "flex", flexDirection: "column", gap: 24 },
+    sideBlock: { background: "#fff", padding: 0 },
+    sideRule: { borderTop: "2px solid #1e6fb8", marginBottom: 12 },
+    sideHead: { fontSize: 13, fontWeight: 800, letterSpacing: "0.1em", color: "#0a2351", marginBottom: 14 },
+    popList: { listStyle: "none", margin: 0, padding: 0 },
+    popLi: { borderBottom: "1px solid #e5e7eb", padding: "12px 0" },
+    popLk: { display: "flex", gap: 12, alignItems: "flex-start", textDecoration: "none", color: "inherit" },
+    popNum: { fontSize: 13, fontWeight: 700, color: "#9ca3af", lineHeight: 1.4, letterSpacing: "0.04em", fontFeatureSettings: '"tnum" 1', minWidth: 18, paddingTop: 1 },
+    popMeta: { fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "#6b7280", display: "flex", alignItems: "center", gap: 6, marginBottom: 4, textTransform: "uppercase" },
+    popDot: { width: 5, height: 5, borderRadius: "50%", background: "#f5b800" },
+    popTitle: { fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: "#212529", letterSpacing: "-0.005em" },
+
+    newsletter: { background: "#0a2351", color: "#fff", padding: 18 },
+    nlEyebrow: { fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#f5b800", marginBottom: 6 },
+    nlTitle: { fontSize: 16, fontWeight: 700, lineHeight: 1.25, marginBottom: 12, letterSpacing: "-0.005em" },
+    nlForm: { display: "flex", gap: 6 },
+    nlInput: { flex: 1, padding: "8px 10px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: 12, fontFamily: "inherit", outline: "none" },
+    nlBtn: { padding: "8px 12px", background: "#f5b800", color: "#0a2351", border: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", cursor: "pointer" },
+
+    relatedWrap: { background: "#f6f7f9", borderTop: "1px solid #e5e7eb", padding: "40px 0 56px" },
+    relatedInner: { maxWidth: 1280, margin: "0 auto", padding: "0 24px" },
+    relatedHead: { marginBottom: 22 },
+    relatedEyebrow: { fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#1e6fb8", marginBottom: 6 },
+    relatedTitle: { fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", color: "#0a2351" },
+    relatedGrid: { display: "grid", gridTemplateColumns: "repeat(4, minmax(0,1fr))", gap: 16 },
+
+    related: { display: "flex", flexDirection: "column", textDecoration: "none", color: "inherit", background: "#fff", border: "1px solid #e5e7eb", height: "100%" },
+    relImg: { width: "100%", aspectRatio: "16/9" },
+    relBody: { padding: 14, flex: 1, display: "flex", flexDirection: "column" },
+    relMeta: { fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "#6b7280", display: "flex", alignItems: "center", gap: 6, marginBottom: 8 },
+    relDot: { width: 6, height: 6, borderRadius: "50%", background: "#f5b800" },
+    relTitle: { fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: "#212529", letterSpacing: "-0.005em" },
+  };
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

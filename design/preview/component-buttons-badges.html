@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"/>
+<style>
+  body{margin:0;padding:24px;font-family:"Inter",system-ui,sans-serif;background:#fff;color:#212529}
+  .group{display:flex;flex-direction:column;gap:18px}
+  .label{font-size:10px;font-weight:600;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:8px 14px;border-radius:2px;border:0;cursor:pointer;letter-spacing:-0.005em;font-family:inherit}
+  .btn.primary{background:#0a2351;color:#fff}
+  .btn.secondary{background:#fff;color:#0a2351;border:1px solid #0a2351}
+  .btn.tertiary{background:transparent;color:#1e6fb8;padding:8px 0}
+  .btn.amber{background:#f5b800;color:#0a2351}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:2px}
+  .badge.live{background:#c41e3a;color:#fff}
+  .badge.cat{background:#0a2351;color:#fff}
+  .badge.tag{background:#eef1f5;color:#0a2351}
+  .badge.up{background:rgba(46,139,61,0.12);color:#2e8b3d}
+  .pulse{width:6px;height:6px;background:#fff;border-radius:50%}
+</style></head>
+<body>
+<div class="group">
+  <div>
+    <div class="label">Buttons</div>
+    <div class="row">
+      <button class="btn primary">Daha Fazla</button>
+      <button class="btn secondary">Filtrele</button>
+      <button class="btn amber">Bültene Abone Ol</button>
+      <button class="btn tertiary">Tümünü Gör →</button>
+    </div>
+  </div>
+  <div>
+    <div class="label">Badges</div>
+    <div class="row">
+      <span class="badge live"><span class="pulse"></span>CANLI</span>
+      <span class="badge cat">SEKTÖRLER</span>
+      <span class="badge tag">ENERJİ</span>
+      <span class="badge tag">NİJERYA</span>
+      <span class="badge up">↑ %4,2</span>
+    </div>
+  </div>
+</div>
+</body></html>

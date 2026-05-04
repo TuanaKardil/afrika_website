@@ -1,0 +1,36 @@
+# Verification and Confirmation Procedure
+
+After completing the task, run the following loop in full. Do not tell the user you are done until this loop is complete.
+
+## Procedure
+
+### 1. Apply the Task
+Implement the requested change.
+
+### 2. Take a Screenshot
+- Use the browser/screenshot tool to navigate to the relevant page.
+- Take a screenshot and observe the result.
+
+### 3. Verify
+Is the expected change visible in the screenshot?
+
+- **YES:** Move to Step 4.
+- **NO:** Analyze what went wrong, apply the fix, go back to Step 2.
+
+### 4. Second Confirmation Screenshot
+If a fix was applied, take another screenshot and verify the final state.
+
+- Still incorrect? Go back to Step 3. Do not exit this loop.
+- Correct? Move to Step 5.
+
+### 5. Done
+Only after everything is visually confirmed, write exactly this:
+
+**bitti**
+
+## Rules
+
+- Never write "done" without taking a screenshot first.
+- Never confirm with guesses like "I think it worked" or "it should be fixed". Visual verification is mandatory.
+- Do not count the loops. Keep going until the result is correct.
+- At each loop, briefly state which step you are on: "Taking screenshot...", "Change not visible, reapplying...", etc.

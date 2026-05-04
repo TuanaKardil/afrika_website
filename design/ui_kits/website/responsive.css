@@ -1,0 +1,202 @@
+/* responsive.css — site-wide responsive layout via classes
+   Components opt-in by adding className alongside their inline styles. */
+
+html, body { overflow-x: hidden; }
+
+/* ---------- HERO grid (lead + secondary + sidebar) ---------- */
+.ah-hero-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0,1.6fr) minmax(0,1fr) minmax(0,0.9fr);
+}
+@media (max-width: 1024px) {
+  .ah-hero-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ah-hero-grid > .ah-hero-sidebar {
+    grid-column: 1 / -1 !important;
+    padding-left: 0 !important;
+  }
+}
+@media (max-width: 720px) {
+  .ah-hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .ah-hero-grid > .ah-hero-secondary {
+    grid-column: 1 !important;
+    grid-template-rows: auto auto !important;
+  }
+}
+
+/* Horizontal article cards stack on mobile */
+@media (max-width: 720px) {
+  .ah-card-horz {
+    flex-direction: column !important;
+  }
+  .ah-card-horz > .ah-card-img {
+    width: 100% !important;
+    aspect-ratio: 16/10 !important;
+    min-height: auto !important;
+  }
+}
+
+/* ---------- ARTICLE detail body grid ---------- */
+.ah-article-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 640px) 1fr;
+  gap: 56px;
+  align-items: start;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+@media (max-width: 1024px) {
+  .ah-article-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+    max-width: 760px !important;
+  }
+  .ah-article-grid > aside {
+    position: static !important;
+    top: auto !important;
+  }
+}
+
+/* ---------- PROFILE 2-col layout ---------- */
+.ah-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .ah-profile-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .ah-profile-grid > aside {
+    position: static !important;
+  }
+}
+
+/* ---------- LISTING (haberler / sektor) sidebar layouts ---------- */
+.ah-listing-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .ah-listing-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ---------- HEADER ---------- */
+@media (max-width: 1024px) {
+  .ah-header-search { display: none !important; }
+}
+@media (max-width: 720px) {
+  .ah-header-inner {
+    height: auto !important;
+    min-height: 56px !important;
+    padding: 10px 14px !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+  }
+  .ah-header-subscribe { display: none !important; }
+  .ah-header-logo span:nth-child(2),
+  .ah-header-logo span:nth-child(3) {
+    font-size: 16px !important;
+  }
+}
+
+/* ---------- NAV (horizontal scroll on mobile) ---------- */
+@media (max-width: 1024px) {
+  .ah-nav-inner {
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ah-nav-inner::-webkit-scrollbar { display: none; }
+}
+
+/* ---------- BREAKING TICKER ---------- */
+@media (max-width: 720px) {
+  .ah-breaking { font-size: 12px !important; }
+}
+
+/* ---------- REGION BAR ---------- */
+@media (max-width: 1024px) {
+  .ah-region-inner {
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+  }
+  .ah-region-inner::-webkit-scrollbar { display: none; }
+}
+
+/* ---------- SECTION grids (cards) ---------- */
+@media (max-width: 1024px) {
+  .ah-grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
+  .ah-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 720px) {
+  .ah-grid-2,
+  .ah-grid-3,
+  .ah-grid-4 { grid-template-columns: 1fr !important; }
+}
+
+/* ---------- HERO H1s shrink ---------- */
+@media (max-width: 720px) {
+  .ah-h1-xl { font-size: 28px !important; line-height: 1.15 !important; }
+  .ah-h1-lg { font-size: 22px !important; line-height: 1.18 !important; }
+  .ah-overlay-title { font-size: 22px !important; }
+  .ah-hero-padding { padding: 18px 18px 20px !important; }
+}
+
+/* ---------- FOOTER ---------- */
+@media (max-width: 1024px) {
+  .ah-footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 720px) {
+  .ah-footer-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ---------- PROFILE hero stats ---------- */
+@media (max-width: 1024px) {
+  .ah-profile-hero {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .ah-stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
+}
+@media (max-width: 720px) {
+  .ah-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ---------- TABS scroll ---------- */
+@media (max-width: 720px) {
+  .ah-tabs-inner {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none;
+  }
+  .ah-tabs-inner::-webkit-scrollbar { display: none; }
+}
+
+/* ---------- Container padding tighten ---------- */
+@media (max-width: 720px) {
+  .ah-container { padding-left: 16px !important; padding-right: 16px !important; }
+}
+
+/* ---------- IHALE STRIP ---------- */
+@media (max-width: 720px) {
+  .ah-ihale-stats { grid-template-columns: 1fr !important; }
+  .ah-ihale-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+    padding: 14px !important;
+  }
+}

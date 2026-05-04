@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Profilim — Afrika Haberleri</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="responsive.css"/>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #212529; }
+  @keyframes ahPulse { 0% { box-shadow: 0 0 0 0 rgba(196,30,58,0.7); } 70% { box-shadow: 0 0 0 8px rgba(196,30,58,0); } 100% { box-shadow: 0 0 0 0 rgba(196,30,58,0); } }
+  @keyframes ahMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js?v=10"></script>
+<script type="text/babel" src="Header.jsx"></script>
+<script type="text/babel" src="Nav.jsx"></script>
+<script type="text/babel" src="BreakingTicker.jsx"></script>
+<script type="text/babel" src="RegionBar.jsx"></script>
+<script type="text/babel" src="ArticleCard.jsx"></script>
+<script type="text/babel" src="Footer.jsx"></script>
+
+<script type="text/babel">
+  const D = window.AH_DATA;
+
+  // Mock saved data — in a real app comes from backend
+  const SAVED_ARTICLES = [
+    { ...D.LEAD_ARTICLE, savedAgo: "Bugün" },
+    { ...D.SECONDARY[0], savedAgo: "Dün" },
+    { ...D.SECTOR_BLOCK[1], savedAgo: "3 gün önce" },
+    { ...D.COUNTRY_BLOCK[0], savedAgo: "5 gün önce" },
+    { ...D.SIDEBAR_LIST[2], imgGrad: "linear-gradient(135deg,#143063,#1e6fb8)", savedAgo: "1 hafta önce" },
+    { ...D.SECTOR_BLOCK[3], savedAgo: "2 hafta önce" },
+  ];
+
+  const SAVED_TENDERS = [
+    { id: "t1", title: "Cezayir Otoyol İhalesi — Faz 2", country: "Cezayir", sector: "İnşaat", budget: "$340M", deadline: "12 Haz 2026", daysLeft: 42, status: "Açık" },
+    { id: "t2", title: "Lagos Liman Genişlemesi", country: "Nijerya", sector: "Lojistik", budget: "$1.2Mr", deadline: "28 Mayıs 2026", daysLeft: 27, status: "Açık" },
+    { id: "t3", title: "Senegal Güneş Santrali — 200 MW", country: "Senegal", sector: "Enerji", budget: "$180M", deadline: "5 Haz 2026", daysLeft: 35, status: "Açık" },
+    { id: "t4", title: "Nairobi Metro 2. Hat Finansmanı", country: "Kenya", sector: "Altyapı", budget: "$2.8Mr", deadline: "15 May 2026", daysLeft: 14, status: "Son hafta" },
+    { id: "t5", title: "Mısır Pamuk İhracat Lojistiği", country: "Mısır", sector: "Tekstil", budget: "$45M", deadline: "10 Haz 2026", daysLeft: 40, status: "Açık" },
+  ];
+
+  const ALERTS = [
+    { sector: "İnşaat & Müteahhitlik", on: true, count: 124 },
+    { sector: "Enerji", on: true, count: 87 },
+    { sector: "Savunma Sanayi", on: false, count: 23 },
+    { sector: "Madencilik", on: true, count: 41 },
+  ];
+
+  const ACTIVITY = [
+    { ico: "🔖", text: "Cezayir otoyol ihalesi haberini kaydettiniz", ago: "2 saat önce" },
+    { ico: "🔔", text: "Enerji sektöründe 3 yeni ihale eklendi", ago: "5 saat önce" },
+    { ico: "📨", text: "Haftalık bülten gönderildi", ago: "Dün" },
+    { ico: "🔖", text: "Senegal LNG haberini kaydettiniz", ago: "Dün" },
+    { ico: "👁", text: "İhale detayını görüntülediniz: Lagos Limanı", ago: "2 gün önce" },
+  ];
+
+  const App = () => {
+    const [tab, setTab] = React.useState("haberler"); // haberler | ihaleler | uyarilar | ayarlar
+    const [savedArticles, setSavedArticles] = React.useState(SAVED_ARTICLES);
+    const [savedTenders, setSavedTenders] = React.useState(SAVED_TENDERS);
+    const [alerts, setAlerts] = React.useState(ALERTS);
+
+    const removeArticle = (id) => setSavedArticles(prev => prev.filter(a => a.id !== id));
+    const removeTender = (id) => setSavedTenders(prev => prev.filter(t => t.id !== id));
+    const toggleAlert = (sector) => setAlerts(prev => prev.map(a => a.sector === sector ? { ...a, on: !a.on } : a));
+
+    return (
+      <div data-screen-label="Profilim">
+        <Header />
+        <BreakingTicker />
+        <Nav />
+        <RegionBar />
+
+        {/* Profile hero */}
+        <section style={s.hero}>
+          <div className="ah-profile-hero" style={s.heroInner}>
+            <div style={s.heroLeft}>
+              <div style={s.avatar}>MD</div>
+              <div>
+                <div style={s.welcome}>HOŞ GELDİNİZ</div>
+                <h1 style={s.h1}>Mehmet Demir</h1>
+                <div style={s.heroMeta}>
+                  <span>📧 mehmet.demir@firma.com</span>
+                  <span style={s.metaSep}>•</span>
+                  <span>Üye olma: Mart 2025</span>
+                  <span style={s.metaSep}>•</span>
+                  <span style={s.pro}>PRO ÜYE</span>
+                </div>
+              </div>
+            </div>
+            <div className="ah-stats-grid" style={s.heroRight}>
+              <div style={s.statCard}>
+                <div style={s.statV}>{savedArticles.length}</div>
+                <div style={s.statL}>Kayıtlı Haber</div>
+              </div>
+              <div style={s.statCard}>
+                <div style={s.statV}>{savedTenders.length}</div>
+                <div style={s.statL}>Takip Edilen İhale</div>
+              </div>
+              <div style={s.statCard}>
+                <div style={s.statV}>{alerts.filter(a => a.on).length}</div>
+                <div style={s.statL}>Aktif Uyarı</div>
+              </div>
+              <div style={s.statCard}>
+                <div style={s.statV}>47</div>
+                <div style={s.statL}>Okunan Haber</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Tabs */}
+        <div style={s.tabBar}>
+          <div className="ah-tabs-inner" style={s.tabInner}>
+            {[
+              ["haberler", "Kaydedilen Haberler", savedArticles.length],
+              ["ihaleler", "Takip Edilen İhaleler", savedTenders.length],
+              ["uyarilar", "Sektör Uyarıları", alerts.filter(a => a.on).length],
+              ["ayarlar", "Hesap Ayarları", null],
+            ].map(([k, l, n]) => (
+              <a key={k} href="#" onClick={(e) => { e.preventDefault(); setTab(k); }}
+                 style={{
+                   ...s.tab,
+                   color: tab === k ? "#0a2351" : "#6b7280",
+                   borderBottom: tab === k ? "2px solid #f5b800" : "2px solid transparent",
+                 }}>
+                {l}
+                {n !== null && <span style={s.tabCount}>{n}</span>}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <section style={s.content}>
+          <div style={s.contentInner}>
+            {tab === "haberler" && (
+              <div className="ah-profile-grid" style={s.layout}>
+                <div>
+                  <div style={s.secHead}>
+                    <div>
+                      <div style={s.secEyebrow}>KAYDEDİLENLER</div>
+                      <h2 style={s.secTitle}>Kaydedilen Haberler ({savedArticles.length})</h2>
+                    </div>
+                    <div style={s.toolbar}>
+                      <select style={s.select}>
+                        <option>Tüm Sektörler</option>
+                        <option>İnşaat</option>
+                        <option>Enerji</option>
+                        <option>Savunma</option>
+                      </select>
+                      <select style={s.select}>
+                        <option>En Yeni</option>
+                        <option>En Eski</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {savedArticles.length === 0 ? (
+                    <EmptyState icon="🔖" title="Henüz haber kaydetmediniz" sub="Beğendiğiniz haberlerin sağındaki yer imi simgesine basarak burada saklayabilirsiniz." />
+                  ) : (
+                    <div className="ah-grid-2" style={s.grid}>
+                      {savedArticles.map(a => (
+                        <div key={a.id} style={s.savedCard}>
+                          <a href={`haber.html?id=${encodeURIComponent(a.id)}`} style={s.savedImgLink}>
+                            <div style={{...s.savedImg, background: a.imgGrad || "linear-gradient(135deg,#143063,#1e6fb8)"}}></div>
+                          </a>
+                          <div style={s.savedBody}>
+                            <div style={s.savedMeta}>
+                              <span style={s.dot}></span>
+                              {a.ago} • {a.category}
+                            </div>
+                            <a href={`haber.html?id=${encodeURIComponent(a.id)}`} style={s.savedTitle}>{a.title}</a>
+                            <div style={s.savedFooter}>
+                              <span style={s.savedAgo}>🔖 {a.savedAgo} kaydedildi</span>
+                              <a href="#" onClick={(e) => { e.preventDefault(); removeArticle(a.id); }} style={s.removeBtn}>Kaldır</a>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <ProfileSidebar />
+              </div>
+            )}
+
+            {tab === "ihaleler" && (
+              <div className="ah-profile-grid" style={s.layout}>
+                <div>
+                  <div style={s.secHead}>
+                    <div>
+                      <div style={s.secEyebrow}>TAKİP LİSTESİ</div>
+                      <h2 style={s.secTitle}>Takip Edilen İhaleler ({savedTenders.length})</h2>
+                    </div>
+                    <div style={s.toolbar}>
+                      <select style={s.select}>
+                        <option>Durum: Tümü</option>
+                        <option>Açık</option>
+                        <option>Son hafta</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {savedTenders.length === 0 ? (
+                    <EmptyState icon="📋" title="Takip listenizde ihale yok" sub="İhale detay sayfasından ihale takip edip son tarih uyarıları alabilirsiniz." />
+                  ) : (
+                    <div style={s.tenderList}>
+                      {savedTenders.map(t => (
+                        <div key={t.id} style={s.tender}>
+                          <div style={s.tenderLeft}>
+                            <div style={s.tenderMeta}>
+                              <span style={s.country}>📍 {t.country}</span>
+                              <span style={s.sector}>{t.sector}</span>
+                              <span style={{
+                                ...s.statusBadge,
+                                background: t.status === "Son hafta" ? "#fef2f2" : "#ecfdf5",
+                                color: t.status === "Son hafta" ? "#c41e3a" : "#047857",
+                                borderColor: t.status === "Son hafta" ? "#fecaca" : "#a7f3d0",
+                              }}>{t.status}</span>
+                            </div>
+                            <div style={s.tenderTitle}>{t.title}</div>
+                            <div style={s.tenderInfo}>
+                              <div><span style={s.infoLabel}>Bütçe</span><span style={s.infoValue}>{t.budget}</span></div>
+                              <div><span style={s.infoLabel}>Son Tarih</span><span style={s.infoValue}>{t.deadline}</span></div>
+                              <div>
+                                <span style={s.infoLabel}>Kalan</span>
+                                <span style={{...s.infoValue, color: t.daysLeft <= 14 ? "#c41e3a" : "#0a2351"}}>{t.daysLeft} gün</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div style={s.tenderRight}>
+                            <a href="#" style={s.viewBtn}>DETAY →</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); removeTender(t.id); }} style={s.removeBtn}>Takipten çık</a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <ProfileSidebar />
+              </div>
+            )}
+
+            {tab === "uyarilar" && (
+              <div className="ah-profile-grid" style={s.layout}>
+                <div>
+                  <div style={s.secHead}>
+                    <div>
+                      <div style={s.secEyebrow}>BİLDİRİMLER</div>
+                      <h2 style={s.secTitle}>Sektör Uyarıları</h2>
+                      <div style={s.secSub}>Seçili sektörlerde yeni haber/ihale eklendiğinde e-posta ve uygulama bildirimi alırsınız.</div>
+                    </div>
+                  </div>
+
+                  <div style={s.alertList}>
+                    {alerts.map(a => (
+                      <div key={a.sector} style={s.alertRow}>
+                        <div>
+                          <div style={s.alertSec}>{a.sector}</div>
+                          <div style={s.alertCount}>{a.count} haber bu ay</div>
+                        </div>
+                        <Toggle on={a.on} onChange={() => toggleAlert(a.sector)}/>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={s.alertCta}>
+                    <div>
+                      <div style={s.alertCtaTitle}>Daha fazla sektör eklemek ister misiniz?</div>
+                      <div style={s.alertCtaSub}>26 sektör arasından seçim yapın.</div>
+                    </div>
+                    <a href="sektor-haberleri.html" style={s.primaryBtn}>SEKTÖRLERE GÖZ AT</a>
+                  </div>
+                </div>
+                <ProfileSidebar />
+              </div>
+            )}
+
+            {tab === "ayarlar" && (
+              <div className="ah-profile-grid" style={s.layout}>
+                <div>
+                  <div style={s.secHead}>
+                    <div>
+                      <div style={s.secEyebrow}>HESAP</div>
+                      <h2 style={s.secTitle}>Hesap Ayarları</h2>
+                    </div>
+                  </div>
+
+                  <div style={s.settingsGroup}>
+                    <SettingRow label="Ad Soyad" value="Mehmet Demir" />
+                    <SettingRow label="E-posta" value="mehmet.demir@firma.com" />
+                    <SettingRow label="Telefon" value="+90 532 123 45 67" />
+                    <SettingRow label="Şirket" value="Demir İnşaat A.Ş." />
+                    <SettingRow label="Pozisyon" value="Dış Ticaret Müdürü" />
+                  </div>
+
+                  <h3 style={s.subSec}>Bildirim Tercihleri</h3>
+                  <div style={s.settingsGroup}>
+                    <ToggleRow label="Günlük bülten e-postası" sub="Her sabah 07:00'de" defaultOn={true} />
+                    <ToggleRow label="İhale uyarıları" sub="Takip ettiğiniz ihaleler için" defaultOn={true} />
+                    <ToggleRow label="Son tarih hatırlatmaları" sub="İhalenin bitimine 7/3/1 gün kala" defaultOn={true} />
+                    <ToggleRow label="Sektör özet raporu" sub="Her hafta pazartesi" defaultOn={false} />
+                  </div>
+
+                  <h3 style={s.subSec}>Üyelik</h3>
+                  <div style={s.proCard}>
+                    <div>
+                      <div style={s.proBadge}>PRO ÜYE</div>
+                      <div style={s.proTitle}>Üyeliğiniz 23 Mart 2027'ye kadar geçerli</div>
+                      <div style={s.proSub}>Yıllık plan • $89/yıl • Sonraki yenileme: 23 Mart 2027</div>
+                    </div>
+                    <a href="#" style={s.outlineBtn}>YÖNETİM</a>
+                  </div>
+
+                  <div style={s.danger}>
+                    <a href="giris.html" style={s.logout}>Çıkış Yap</a>
+                    <a href="#" style={s.delete}>Hesabımı sil</a>
+                  </div>
+                </div>
+                <ProfileSidebar />
+              </div>
+            )}
+          </div>
+        </section>
+
+        <Footer />
+      </div>
+    );
+  };
+
+  const ProfileSidebar = () => (
+    <aside style={s.sidebar}>
+      <div style={s.sideBlock}>
+        <div style={s.sideHead}>SON AKTİVİTE</div>
+        {ACTIVITY.map((a, i) => (
+          <div key={i} style={s.actRow}>
+            <div style={s.actIco}>{a.ico}</div>
+            <div style={{ flex: 1 }}>
+              <div style={s.actText}>{a.text}</div>
+              <div style={s.actAgo}>{a.ago}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={s.proSidebar}>
+        <div style={s.proSideEyebrow}>PRO ÜYELİK</div>
+        <div style={s.proSideTitle}>İhale verisine sınırsız erişim</div>
+        <div style={s.proSideList}>
+          <div>✓ Tüm ihale arşivi</div>
+          <div>✓ Erken bildirim</div>
+          <div>✓ Sektör raporları</div>
+        </div>
+        <a href="#" style={s.proSideBtn}>PLANI YÖNET →</a>
+      </div>
+    </aside>
+  );
+
+  const EmptyState = ({ icon, title, sub }) => (
+    <div style={s.empty}>
+      <div style={s.emptyIcon}>{icon}</div>
+      <div style={s.emptyTitle}>{title}</div>
+      <div style={s.emptySub}>{sub}</div>
+      <a href="index.html" style={s.primaryBtn}>HABERLERE GÖZ AT</a>
+    </div>
+  );
+
+  const Toggle = ({ on, onChange }) => (
+    <button onClick={onChange} style={{
+      ...s.toggle,
+      background: on ? "#1e6fb8" : "#d1d5db",
+    }}>
+      <span style={{
+        ...s.toggleKnob,
+        transform: on ? "translateX(22px)" : "translateX(2px)",
+      }}></span>
+    </button>
+  );
+
+  const SettingRow = ({ label, value }) => (
+    <div style={s.settingRow}>
+      <div style={s.settingLabel}>{label}</div>
+      <div style={s.settingValue}>{value}</div>
+      <a href="#" style={s.editLink}>Düzenle</a>
+    </div>
+  );
+
+  const ToggleRow = ({ label, sub, defaultOn }) => {
+    const [on, setOn] = React.useState(defaultOn);
+    return (
+      <div style={s.settingRow}>
+        <div style={{ flex: 1 }}>
+          <div style={s.settingLabel}>{label}</div>
+          <div style={s.settingSub}>{sub}</div>
+        </div>
+        <Toggle on={on} onChange={() => setOn(!on)} />
+      </div>
+    );
+  };
+
+  const s = {
+    hero: { background: "linear-gradient(135deg,#0a2351 0%,#143063 60%,#1e6fb8 100%)", color: "#fff", padding: "40px 0 32px" },
+    heroInner: { maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 32, flexWrap: "wrap" },
+    heroLeft: { display: "flex", alignItems: "center", gap: 20 },
+    avatar: { width: 88, height: 88, borderRadius: "50%", background: "#f5b800", color: "#0a2351", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, fontWeight: 800, letterSpacing: "0.04em", flexShrink: 0 },
+    welcome: { fontSize: 11, fontWeight: 800, letterSpacing: "0.16em", color: "#f5b800", marginBottom: 6 },
+    h1: { fontSize: 38, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: "#fff", margin: "0 0 10px" },
+    heroMeta: { display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.78)", flexWrap: "wrap" },
+    metaSep: { color: "rgba(255,255,255,0.4)" },
+    pro: { background: "#f5b800", color: "#0a2351", padding: "3px 10px", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", borderRadius: 2 },
+
+    heroRight: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 },
+    statCard: { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)", padding: "14px 18px", textAlign: "left", minWidth: 120 },
+    statV: { fontSize: 26, fontWeight: 800, color: "#f5b800", letterSpacing: "-0.01em", lineHeight: 1, fontFeatureSettings: '"tnum" 1' },
+    statL: { fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.7)", textTransform: "uppercase", marginTop: 6 },
+
+    tabBar: { background: "#fff", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, zIndex: 30 },
+    tabInner: { maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", gap: 4, overflowX: "auto" },
+    tab: { display: "inline-flex", alignItems: "center", gap: 8, padding: "16px 18px", fontSize: 13, fontWeight: 700, letterSpacing: "-0.005em", textDecoration: "none", borderBottom: "2px solid transparent", marginBottom: -1, whiteSpace: "nowrap" },
+    tabCount: { background: "#f3f4f6", padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 700, color: "#0a2351", fontFeatureSettings: '"tnum" 1' },
+
+    content: { background: "#f6f7f9", padding: "32px 0 48px" },
+    contentInner: { maxWidth: 1280, margin: "0 auto", padding: "0 24px" },
+    layout: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 32, alignItems: "start" },
+
+    secHead: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 18, gap: 16, flexWrap: "wrap" },
+    secEyebrow: { fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#1e6fb8", marginBottom: 6 },
+    secTitle: { fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", color: "#0a2351", margin: 0 },
+    secSub: { fontSize: 13, color: "#6b7280", marginTop: 8, lineHeight: 1.5, maxWidth: 520 },
+    subSec: { fontSize: 16, fontWeight: 800, color: "#0a2351", letterSpacing: "-0.01em", margin: "32px 0 12px" },
+    toolbar: { display: "flex", gap: 8 },
+    select: { padding: "8px 12px", border: "1px solid #d1d5db", background: "#fff", fontSize: 12, fontWeight: 600, color: "#212529", fontFamily: "inherit", borderRadius: 2, cursor: "pointer" },
+
+    grid: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 },
+    savedCard: { background: "#fff", border: "1px solid #e5e7eb", display: "flex", flexDirection: "column" },
+    savedImgLink: { display: "block" },
+    savedImg: { width: "100%", aspectRatio: "16/9" },
+    savedBody: { padding: "12px 14px 14px", display: "flex", flexDirection: "column", gap: 8, flex: 1 },
+    savedMeta: { fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "#6b7280", display: "flex", alignItems: "center", gap: 6 },
+    dot: { width: 6, height: 6, borderRadius: "50%", background: "#f5b800" },
+    savedTitle: { fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: "#212529", textDecoration: "none", letterSpacing: "-0.005em" },
+    savedFooter: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 8, borderTop: "1px solid #f3f4f6" },
+    savedAgo: { fontSize: 11, fontWeight: 600, color: "#6b7280" },
+    removeBtn: { fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: "#c41e3a", textDecoration: "none", textTransform: "uppercase" },
+
+    tenderList: { display: "flex", flexDirection: "column", gap: 10 },
+    tender: { display: "flex", justifyContent: "space-between", gap: 20, background: "#fff", border: "1px solid #e5e7eb", borderLeft: "4px solid #f5b800", padding: "16px 18px", flexWrap: "wrap" },
+    tenderLeft: { flex: 1, minWidth: 280 },
+    tenderMeta: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" },
+    country: { fontSize: 11, fontWeight: 700, color: "#1e6fb8" },
+    sector: { fontSize: 11, fontWeight: 600, color: "#6b7280", padding: "2px 8px", background: "#f3f4f6", borderRadius: 2 },
+    statusBadge: { fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", padding: "3px 9px", border: "1px solid", borderRadius: 2, textTransform: "uppercase" },
+    tenderTitle: { fontSize: 17, fontWeight: 800, color: "#0a2351", letterSpacing: "-0.01em", lineHeight: 1.25, marginBottom: 12 },
+    tenderInfo: { display: "flex", gap: 28, flexWrap: "wrap" },
+    infoLabel: { fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "#9ca3af", display: "block", marginBottom: 3, textTransform: "uppercase" },
+    infoValue: { fontSize: 14, fontWeight: 700, color: "#0a2351", fontFeatureSettings: '"tnum" 1' },
+    tenderRight: { display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end", justifyContent: "space-between" },
+    viewBtn: { fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", padding: "9px 14px", background: "#0a2351", color: "#fff", textDecoration: "none", borderRadius: 2 },
+
+    alertList: { display: "flex", flexDirection: "column", gap: 0, background: "#fff", border: "1px solid #e5e7eb" },
+    alertRow: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 18px", borderBottom: "1px solid #f3f4f6", gap: 16 },
+    alertSec: { fontSize: 14, fontWeight: 700, color: "#0a2351", marginBottom: 3 },
+    alertCount: { fontSize: 12, color: "#6b7280" },
+
+    alertCta: { background: "#fff8e0", border: "1px solid #f5b800", padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginTop: 16, flexWrap: "wrap" },
+    alertCtaTitle: { fontSize: 14, fontWeight: 800, color: "#0a2351" },
+    alertCtaSub: { fontSize: 12, color: "#6b7280", marginTop: 2 },
+
+    settingsGroup: { background: "#fff", border: "1px solid #e5e7eb" },
+    settingRow: { display: "flex", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid #f3f4f6", gap: 16 },
+    settingLabel: { fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", color: "#6b7280", textTransform: "uppercase", width: 140, flexShrink: 0 },
+    settingValue: { flex: 1, fontSize: 14, fontWeight: 600, color: "#0a2351" },
+    settingSub: { fontSize: 12, color: "#6b7280", marginTop: 4 },
+    editLink: { fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: "#1e6fb8", textDecoration: "none", textTransform: "uppercase" },
+
+    proCard: { background: "linear-gradient(135deg,#0a2351,#1e6fb8)", color: "#fff", padding: "20px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" },
+    proBadge: { display: "inline-block", background: "#f5b800", color: "#0a2351", padding: "3px 10px", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", borderRadius: 2, marginBottom: 8 },
+    proTitle: { fontSize: 15, fontWeight: 800, marginBottom: 4 },
+    proSub: { fontSize: 12, color: "rgba(255,255,255,0.75)" },
+    outlineBtn: { fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", padding: "9px 14px", border: "1px solid #f5b800", color: "#f5b800", textDecoration: "none", borderRadius: 2 },
+
+    danger: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 0 0", marginTop: 20, borderTop: "1px solid #e5e7eb" },
+    logout: { fontSize: 12, fontWeight: 700, color: "#0a2351", textDecoration: "none", letterSpacing: "0.04em", textTransform: "uppercase", padding: "10px 16px", border: "1px solid #d1d5db", borderRadius: 2 },
+    delete: { fontSize: 12, fontWeight: 700, color: "#c41e3a", textDecoration: "none", letterSpacing: "0.04em", textTransform: "uppercase" },
+
+    empty: { padding: "56px 24px", textAlign: "center", background: "#fff", border: "1px solid #e5e7eb" },
+    emptyIcon: { fontSize: 40, marginBottom: 14 },
+    emptyTitle: { fontSize: 18, fontWeight: 800, color: "#0a2351", marginBottom: 6 },
+    emptySub: { fontSize: 13, color: "#6b7280", marginBottom: 16, maxWidth: 380, marginLeft: "auto", marginRight: "auto", lineHeight: 1.5 },
+    primaryBtn: { display: "inline-block", fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", padding: "11px 18px", background: "#0a2351", color: "#fff", textDecoration: "none", borderRadius: 2 },
+
+    sidebar: { display: "flex", flexDirection: "column", gap: 16, position: "sticky", top: 80 },
+    sideBlock: { background: "#fff", border: "1px solid #e5e7eb", padding: 18 },
+    sideHead: { fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#0a2351", paddingBottom: 12, borderBottom: "2px solid #f5b800", marginBottom: 12 },
+    actRow: { display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #f3f4f6" },
+    actIco: { fontSize: 18, lineHeight: 1.2 },
+    actText: { fontSize: 13, fontWeight: 600, color: "#212529", lineHeight: 1.35 },
+    actAgo: { fontSize: 11, color: "#9ca3af", marginTop: 3 },
+
+    proSidebar: { background: "linear-gradient(160deg,#0a2351,#143063 80%)", color: "#fff", padding: 18 },
+    proSideEyebrow: { fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "#f5b800", marginBottom: 6 },
+    proSideTitle: { fontSize: 16, fontWeight: 800, lineHeight: 1.25, marginBottom: 12, letterSpacing: "-0.005em" },
+    proSideList: { fontSize: 12, lineHeight: 1.8, color: "rgba(255,255,255,0.85)", marginBottom: 14 },
+    proSideBtn: { display: "block", textAlign: "center", fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", padding: "9px 14px", background: "#f5b800", color: "#0a2351", textDecoration: "none", borderRadius: 2 },
+
+    toggle: { width: 44, height: 24, borderRadius: 99, border: 0, padding: 0, position: "relative", cursor: "pointer", transition: "background 150ms", flexShrink: 0 },
+    toggleKnob: { position: "absolute", top: 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "transform 150ms", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" },
+  };
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

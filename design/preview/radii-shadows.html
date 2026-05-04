@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"/>
+<style>
+  body{margin:0;padding:24px;font-family:"Inter",system-ui,sans-serif;background:#fff;color:#212529}
+  .row{display:flex;gap:24px;align-items:flex-end}
+  .item{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .demo{background:#0a2351;width:80px;height:64px}
+  .label{font-size:11px;font-weight:600;color:#6b7280;letter-spacing:0.06em;text-transform:uppercase}
+  .name{font-size:13px;font-weight:700;color:#212529}
+  .shadow{width:160px;height:64px;background:#fff;border:1px solid #e5e7eb;border-radius:2px}
+</style></head>
+<body>
+<div style="display:flex;flex-direction:column;gap:24px">
+  <div class="row">
+    <div class="item"><div class="demo" style="border-radius:0"></div><div class="name">0</div><div class="label">r-none</div></div>
+    <div class="item"><div class="demo" style="border-radius:2px"></div><div class="name">2px</div><div class="label">r-sm (default)</div></div>
+    <div class="item"><div class="demo" style="border-radius:9999px"></div><div class="name">∞</div><div class="label">r-full (dots)</div></div>
+  </div>
+  <div class="row">
+    <div class="item"><div class="shadow" style="box-shadow:none"></div><div class="label">none — cards</div></div>
+    <div class="item"><div class="shadow" style="box-shadow:0 4px 16px rgba(10,35,81,0.10)"></div><div class="label">dropdown</div></div>
+    <div class="item"><div class="shadow" style="box-shadow:0 12px 40px rgba(10,35,81,0.18)"></div><div class="label">modal</div></div>
+  </div>
+</div>
+</body></html>

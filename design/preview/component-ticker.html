@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"/>
+<style>
+  body{margin:0;padding:0;font-family:"Inter",system-ui,sans-serif;background:#f7f8fa;color:#212529}
+  .ticker{height:36px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:0;overflow:hidden}
+  .label{font-size:11px;font-weight:700;color:#0a2351;letter-spacing:0.08em;text-transform:uppercase;padding:0 16px;border-right:1px solid #e5e7eb;height:100%;display:flex;align-items:center}
+  .chips{display:flex;gap:0;overflow-x:auto;padding:0 4px}
+  .chip{font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#4a5159;padding:0 14px;height:36px;display:flex;align-items:center;white-space:nowrap;border-right:1px solid #e5e7eb}
+  .chip.up{color:#2e8b3d}
+  .chip.down{color:#c41e3a}
+  .arrow{font-weight:700;margin-left:6px;font-feature-settings:"tnum"}
+</style></head>
+<body>
+<div class="ticker">
+  <div class="label">SEKTÖRLER</div>
+  <div class="chips">
+    <div class="chip up">İNŞAAT <span class="arrow">↑ %2,1</span></div>
+    <div class="chip up">ENERJİ <span class="arrow">↑ %4,2</span></div>
+    <div class="chip down">SAVUNMA <span class="arrow">↓ %0,8</span></div>
+    <div class="chip up">MADENCİLİK <span class="arrow">↑ %1,5</span></div>
+    <div class="chip">TEKSTİL</div>
+    <div class="chip up">OTOMOTİV <span class="arrow">↑ %3,4</span></div>
+    <div class="chip">TARIM &amp; GIDA</div>
+    <div class="chip">KİMYA</div>
+  </div>
+</div>
+</body></html>

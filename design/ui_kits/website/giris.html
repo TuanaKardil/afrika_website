@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Giriş Yap — Afrika Haberleri</title>
+<link rel="stylesheet" href="../../colors_and_type.css"/>
+<link rel="stylesheet" href="responsive.css"/>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #212529; }
+  @keyframes ahPulse { 0% { box-shadow: 0 0 0 0 rgba(196,30,58,0.7); } 70% { box-shadow: 0 0 0 8px rgba(196,30,58,0); } 100% { box-shadow: 0 0 0 0 rgba(196,30,58,0); } }
+  @keyframes ahMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .auth-input:focus { border-color: #1e6fb8 !important; outline: none; box-shadow: 0 0 0 3px rgba(30,111,184,0.12); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js?v=10"></script>
+<script type="text/babel" src="Header.jsx"></script>
+<script type="text/babel" src="Footer.jsx"></script>
+
+<script type="text/babel">
+  const App = () => {
+    const [mode, setMode] = React.useState("login"); // "login" | "register"
+    const [email, setEmail] = React.useState("");
+    const [pw, setPw] = React.useState("");
+    const [pw2, setPw2] = React.useState("");
+    const [name, setName] = React.useState("");
+    const [showPw, setShowPw] = React.useState(false);
+    const [remember, setRemember] = React.useState(true);
+    const [agree, setAgree] = React.useState(false);
+    const [err, setErr] = React.useState("");
+
+    const submit = (e) => {
+      e.preventDefault();
+      setErr("");
+      if (mode === "register") {
+        if (!name || !email || !pw) { setErr("Lütfen tüm alanları doldurun."); return; }
+        if (pw.length < 6) { setErr("Parola en az 6 karakter olmalıdır."); return; }
+        if (pw !== pw2) { setErr("Parolalar eşleşmiyor."); return; }
+        if (!agree) { setErr("Devam etmek için sözleşmeyi onaylayın."); return; }
+        alert("Hesap oluşturuldu (demo). Anasayfaya yönlendiriliyorsunuz.");
+        location.href = "index.html";
+        return;
+      }
+      if (!email || !pw) { setErr("E-posta ve parola gereklidir."); return; }
+      alert("Giriş başarılı (demo). Anasayfaya yönlendiriliyorsunuz.");
+      location.href = "index.html";
+    };
+
+    return (
+      <div data-screen-label="Giriş Yap">
+        <Header />
+
+        <main style={s.page}>
+          <div style={s.grid}>
+            {/* Form */}
+            <section style={s.formWrap}>
+              <div style={s.formInner}>
+                <div style={s.tabs}>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setMode("login"); setErr(""); }}
+                     style={{...s.tab, ...(mode === "login" ? s.tabOn : {})}}>
+                    Giriş Yap
+                  </a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setMode("register"); setErr(""); }}
+                     style={{...s.tab, ...(mode === "register" ? s.tabOn : {})}}>
+                    Hesap Oluştur
+                  </a>
+                </div>
+
+                <h1 style={s.h1}>{mode === "login" ? "Hesabınıza giriş yapın" : "Yeni hesap oluşturun"}</h1>
+                <p style={s.helper}>
+                  {mode === "login"
+                    ? "Bültene abone olduysanız aynı e-posta ile giriş yapabilirsiniz."
+                    : "Üye olun, sektörünüze özel bültenlere ücretsiz abone olun."}
+                </p>
+
+                {/* Social */}
+                <div style={s.social}>
+                  <a href="#" style={s.socialBtn}>
+                    <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.6 39.5 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.6l6.2 5.2C40.6 36.1 44 30.6 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+                    Google ile devam et
+                  </a>
+                  <a href="#" style={s.socialBtn}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#0a66c2"><path d="M20.4 3H3.6C3.3 3 3 3.3 3 3.6v16.8c0 .3.3.6.6.6h16.8c.3 0 .6-.3.6-.6V3.6c0-.3-.3-.6-.6-.6zM8.3 18.3H5.6V9.7h2.7v8.6zM6.9 8.5c-.9 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5c.9 0 1.5.7 1.5 1.5s-.6 1.5-1.5 1.5zm11.4 9.8h-2.7v-4.2c0-1 0-2.3-1.4-2.3s-1.6 1.1-1.6 2.2v4.3H10V9.7h2.6v1.2c.4-.7 1.3-1.4 2.6-1.4 2.7 0 3.2 1.8 3.2 4.1v4.7z"/></svg>
+                    LinkedIn ile devam et
+                  </a>
+                </div>
+
+                <div style={s.divider}>
+                  <span style={s.dividerLine}></span>
+                  <span style={s.dividerText}>VEYA E-POSTA İLE</span>
+                  <span style={s.dividerLine}></span>
+                </div>
+
+                <form onSubmit={submit} style={s.form}>
+                  {mode === "register" && (
+                    <div style={s.field}>
+                      <label style={s.label}>Ad Soyad</label>
+                      <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+                             className="auth-input" style={s.input} placeholder="Adınız Soyadınız"/>
+                    </div>
+                  )}
+
+                  <div style={s.field}>
+                    <label style={s.label}>E-posta</label>
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                           className="auth-input" style={s.input} placeholder="ornek@firma.com"/>
+                  </div>
+
+                  <div style={s.field}>
+                    <div style={s.labelRow}>
+                      <label style={s.label}>Parola</label>
+                      {mode === "login" && <a href="#" style={s.forgot}>Parolamı unuttum</a>}
+                    </div>
+                    <div style={s.pwWrap}>
+                      <input type={showPw ? "text" : "password"} value={pw} onChange={(e) => setPw(e.target.value)}
+                             className="auth-input" style={s.input}
+                             placeholder={mode === "register" ? "En az 6 karakter" : "••••••••"}/>
+                      <button type="button" onClick={() => setShowPw(!showPw)} style={s.pwToggle}>
+                        {showPw ? "Gizle" : "Göster"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {mode === "register" && (
+                    <div style={s.field}>
+                      <label style={s.label}>Parola (Tekrar)</label>
+                      <input type={showPw ? "text" : "password"} value={pw2} onChange={(e) => setPw2(e.target.value)}
+                             className="auth-input" style={s.input} placeholder="Parolayı tekrar girin"/>
+                    </div>
+                  )}
+
+                  {mode === "login" ? (
+                    <label style={s.checkboxRow}>
+                      <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} style={s.checkbox}/>
+                      <span>Beni hatırla</span>
+                    </label>
+                  ) : (
+                    <label style={s.checkboxRow}>
+                      <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} style={s.checkbox}/>
+                      <span>
+                        <a href="#" style={s.link}>Kullanım Koşulları</a> ve <a href="#" style={s.link}>Gizlilik Politikası</a>'nı okudum, kabul ediyorum.
+                      </span>
+                    </label>
+                  )}
+
+                  {err && <div style={s.err}>{err}</div>}
+
+                  <button type="submit" style={s.submitBtn}>
+                    {mode === "login" ? "GİRİŞ YAP" : "HESAP OLUŞTUR"}
+                    <span style={s.arrow}>→</span>
+                  </button>
+
+                  <div style={s.bottom}>
+                    {mode === "login" ? (
+                      <>Hesabınız yok mu? <a href="#" onClick={(e) => { e.preventDefault(); setMode("register"); }} style={s.link}>Kaydolun</a></>
+                    ) : (
+                      <>Zaten üye misiniz? <a href="#" onClick={(e) => { e.preventDefault(); setMode("login"); }} style={s.link}>Giriş yapın</a></>
+                    )}
+                  </div>
+                </form>
+              </div>
+            </section>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  };
+
+  const s = {
+    page: { background: "#f6f7f9", minHeight: "calc(100vh - 200px)", padding: "32px 0 56px" },
+    grid: { maxWidth: 520, margin: "0 auto", padding: "0 24px", background: "#fff", border: "1px solid #e5e7eb", boxShadow: "0 6px 24px rgba(10,35,81,0.06)" },
+
+    brand: { background: "linear-gradient(160deg,#0a2351 0%,#143063 50%,#1e6fb8 100%)", color: "#fff", position: "relative" },
+    brandInner: { padding: "44px 40px", display: "flex", flexDirection: "column", height: "100%" },
+    brandLogo: { display: "flex", alignItems: "center", gap: 12, marginBottom: 36 },
+    brandBar: { width: 4, height: 38, background: "#f5b800" },
+    brandWm1: { fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", color: "rgba(255,255,255,0.7)" },
+    brandWm2: { fontSize: 18, fontWeight: 800, letterSpacing: "0.04em", color: "#fff", marginTop: 2 },
+    brandTitle: { fontSize: 28, fontWeight: 800, lineHeight: 1.18, letterSpacing: "-0.02em", margin: "0 0 14px", color: "#fff" },
+    brandSub: { fontSize: 14, lineHeight: 1.55, color: "rgba(255,255,255,0.78)", margin: "0 0 28px" },
+    bullets: { listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: 10 },
+    bullet: { display: "flex", gap: 12, alignItems: "flex-start", fontSize: 14, lineHeight: 1.4 },
+    check: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", background: "#f5b800", color: "#0a2351", fontWeight: 800, fontSize: 12, flexShrink: 0 },
+
+    brandStats: { marginTop: "auto", paddingTop: 28, borderTop: "1px solid rgba(255,255,255,0.18)", display: "flex", alignItems: "center", gap: 20 },
+    stat: {},
+    statV: { fontSize: 22, fontWeight: 800, color: "#f5b800", letterSpacing: "-0.01em", fontFeatureSettings: '"tnum" 1' },
+    statL: { fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.65)", textTransform: "uppercase", marginTop: 2 },
+    statDiv: { width: 1, height: 32, background: "rgba(255,255,255,0.18)" },
+
+    formWrap: { padding: "44px 40px" },
+    formInner: { maxWidth: 380, margin: "0 auto" },
+    tabs: { display: "flex", gap: 0, borderBottom: "1px solid #e5e7eb", marginBottom: 24 },
+    tab: { flex: 1, textAlign: "center", padding: "12px 0", fontSize: 13, fontWeight: 700, color: "#6b7280", textDecoration: "none", borderBottom: "2px solid transparent", marginBottom: -1, letterSpacing: "0.02em" },
+    tabOn: { color: "#0a2351", borderBottomColor: "#f5b800" },
+
+    h1: { fontSize: 24, fontWeight: 800, lineHeight: 1.2, letterSpacing: "-0.02em", color: "#0a2351", margin: "0 0 8px" },
+    helper: { fontSize: 13, color: "#6b7280", lineHeight: 1.5, margin: "0 0 22px" },
+
+    social: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 },
+    socialBtn: { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 14px", border: "1px solid #d1d5db", borderRadius: 2, fontSize: 13, fontWeight: 600, color: "#212529", textDecoration: "none", background: "#fff" },
+
+    divider: { display: "flex", alignItems: "center", gap: 12, margin: "12px 0 18px" },
+    dividerLine: { flex: 1, height: 1, background: "#e5e7eb" },
+    dividerText: { fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: "#9ca3af" },
+
+    form: { display: "flex", flexDirection: "column", gap: 14 },
+    field: { display: "flex", flexDirection: "column", gap: 6 },
+    labelRow: { display: "flex", justifyContent: "space-between", alignItems: "baseline" },
+    label: { fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", color: "#0a2351", textTransform: "uppercase" },
+    input: { padding: "11px 13px", border: "1px solid #d1d5db", borderRadius: 2, fontFamily: "inherit", fontSize: 14, color: "#212529", background: "#fff", transition: "border-color 120ms, box-shadow 120ms", width: "100%" },
+    forgot: { fontSize: 11, fontWeight: 700, color: "#1e6fb8", textDecoration: "none", letterSpacing: "0.02em" },
+
+    pwWrap: { position: "relative" },
+    pwToggle: { position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "transparent", border: 0, color: "#1e6fb8", fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", cursor: "pointer", padding: "4px 8px", textTransform: "uppercase" },
+
+    checkboxRow: { display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "#4a5159", lineHeight: 1.5, cursor: "pointer", marginTop: 2 },
+    checkbox: { marginTop: 2, accentColor: "#1e6fb8" },
+    link: { color: "#1e6fb8", textDecoration: "none", fontWeight: 600 },
+
+    err: { padding: "10px 12px", background: "#fef2f2", border: "1px solid #fecaca", color: "#c41e3a", fontSize: 12, fontWeight: 600 },
+
+    submitBtn: { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "13px 18px", background: "#0a2351", color: "#fff", border: 0, fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", cursor: "pointer", borderRadius: 2, marginTop: 6, transition: "background 120ms" },
+    arrow: { fontSize: 14, fontWeight: 700 },
+    bottom: { fontSize: 13, color: "#6b7280", textAlign: "center", marginTop: 8 },
+  };
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
