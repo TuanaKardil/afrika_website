@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: HaberPageProps): Promise<Meta
 
 export default async function HaberPage({ params }: HaberPageProps) {
   const article = await getArticleBySlug(params.slug);
-  if (!article || !article.title_tr || article.is_suppressed || (article.score !== null && article.score < 5)) notFound();
+  if (!article || !article.title_tr || article.is_suppressed || (article.score !== null && article.score < 4)) notFound();
 
   const safeContent = sanitizeArticleContent(article.content_tr ?? "");
 
