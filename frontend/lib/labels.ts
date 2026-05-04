@@ -81,11 +81,11 @@ export function resolveCategory(
   sectorSlugs: string[],
   hashtags?: string[] | null,
 ): string | null {
-  if (!navTabSlug) return null;
-  if (navTabSlug === "diger") {
-    const specificSector = sectorSlugs.find((s) => s !== "diger-sektor");
-    if (specificSector) return SECTOR_LABELS[specificSector] ?? null;
-    return pickBestHashtag(hashtags ?? []);
+  if (navTabSlug && navTabSlug !== "diger") {
+    return NAV_LABELS[navTabSlug] ?? null;
   }
-  return NAV_LABELS[navTabSlug] ?? null;
+  // navTabSlug is null or "diger": sector first, then best hashtag
+  const specificSector = sectorSlugs.find((s) => s !== "diger-sektor");
+  if (specificSector) return SECTOR_LABELS[specificSector] ?? null;
+  return pickBestHashtag(hashtags ?? []);
 }
