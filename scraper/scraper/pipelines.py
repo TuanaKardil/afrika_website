@@ -95,7 +95,7 @@ class SanitizationPipeline:
         return item
 
 
-MIN_AFRICA_SCORE = 5
+MIN_AFRICA_SCORE = 4
 
 
 class ScorePipeline:
@@ -119,8 +119,8 @@ class ScorePipeline:
 
 
 class TranslationPipeline:
-    """Translate English content to Turkish for articles scoring 5 or higher.
-    Articles below 5 skip translation (title_tr/excerpt_tr/content_tr remain None).
+    """Translate English content to Turkish for articles scoring 4 or higher.
+    Articles below 4 skip translation (title_tr/excerpt_tr/content_tr remain None).
     Uses Gemini 2.5 Flash-Lite via OpenRouter.
     """
 
@@ -128,11 +128,11 @@ class TranslationPipeline:
         from scraper.translate import translate_article
 
         score = item.get("score", 0)
-        if score < 5:
+        if score < 4:
             item["title_tr"] = None
             item["excerpt_tr"] = None
             item["content_tr"] = None
-            logger.info("Translation skipped (score %d < 5): %s", score, item.get("source_url", ""))
+            logger.info("Translation skipped (score %d < 4): %s", score, item.get("source_url", ""))
             return item
 
         result = translate_article(
