@@ -22,6 +22,9 @@ echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] News spiders finished"
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Retranslating any untranslated articles"
 python3 -m scraper.retranslate
 
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Backfilling missing hashtags"
+python3 backfill_hashtags.py
+
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running tender spiders"
 SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl worldbank_tenders &
 SCRAPY_SETTINGS_MODULE=scraper.tender_settings python3 -m scrapy crawl undp_tenders &
