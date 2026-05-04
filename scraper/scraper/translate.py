@@ -192,8 +192,10 @@ Sen Türkçe bir haber editörüsün. Sana HTML formatında bir Türkçe haber m
 Bu metni en fazla 550 kelimeye sıkıştır:
 - En önemli gerçekleri, istatistikleri ve alıntıları koru
 - Gazetecilik Türkçesini ve akıcı anlatımı koru
-- HTML paragraf etiketlerini (<p>...</p>) koru
+- Tüm HTML etiketlerini koru: <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>
+- Soru bazlı <h2> başlıklarını MUTLAKA koru; bunlar SEO için zorunlu
 - Kaynak bağlantısını (<p class="source-link">...</p>) ÇIKARMA, sonunda bırak
+- <p><strong>Özet:</strong> ...</p> bloğunu koru
 - Açıklama veya not ekleme; yalnızca özetlenmiş metni yaz."""
 
 
