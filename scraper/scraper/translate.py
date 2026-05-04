@@ -1,5 +1,6 @@
 import concurrent.futures
 import hashlib
+import json
 import logging
 import re
 from typing import Any
@@ -71,61 +72,111 @@ def _ensure_html_paragraphs(text: str) -> str:
 
 
 _SYSTEM_PROMPT = """\
-You are a professional Turkish news translator specializing in African affairs. \
-Translate the provided content from English to Turkish using natural, journalistic Turkish.
+You are a senior Turkish news editor and translator specializing in Africa-Turkey business relations. \
+Translate English news articles into journalistic Turkish optimized for SEO, GEO, and AEO.
 
-=== SEO / GEO / AEO THREE-LAYER TRANSLATION RULES ===
+## Non-Negotiable Rules
 
-1. SEO Layer (Search Engine Optimization):
-   - Headline: punchy, keyword-rich, under 70 chars if possible.
-   - Include primary keyword (country/sector name) near the start.
+1. LENGTH: Translated body MUST NOT exceed 600 words. Condense/summarize if needed. \
+   Title + body count only; source link and image captions excluded.
 
-2. GEO Layer (Generative Engine Optimization):
-   - Use full entity names on first mention (e.g. "Nijerya Merkez Bankası (CBN)").
-   - Convert foreign currencies to TRY (Turkish Lira) using approximate rates.
-   - Convert imperial units to metric (miles->km, feet->m, pounds->kg, acres->hectare).
-   - Use Turkish date format: 15 Haziran 2025.
-   - Use Turkish number format: 1.234.567,89.
+2. HTML: Preserve all HTML tags exactly. Allowed: h2, h3, p, blockquote, ul, ol, li, strong, em, figure, figcaption, img, a.
 
-3. AEO Layer (Answer Engine Optimization):
-   - First paragraph must directly answer: Who did what, where, when, why it matters.
-   - Include a 2-3 sentence "TL;DR" feel in the opening.
-   - Use short paragraphs (2-4 sentences) for voice/search snippet compatibility.
+3. NO EM DASHES: Never use — or – or --. Use commas or rephrase.
 
-=== HARD RULES ===
-- Preserve all HTML tags exactly as they appear. Do not add, remove, or modify any HTML tags.
-- Do not use em dashes (-- or Unicode em dash/en dash) anywhere. Use commas or rephrase instead.
-- Preserve proper nouns in Turkish-accepted forms: \
-Nigeria->Nijerya, Kenya->Kenya, Cairo->Kahire, Ethiopia->Etiyopya, Egypt->Mısır, \
-Ghana->Gana, Sudan->Sudan, Somalia->Somali, Cameroon->Kamerun, Congo->Kongo, \
-Zimbabwe->Zimbabve, Tanzania->Tanzanya, Uganda->Uganda, Rwanda->Ruanda.
-- When adding Turkish case suffixes to proper nouns, ALWAYS use an apostrophe: \
-Kamerun'da (not "Kamerunda"), Afrika'da (not "Afrikada"), ABD'den (not "ABDden").
-- Translate "Mass" (Catholic religious service) as "Ayin" not "Kütle".
-- Translate "pontiff" as "Papa", "Popemobile" as "Papamobil".
-- Translate "firebrand" as "kışkırtıcı" or "ateşli muhalefet figürü".
-- Translate "sedated" as "uyuşturuldu" or "anestezi uygulandı".
-- Do not leave any English words untranslated in the output.
-- WORD LIMIT: The translated <body> must not exceed 600 words. If the original body is longer, \
-summarize it to fit within 600 words while keeping the most important facts, \
-key quotes, and journalistic structure. Do not truncate mid-sentence.
-- SOURCE LINK: Append the original source URL at the very end as a separate paragraph: \
-<p class="source-link">Kaynak: {source_url}</p>
-- Do not add commentary, notes, or translator remarks.
-- Output only the translated content using the exact delimiter tags provided."""
+4. PROPER NOUNS: Use Turkish forms.
+   Nigeria→Nijerya, South Africa→Güney Afrika, Egypt→Mısır, Ethiopia→Etiyopya,
+   Ghana→Gana, Cameroon→Kamerun, Congo→Kongo, Zimbabwe→Zimbabve, Tanzania→Tanzanya,
+   Rwanda→Ruanda, Somalia→Somali, Sudan→Sudan, Uganda→Uganda, Kenya→Kenya.
+   African Union→Afrika Birliği, AfCFTA→Afrika Kıtası Serbest Ticaret Alanı (AfCFTA),
+   African Development Bank→Afrika Kalkınma Bankası (AfDB).
+   Turkish Airlines→Türk Hava Yolları. Other company names: keep original.
+   Proper noun + Turkish suffix → always apostrophe: Kamerun'da, Afrika'da, ABD'den.
+
+5. SOURCE LINK: Last line must be exactly:
+   <p class="source-link"><small>Kaynak: <a href="{source_url}" target="_blank" rel="noopener">{source_name}</a></small></p>
+   Never omit this.
+
+## SEO Optimization
+- Title must include primary country/region name and core topic (max 120 chars).
+- First paragraph answers Who, What, Where, When in 1-2 sentences (meta description candidate).
+- Use descriptive H2/H3 headings with natural keywords, not generic ones like "Detaylar".
+
+## GEO Optimization
+- Use full entity names on first mention; avoid pronouns ("bu ülke", "söz konusu anlaşma").
+- Include specific numbers, dates, dollar amounts, percentages.
+- Attribute quotes clearly: "Nijerya Merkez Bankası Başkanı'nın açıklamasına göre..." not "yetkililer söyledi".
+- Add one sentence connecting news to Turkey-Africa context.
+
+## AEO Optimization
+- Include at least one question-based H2 (e.g. "Nijerya Nairası Neden Değer Kaybediyor?").
+- After each question H2, provide a 40-60 word direct answer block.
+- Use bullet lists for comparisons and multi-item impacts.
+- End with a 2-3 sentence <p><strong>Özet:</strong> ...</p> block answering "Bu haber neden önemli?".
+
+## Output Format
+Return ONLY a valid JSON object — no markdown, no extra text:
+{"title_tr": "...", "excerpt_tr": "...", "content_tr": "..."}
+- title_tr: max 120 chars, SEO-optimized Turkish title
+- excerpt_tr: max 200 chars, answers What+Who+Where+When
+- content_tr: full translated body HTML including source-link at bottom, max 600 words"""
 
 _USER_TEMPLATE = """\
 Translate the following news article to Turkish.
 
-<title>{title}</title>
-<excerpt>{excerpt}</excerpt>
-<body>{body}</body>
+Title: {title}
+Excerpt: {excerpt}
 
-<source_url>{source_url}</source_url>"""
+Body HTML:
+{body}
+
+Source URL: {source_url}
+Source Name: {source_name}"""
 
 _TITLE_RE = re.compile(r"<title>(.*?)</title>", re.DOTALL)
 _EXCERPT_RE = re.compile(r"<excerpt>(.*?)</excerpt>", re.DOTALL)
 _BODY_RE = re.compile(r"<body>(.*?)</body>", re.DOTALL)
+_JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
+_CODEBLOCK_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.MULTILINE)
+
+
+def _safe_parse_json(text: str) -> dict[str, str] | None:
+    """Parse JSON from AI response, handling markdown code blocks and unescaped HTML quotes."""
+    # Strip markdown code block markers
+    cleaned = _CODEBLOCK_RE.sub("", text).strip()
+
+    # Try strict JSON first
+    json_m = _JSON_RE.search(cleaned)
+    if json_m:
+        try:
+            return json.loads(json_m.group(0))
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Fallback: extract fields individually (handles unescaped HTML quotes in content_tr)
+    result: dict[str, str] = {}
+
+    for field in ("title_tr", "excerpt_tr"):
+        m = re.search(rf'"{field}"\s*:\s*"((?:[^"\\]|\\.)*)"', cleaned)
+        if m:
+            result[field] = m.group(1).replace('\\"', '"')
+
+    # content_tr may contain unescaped HTML — take everything between field marker and closing }
+    m = re.search(r'"content_tr"\s*:\s*"', cleaned)
+    if m:
+        remaining = cleaned[m.end():]
+        end = re.search(r'"\s*\n?\s*\}\s*$', remaining)
+        if end:
+            raw_content = remaining[: end.start()]
+            raw_content = (
+                raw_content.replace('\\"', '"')
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\\\", "\\")
+            )
+            result["content_tr"] = raw_content
+
+    return result if result.get("title_tr") else None
 
 
 def _md5(text: str) -> str:
@@ -187,28 +238,39 @@ def _summarize_if_needed(body: str) -> str:
     return result
 
 
-def _parse_response(text: str, original: dict, source_url: str = "") -> tuple[str, str, str] | None:
-    title_m = _TITLE_RE.search(text)
-    if not title_m:
-        return None
-    title = postprocess(_strip_em_dashes(title_m.group(1).strip()))
+def _parse_response(text: str, original: dict, source_url: str = "", source_name: str = "") -> tuple[str, str, str] | None:
+    title_raw = excerpt_raw = body_raw = ""
 
-    excerpt_m = _EXCERPT_RE.search(text)
-    excerpt_raw = excerpt_m.group(1).strip() if excerpt_m else (original.get("excerpt_original") or "")
-    excerpt = postprocess(_strip_em_dashes(excerpt_raw))
+    # Try JSON parsing (handles markdown code blocks and malformed HTML quotes)
+    parsed = _safe_parse_json(text)
+    if parsed:
+        title_raw = parsed.get("title_tr", "").strip()
+        excerpt_raw = parsed.get("excerpt_tr", "").strip()
+        body_raw = parsed.get("content_tr", "").strip()
+    else:
+        title_raw = excerpt_raw = body_raw = ""
 
-    body_m = _BODY_RE.search(text)
-    body_raw = body_m.group(1).strip() if body_m else (original.get("content_original") or "")
-    body = postprocess(_strip_em_dashes(body_raw))
+    # Fallback to XML tag parsing
+    if not title_raw:
+        title_m = _TITLE_RE.search(text)
+        if not title_m:
+            return None
+        title_raw = title_m.group(1).strip()
+        excerpt_m = _EXCERPT_RE.search(text)
+        excerpt_raw = excerpt_m.group(1).strip() if excerpt_m else ""
+        body_m = _BODY_RE.search(text)
+        body_raw = body_m.group(1).strip() if body_m else ""
 
-    # Enforce source link at end
+    title = postprocess(_strip_em_dashes(title_raw))
+    excerpt = postprocess(_strip_em_dashes(excerpt_raw or (original.get("excerpt_original") or "")))
+    body = postprocess(_strip_em_dashes(body_raw or (original.get("content_original") or "")))
+
+    # Enforce source link at end with new <small><a> format
     if source_url and "Kaynak:" not in body:
-        body = body.rstrip() + f'\n<p class="source-link">Kaynak: {source_url}</p>'
+        name = source_name or source_url
+        body = body.rstrip() + f'\n<p class="source-link"><small>Kaynak: <a href="{source_url}" target="_blank" rel="noopener">{name}</a></small></p>'
 
-    # Ensure HTML paragraph structure
     body = _ensure_html_paragraphs(body)
-
-    # If AI translated more than 600 words, ask AI to summarize properly
     body = _summarize_if_needed(body)
 
     return title, excerpt, body
@@ -219,12 +281,14 @@ def _translate_one(article: dict[str, Any]) -> dict[str, Any]:
     excerpt = article.get("excerpt_original") or ""
     body = article.get("content_original") or ""
     source_url = article.get("source_url") or ""
+    source_name = article.get("source") or source_url
 
     user_message = _USER_TEMPLATE.format(
         title=title,
         excerpt=excerpt,
         body=body,
         source_url=source_url,
+        source_name=source_name,
     )
 
     raw = chat(
@@ -242,7 +306,7 @@ def _translate_one(article: dict[str, Any]) -> dict[str, Any]:
         article["content_tr"] = None
         return article
 
-    parsed = _parse_response(raw, article, source_url=source_url)
+    parsed = _parse_response(raw, article, source_url=source_url, source_name=source_name)
     if parsed is None:
         logger.warning(
             "Could not parse translation response for %s, raw: %.200s",

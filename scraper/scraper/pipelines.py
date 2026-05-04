@@ -140,6 +140,7 @@ class TranslationPipeline:
             excerpt=item.get("excerpt_original", ""),
             body=item.get("content_original", ""),
             source_url=item.get("source_url", ""),
+            source_name=item.get("source", ""),
         )
         if result is None:
             logger.warning("Translation failed for %s", item.get("source_url", ""))
