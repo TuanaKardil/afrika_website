@@ -30,11 +30,11 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       </Link>
 
       {/* Body */}
-      <div className="flex flex-col flex-1 px-4 pt-3.5 pb-4">
+      <div className="flex flex-col flex-1 px-2.5 pt-2.5 pb-3 md:px-4 md:pt-3.5 md:pb-4">
         {/* Meta: amber dot + date + category */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="w-[5px] h-[5px] rounded-full bg-amber shrink-0" />
-          <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-fg-3">
+        <div className="flex items-center gap-1 mb-1.5 md:gap-1.5 md:mb-2">
+          <span className="w-[4px] h-[4px] md:w-[5px] md:h-[5px] rounded-full bg-amber shrink-0" />
+          <span className="text-[9px] md:text-[11px] font-semibold tracking-[0.07em] uppercase text-fg-3">
             {formatDateShort(article.published_at)}
             {category ? ` • ${category.toLocaleUpperCase("tr-TR")}` : ""}
           </span>
@@ -42,7 +42,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
         {/* Title */}
         <Link href={href}>
-          <h2 className="text-base font-black leading-[1.28] tracking-tight text-navy line-clamp-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
+          <h2 className="text-[13px] md:text-base font-black leading-[1.28] tracking-tight text-navy line-clamp-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
             {article.title_tr}
           </h2>
         </Link>

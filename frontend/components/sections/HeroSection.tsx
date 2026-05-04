@@ -51,7 +51,7 @@ export default function HeroSection({
                   {category ? ` • ${category.toLocaleUpperCase("tr-TR")}` : ""}
                 </span>
               </div>
-              <h1 className="text-[15px] md:text-[30px] font-black leading-[1.18] tracking-[-0.018em] md:tracking-[-0.022em] text-white mb-1.5 md:mb-3 line-clamp-4 md:line-clamp-none group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
+              <h1 className="text-[13px] md:text-[30px] font-black leading-[1.18] tracking-[-0.018em] md:tracking-[-0.022em] text-white mb-1.5 md:mb-3 line-clamp-4 md:line-clamp-none group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
                 {article.title_tr}
               </h1>
               {article.excerpt_tr && (
@@ -83,8 +83,8 @@ export default function HeroSection({
                     <div className="absolute inset-0 bg-[linear-gradient(135deg,#143063,#1e6fb8)]" />
                   )}
                 </div>
-                <div className="px-2 py-2 md:px-4 md:py-3 shrink-0">
-                  <h2 className="text-[11px] md:text-[14px] font-black leading-[1.28] tracking-tight text-navy line-clamp-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
+                <div className="px-1.5 py-1.5 md:px-4 md:py-3 shrink-0">
+                  <h2 className="text-[10px] md:text-[14px] font-black leading-[1.28] tracking-tight text-navy line-clamp-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
                     {sec.title_tr}
                   </h2>
                 </div>
@@ -109,7 +109,7 @@ export default function HeroSection({
                       href={`/haber/${top.slug}`}
                       className="group flex items-start gap-2 md:gap-3 md:py-3"
                     >
-                      <span className="text-[11px] md:text-[13px] font-bold tabular-nums leading-[1.4] tracking-[0.04em] text-fg-3 shrink-0 pt-px">
+                      <span className="text-[10px] md:text-[13px] font-bold tabular-nums leading-[1.4] tracking-[0.04em] text-fg-3 shrink-0 pt-px">
                         {String(idx + 1).padStart(2, "0")}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -119,7 +119,7 @@ export default function HeroSection({
                             {topCategory ?? formatDateShort(top.published_at)}
                           </span>
                         </div>
-                        <h3 className="text-[11px] md:text-[14px] font-bold leading-[1.3] tracking-[-0.005em] text-on-surface line-clamp-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
+                        <h3 className="text-[10px] md:text-[14px] font-bold leading-[1.3] tracking-[-0.005em] text-on-surface line-clamp-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
                           {top.title_tr}
                         </h3>
                       </div>
