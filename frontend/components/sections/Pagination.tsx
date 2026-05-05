@@ -39,12 +39,18 @@ export default function Pagination({
         <Link
           href={buildUrl(basePath, page - 1)}
           scroll={false}
-          className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-sm hover:bg-surface-container transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-lg hover:bg-surface-container transition-colors"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
           Önceki
         </Link>
       ) : (
-        <span className="px-3 py-2 font-body text-sm text-on-surface/30 cursor-not-allowed">
+        <span className="inline-flex items-center gap-1.5 px-3 py-2 font-body text-sm text-on-surface/30 cursor-not-allowed">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
           Önceki
         </span>
       )}
@@ -99,13 +105,19 @@ export default function Pagination({
         <Link
           href={buildUrl(basePath, page + 1)}
           scroll={false}
-          className="px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-sm hover:bg-surface-container transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-2 font-body text-sm text-on-surface/70 hover:text-primary rounded-lg hover:bg-surface-container transition-colors"
         >
           Sonraki
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
         </Link>
       ) : (
-        <span className="px-3 py-2 font-body text-sm text-on-surface/30 cursor-not-allowed">
+        <span className="inline-flex items-center gap-1.5 px-3 py-2 font-body text-sm text-on-surface/30 cursor-not-allowed">
           Sonraki
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
         </span>
       )}
     </nav>

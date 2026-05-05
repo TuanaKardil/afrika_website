@@ -1,5 +1,6 @@
 import { createBuildClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
+import { getTenderStatus as _getTenderStatus } from "@/lib/tender-utils";
 
 const createClient = createBuildClient;
 
@@ -8,43 +9,68 @@ export type TenderCategory = Database["public"]["Tables"]["tender_categories"]["
 
 export const PAGE_SIZE = 12;
 
-export type TenderStatus = "active" | "planned" | "expired";
+// Re-export from client-safe utils so server-side callers keep one import path
+export type { TenderStatus, TenderSort } from "@/lib/tender-utils";
+export { getTenderStatus } from "@/lib/tender-utils";
 
 export interface TenderFilters {
-  status?: TenderStatus | "";
+  status?: "active" | "planned" | "expired" | "";
   category?: string;
   region?: string;
   source?: string;
   ulke?: string;
-}
-
-// Compute tender status from dates (no status column in DB)
-export function getTenderStatus(tender: Tender): TenderStatus {
-  const now = new Date();
-  if (tender.deadline_at && new Date(tender.deadline_at) < now) return "expired";
-  if (tender.project_start_at && new Date(tender.project_start_at) > now) return "planned";
-  return "active";
+  search?: string;
+  sort?: "deadline_asc" | "newest" | "budget_desc" | "title_asc" | "";
+  budgetMin?: number;
+  budgetMax?: number;
+  deadlineFrom?: string; // YYYY-MM-DD
+  deadlineTo?: string;   // YYYY-MM-DD
 }
 
 export async function getTenders(
   page = 1,
-  filters: TenderFilters = {}
+  filters: TenderFilters = {},
+  pageSize = PAGE_SIZE
 ): Promise<{ tenders: Tender[]; count: number }> {
   const supabase = createClient();
-  const offset = (page - 1) * PAGE_SIZE;
+  const offset = (page - 1) * pageSize;
   const nowIso = new Date().toISOString();
 
   let query = supabase
     .from("tenders")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
-    .order("deadline_at", { ascending: true })
-    .range(offset, offset + PAGE_SIZE - 1);
+    .range(offset, offset + pageSize - 1);
+
+  // Sorting
+  const sort = filters.sort || "deadline_asc";
+  if (sort === "newest") {
+    query = query.order("scraped_at", { ascending: false });
+  } else if (sort === "budget_desc") {
+    query = query.order("budget_usd", { ascending: false, nullsFirst: false });
+  } else if (sort === "title_asc") {
+    query = query.order("title_tr", { ascending: true });
+  } else {
+    // deadline_asc (default: soonest deadline first)
+    query = query.order("deadline_at", { ascending: true });
+  }
 
   if (filters.category) query = query.eq("category_slug", filters.category);
   if (filters.region) query = query.eq("region_slug", filters.region);
   if (filters.source) query = query.eq("source", filters.source);
   if (filters.ulke) query = query.ilike("country", filters.ulke);
+  if (filters.budgetMin != null) query = query.gte("budget_usd", filters.budgetMin);
+  if (filters.budgetMax != null) query = query.lte("budget_usd", filters.budgetMax);
+  if (filters.deadlineFrom) query = query.gte("deadline_at", filters.deadlineFrom);
+  if (filters.deadlineTo) query = query.lte("deadline_at", filters.deadlineTo + "T23:59:59Z");
+
+  // Search: ILIKE across title, institution, reference_number, country, description
+  if (filters.search && filters.search.trim()) {
+    const term = filters.search.trim().replace(/[%_]/g, "\\$&");
+    query = query.or(
+      `title_tr.ilike.%${term}%,institution_tr.ilike.%${term}%,reference_number.ilike.%${term}%,country_tr.ilike.%${term}%,description_tr.ilike.%${term}%`
+    );
+  }
 
   // Always exclude expired at the DB level — show only active/planned tenders
   query = query.or(`deadline_at.is.null,deadline_at.gte.${nowIso}`);
@@ -54,9 +80,9 @@ export async function getTenders(
 
   // Refine active vs planned in-memory (both are within the non-expired set)
   if (filters.status === "active") {
-    tenders = tenders.filter((t) => getTenderStatus(t) === "active");
+    tenders = tenders.filter((t) => _getTenderStatus(t) === "active");
   } else if (filters.status === "planned") {
-    tenders = tenders.filter((t) => getTenderStatus(t) === "planned");
+    tenders = tenders.filter((t) => _getTenderStatus(t) === "planned");
   }
 
   return {
@@ -73,8 +99,9 @@ export async function getTenderBySlug(slug: string): Promise<Tender | null> {
     .from("tenders")
     .select("*")
     .eq("slug", slug)
-    .maybeSingle();
-  return data;
+    .order("scraped_at", { ascending: false })
+    .limit(1);
+  return data?.[0] ?? null;
 }
 
 export async function getTendersByCategory(
@@ -179,6 +206,55 @@ export async function getTenderStats(): Promise<TenderStats> {
     expiringIn7Days: expiringIn7Days ?? 0,
     totalBudgetUsd,
   };
+}
+
+export async function getSimilarTenders(
+  tender: Tender,
+  limit = 4
+): Promise<Tender[]> {
+  const supabase = createClient();
+  const nowIso = new Date().toISOString();
+
+  const base = () =>
+    supabase
+      .from("tenders")
+      .select("*")
+      .eq("is_suppressed", false)
+      .neq("id", tender.id)
+      .or(`deadline_at.is.null,deadline_at.gte.${nowIso}`)
+      .order("deadline_at", { ascending: true })
+      .limit(10);
+
+  const [countryRes, categoryRes] = await Promise.all([
+    tender.country ? base().eq("country", tender.country) : Promise.resolve({ data: [] as Tender[] }),
+    tender.category_slug ? base().eq("category_slug", tender.category_slug) : Promise.resolve({ data: [] as Tender[] }),
+  ]);
+
+  const countryIds = new Set((countryRes.data ?? []).map((t) => t.id));
+  const seen = new Set<string>();
+  const all: Tender[] = [];
+
+  for (const t of countryRes.data ?? []) {
+    if (!seen.has(t.id)) { seen.add(t.id); all.push(t); }
+  }
+  for (const t of categoryRes.data ?? []) {
+    if (!seen.has(t.id)) { seen.add(t.id); all.push(t); }
+  }
+
+  // Sort: country match first, then budget proximity
+  all.sort((a, b) => {
+    const aCountry = countryIds.has(a.id) ? 0 : 1;
+    const bCountry = countryIds.has(b.id) ? 0 : 1;
+    if (aCountry !== bCountry) return aCountry - bCountry;
+    if (tender.budget_usd != null) {
+      const aDiff = a.budget_usd != null ? Math.abs(a.budget_usd - tender.budget_usd!) : Infinity;
+      const bDiff = b.budget_usd != null ? Math.abs(b.budget_usd - tender.budget_usd!) : Infinity;
+      if (aDiff !== bDiff) return aDiff - bDiff;
+    }
+    return 0;
+  });
+
+  return all.slice(0, limit);
 }
 
 export async function getAllTenderSlugs(): Promise<string[]> {
