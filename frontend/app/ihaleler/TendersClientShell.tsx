@@ -12,7 +12,7 @@ import type { Tender, TenderCategory } from "@/lib/queries/tenders";
 // ---------------------------------------------------------------------------
 
 export interface FilterState {
-  status: "" | "active" | "planned";
+  status: "" | "active" | "planned" | "expired";
   category: string;
   region: string;
   ulke: string;
@@ -35,6 +35,7 @@ const STATUS_OPTIONS: { value: FilterState["status"]; label: string }[] = [
   { value: "", label: "Tümü" },
   { value: "active", label: "Aktif" },
   { value: "planned", label: "Planlandı" },
+  { value: "expired", label: "Süresi Doldu" },
 ];
 
 const SORT_OPTIONS: { value: TenderSort; label: string }[] = [

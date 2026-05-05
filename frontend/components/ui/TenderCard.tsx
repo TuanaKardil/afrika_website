@@ -6,6 +6,7 @@ import TenderFavoriteButton from "./TenderFavoriteButton";
 
 // Map ISO 3166-1 alpha-2 country codes to Unicode flag emojis
 const COUNTRY_NAME_TO_ISO: Record<string, string> = {
+  // Turkish names
   "misir": "EG", "fas": "MA", "cezayir": "DZ", "tunus": "TN", "libya": "LY",
   "sudan": "SD", "moritanya": "MR", "nijerya": "NG", "gana": "GH", "senegal": "SN",
   "fildisi sahili": "CI", "mali": "ML", "burkina faso": "BF", "benin": "BJ",
@@ -20,6 +21,23 @@ const COUNTRY_NAME_TO_ISO: Record<string, string> = {
   "guney afrika": "ZA", "zimbabve": "ZW", "botsvana": "BW", "namibya": "NA",
   "mozambik": "MZ", "zambiya": "ZM", "malavi": "MW", "lesoto": "LS",
   "esvatini": "SZ",
+  // English names (for when translation fails)
+  "egypt": "EG", "morocco": "MA", "algeria": "DZ", "tunisia": "TN",
+  "mauritania": "MR", "nigeria": "NG", "ghana": "GH",
+  "ivory coast": "CI", "cote d'ivoire": "CI",
+  "guinea": "GN", "guinea bissau": "GW",
+  "liberia": "LR", "gambia": "GM", "the gambia": "GM", "cape verde": "CV",
+  "niger": "NE", "ethiopia": "ET", "tanzania": "TZ",
+  "rwanda": "RW", "somalia": "SO", "djibouti": "DJ",
+  "eritrea": "ER", "south sudan": "SS", "comoros": "KM", "seychelles": "SC",
+  "madagascar": "MG",
+  "democratic republic of congo": "CD", "dr congo": "CD", "drc": "CD",
+  "republic of congo": "CG", "cameroon": "CM", "chad": "TD",
+  "central african republic": "CF", "car": "CF",
+  "equatorial guinea": "GQ", "sao tome and principe": "ST",
+  "south africa": "ZA", "zimbabwe": "ZW", "botswana": "BW",
+  "namibia": "NA", "mozambique": "MZ", "zambia": "ZM", "malawi": "MW",
+  "lesotho": "LS", "eswatini": "SZ", "swaziland": "SZ",
 };
 
 function isoToFlagEmoji(code: string): string {

@@ -1,6 +1,7 @@
 import { createBuildClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 import { getTenderStatus as _getTenderStatus } from "@/lib/tender-utils";
+import { unstable_cache } from "next/cache";
 
 const createClient = createBuildClient;
 
@@ -72,13 +73,15 @@ export async function getTenders(
     );
   }
 
-  // Always exclude expired at the DB level — show only active/planned tenders
-  query = query.or(`deadline_at.is.null,deadline_at.gte.${nowIso}`);
+  if (filters.status === "expired") {
+    query = query.not("deadline_at", "is", null).lt("deadline_at", nowIso);
+  } else {
+    query = query.or(`deadline_at.is.null,deadline_at.gte.${nowIso}`);
+  }
 
   const { data, count } = await query;
   let tenders = data ?? [];
 
-  // Refine active vs planned in-memory (both are within the non-expired set)
   if (filters.status === "active") {
     tenders = tenders.filter((t) => _getTenderStatus(t) === "active");
   } else if (filters.status === "planned") {
@@ -160,27 +163,24 @@ export interface TenderStats {
   totalBudgetUsd: number;
 }
 
-export async function getTenderStats(): Promise<TenderStats> {
+const _getTenderStatsImpl = async (): Promise<TenderStats> => {
   const supabase = createClient();
   const now = new Date();
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  // Active tenders: deadline in the future (or no deadline) and not suppressed
   const { count: active } = await supabase
     .from("tenders")
     .select("*", { count: "exact", head: true })
     .eq("is_suppressed", false)
     .or(`deadline_at.is.null,deadline_at.gte.${now.toISOString()}`);
 
-  // Added this week: scraped within last 7 days
   const { count: addedThisWeek } = await supabase
     .from("tenders")
     .select("*", { count: "exact", head: true })
     .eq("is_suppressed", false)
     .gte("scraped_at", oneWeekAgo.toISOString());
 
-  // Expiring in 7 days: deadline between now and 7 days from now
   const { count: expiringIn7Days } = await supabase
     .from("tenders")
     .select("*", { count: "exact", head: true })
@@ -188,7 +188,6 @@ export async function getTenderStats(): Promise<TenderStats> {
     .gte("deadline_at", now.toISOString())
     .lte("deadline_at", sevenDaysFromNow.toISOString());
 
-  // Total budget: sum of budget_usd
   const { data: budgetData } = await supabase
     .from("tenders")
     .select("budget_usd")
@@ -206,7 +205,13 @@ export async function getTenderStats(): Promise<TenderStats> {
     expiringIn7Days: expiringIn7Days ?? 0,
     totalBudgetUsd,
   };
-}
+};
+
+export const getTenderStats = unstable_cache(
+  _getTenderStatsImpl,
+  ["tender-stats"],
+  { revalidate: 300 }
+);
 
 export async function getSimilarTenders(
   tender: Tender,

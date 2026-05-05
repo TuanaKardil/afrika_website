@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 const VALID_SORTS: TenderSort[] = ["deadline_asc", "newest", "budget_desc", "title_asc"];
-const VALID_STATUSES = ["active", "planned", ""] as const;
+const VALID_STATUSES = ["active", "planned", "expired", ""] as const;
 const VALID_PAGE_SIZES = [10, 20, 50] as const;
 
 interface IhalelerPageProps {

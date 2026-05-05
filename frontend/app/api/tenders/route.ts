@@ -8,9 +8,9 @@ export async function GET(req: NextRequest) {
   const pageSize = Math.min(100, Math.max(1, Number(sp.get("pageSize") ?? 20) || 20));
 
   const rawStatus = sp.get("status") ?? "";
-  const status = (["active", "planned", ""].includes(rawStatus)
+  const status = (["active", "planned", "expired", ""].includes(rawStatus)
     ? rawStatus
-    : "") as "" | "active" | "planned";
+    : "") as "" | "active" | "planned" | "expired";
 
   const rawSort = sp.get("sort") ?? "";
   const validSorts: TenderSort[] = ["deadline_asc", "newest", "budget_desc", "title_asc"];
@@ -31,5 +31,9 @@ export async function GET(req: NextRequest) {
   };
 
   const result = await getTenders(page, filters, pageSize);
-  return NextResponse.json(result);
+  return NextResponse.json(result, {
+    headers: {
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+    },
+  });
 }
