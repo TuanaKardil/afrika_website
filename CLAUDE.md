@@ -69,7 +69,11 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 | **Tailwind classes** | Always use Tailwind classes instead of inline styles. |
 | **Supabase RLS** | Policy review on every schema change. |
 
-## 6. Navigation (8 Tabs)
+## 6. Navigation
+
+**UI tabs (7 visible + 1 module):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, etkinlikler-fuarlar, ulkeler, ihaleler (separate module), diger (hidden)
+
+**Classifier nav_tab values (8):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, turk-is-dunyasi, etkinlikler-fuarlar, ulkeler, diger
 
 | Slug | Description |
 |------|-------------|
@@ -77,9 +81,10 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 | pazarlar-ekonomi | Macro data, stock markets, inflation, GDP, foreign exchange |
 | ticaret-ihracat | Trade agreements, export/import statistics, customs |
 | sektorler | Sector analysis, industry trends, company news |
-| turk-is-dunyasi | Turkish companies, joint ventures, government initiatives |
+| turk-is-dunyasi | Turkish companies, joint ventures, government initiatives (classifier only, removed from UI nav) |
 | etkinlikler-fuarlar | Conferences, fairs, expos, summits |
 | ulkeler | Country profiles, political developments, bilateral relations |
+| ihaleler | Tender listings module (separate AI pipeline, not a nav_tab classifier value) |
 | diger | General Africa news that does not fit the categories above |
 
 ## 7. Regions (6)
@@ -93,9 +98,13 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 | dogu-afrika | Ethiopia, Kenya, Somalia, Tanzania, Uganda, Rwanda, Burundi, Djibouti, Eritrea, South Sudan, Seychelles, Comoros, Mauritius, Madagascar |
 | guney-afrika | South Africa, Botswana, Namibia, Zambia, Zimbabwe, Mozambique, Malawi, Lesotho, Eswatini, Angola |
 
-## 8. Sectors (30)
+## 8. Sectors (26)
 
-Packaging & Recycling, Banking & Finance, White Goods & Home Appliances, Cement & Construction Materials, Iron-Steel & Industry, Energy, Home Textiles & Carpets, Fintech & Digital Payments, Trade Fairs & Events, Real Estate & Housing, Aviation & Civil Aviation, HVAC-R (Heating-Cooling), Pharmaceuticals & Medical Devices, Construction & Contracting, Chemicals & Petrochemicals, Cosmetics & Hygiene, Logistics & Transportation, Mining, Machinery & Spare Parts, Furniture & Decoration, Automotive, Retail & E-commerce, Healthcare & Health Tourism, Defense Industry, Agriculture & Food, Technology & Software, Textile & Apparel, Telecommunications, Tourism & Hospitality, Renewable Energy
+Active slugs (source of truth: `docs/sectors.md` and `prompts/classify.md`):
+
+insaat-muteahhitlik, enerji, savunma-sanayi, madencilik, tekstil-hazir-giyim, kozmetik-hijyen, demir-celik-sanayi, tarim-gida, otomotiv, ambalaj-geri-donusum, bankacilik-finans, beyaz-esya-ev-aletleri, cimento-insaat-malzemeleri, ev-tekstili-hali, gayrimenkul-konut, havacilik-sivil-havacilik, hvac-r, kimya-petrokimya, lojistik-tasimaci, makine-yedek-parca, mobilya-dekorasyon, perakende-e-ticaret, saglik-saglik-turizmi, teknoloji-yazilim, turizm-otelcilik, diger-sektor
+
+Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-turizmi; renewable energy → enerji; events → etkinlikler-fuarlar nav_tab.
 
 ## 9. Target Audience (4 Segments)
 
