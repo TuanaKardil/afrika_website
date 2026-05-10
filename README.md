@@ -9,7 +9,7 @@ Türkçe Afrika iş dünyası haber platformu. 5 İngilizce kaynaktan günlük h
 ## Özellikler
 
 - 5 kaynaktan günlük otomatik haber çekme (Business Insider Africa, CNBC Africa, The Africa Report, Anadolu Ajansı, The Conversation Africa)
-- Afrika alaka puanlaması (1-10) — 4 altı haberler otomatik elenir
+- Afrika alaka puanlaması (1-10) — 6 altı haberler otomatik elenir
 - Türkçe çeviri (OpenRouter `google/gemini-2.5-flash-lite`) — maks 600 kelime
 - 8 navigasyon sekmesi + 26 sektör + 6 bölge otomatik sınıflandırma
 - Türkiye duygu filtresi — Türkiye'ye negatif çerçeveleme içeren haberler gizlenir
@@ -30,7 +30,7 @@ Türkçe Afrika iş dünyası haber platformu. 5 İngilizce kaynaktan günlük h
 06:05  DeduplicationPipeline   — son 48 saatteki yinelemeler düşer
 06:06  TurkeyFilterPipeline    — Türkiye'ye negatif haberler düşer
 06:07  SanitizationPipeline    — HTML temizleme, link kaldırma
-06:09  ScorePipeline           — Afrika alaka puanı 1-10 (< 4 düşer)
+06:09  ScorePipeline           — Afrika alaka puanı 1-10 (< 6 düşer)
 06:18  TranslatePipeline       — Türkçe çeviri, maks 600 kelime
 06:22  ContentCleanStep        — Yapay zeka ile alakasız promosyon içerik temizleme
 06:25  ClassifyPipeline        — nav_tab + sector_slugs + region_slug

@@ -10,7 +10,7 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 - **Update time:** 06:00 TST (n8n cron `0 6 * * *`)
 - **Fetch window:** Last 24 hours
 - **Duplicate check window:** Last 48 hours
-- **Publication threshold:** Score 4+
+- **Publication threshold:** Score 6+
 - **News count limit:** NONE (filtering creates a natural ceiling)
 
 ## 2. Tech Stack
@@ -30,15 +30,15 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 06:01 scraper/run.sh        (5 sources scraped in parallel)
 06:05 DuplicatePipeline      (semantic similarity over last 48 hours)
 06:08 TurkeyFilterPipeline   (GPT-5 Nano, BLOCK items are dropped)
-06:10 ScorePipeline          (Gemini 2.5 Flash-Lite, 1-3 are dropped)
-06:18 TranslatePipeline      (only score 4+, 600 words, SEO+GEO+AEO)
+06:10 ScorePipeline          (Gemini 2.5 Flash-Lite, 1-5 are dropped)
+06:18 TranslatePipeline      (only score 6+, 600 words, SEO+GEO+AEO)
 06:22 ContentCleanStep       (Gemini 2.5 Flash-Lite, removes off-topic promos from content_tr)
 06:25 ClassifyPipeline       (nav_tab + sector + region JSON)
 06:28 HashtagsPipeline       (8-15 hashtags from canonical list)
 06:30 Written to Supabase
 ```
 
-**Cost-driven ordering:** The cheapest steps (duplicate, turkey_filter, score) run first. Expensive translation is applied only to score 4+ items. 40-60% cost savings.
+**Cost-driven ordering:** The cheapest steps (duplicate, turkey_filter, score) run first. Expensive translation is applied only to score 6+ items. 40-60% cost savings.
 
 ## 4. Model Configuration
 
@@ -46,10 +46,10 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 |------|-------|-------------|------------|---------------------|
 | score | Gemini 2.5 Flash-Lite | 0.1 | 150 | All news |
 | turkey_filter | GPT-5 Nano | 0.0 | 50 | All news |
-| translate | Gemini 2.5 Flash-Lite | 0.2 | 4096 | Score 4+ only |
-| clean_content | Gemini 2.5 Flash-Lite | 0.0 | 4096 | Score 4+ only (after translate) |
-| classify | GPT-5 Nano | 0.0 | 200 | Score 4+ only |
-| hashtags | Gemini 2.5 Flash-Lite | 0.2 | 300 | Score 4+ only |
+| translate | Gemini 2.5 Flash-Lite | 0.2 | 4096 | Score 6+ only |
+| clean_content | Gemini 2.5 Flash-Lite | 0.0 | 4096 | Score 6+ only (after translate) |
+| classify | GPT-5 Nano | 0.0 | 200 | Score 6+ only |
+| hashtags | Gemini 2.5 Flash-Lite | 0.2 | 300 | Score 6+ only |
 
 **Why Flash-Lite (not Flash):** Flash is $0.30/M input, Flash-Lite is $0.10/M input. 84% savings on the translation step with negligible quality difference.
 
@@ -62,7 +62,7 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 | **600-word limit** | Translated body is max 600 words (excluding source link). 1000+ word originals are summarized. |
 | **Source link required** | Every news item must include a source via `<p class="source-link">`. |
 | **8-15 hashtags required** | Between 8 and 15, drawn from the canonical list (`docs/hashtags.md`). |
-| **Score 4+ is published** | 1-3 are dropped (not translated, not classified). |
+| **Score 6+ is published** | 1-5 are dropped (not translated, not classified). |
 | **Conventional Commits** | `type(scope): description` format is mandatory. |
 | **HTML sanitization** | Clean with `bleach`, then re-sanitize before render with `sanitize-html`. |
 | **TypeScript types** | Type definitions are required for every API endpoint and function. |

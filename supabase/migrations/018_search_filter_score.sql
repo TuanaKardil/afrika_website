@@ -1,4 +1,4 @@
--- Update search_articles to exclude suppressed articles and score < 5.
+-- Update search_articles to exclude suppressed articles and score < 6.
 CREATE OR REPLACE FUNCTION search_articles(
   query text,
   lim integer DEFAULT 20,
@@ -21,7 +21,7 @@ BEGIN
       SELECT *
       FROM articles
       WHERE is_suppressed = false
-        AND (score IS NULL OR score >= 5)
+        AND (score IS NULL OR score >= 6)
         AND to_tsvector(%L, coalesce(title_tr, '') || ' ' || coalesce(content_tr, ''))
           @@ plainto_tsquery(%L, $1)
       ORDER BY
