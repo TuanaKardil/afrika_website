@@ -27,8 +27,11 @@ def _get_supabase():
     )
 
 
+_TR_CHARS = str.maketrans("çşığöüÇŞİĞÖÜ", "csigoucsigou")
+
+
 def _make_slug(title: str, existing_slugs: set[str]) -> str:
-    base = title.lower()
+    base = title.translate(_TR_CHARS).lower()
     base = re.sub(r"[^\w\s-]", "", base)
     base = re.sub(r"[\s_]+", "-", base).strip("-")
     base = base[:80]
@@ -336,7 +339,8 @@ class StoragePipeline:
             item["content_tr"] = None
 
         content_hash = _md5(item.get("content_original") or "")
-        slug = _make_slug(title, self._known_slugs)
+        slug_source = item.get("title_tr") or title
+        slug = _make_slug(slug_source, self._known_slugs)
         self._known_slugs.add(slug)
 
         row = {
