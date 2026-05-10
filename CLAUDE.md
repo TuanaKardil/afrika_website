@@ -10,7 +10,7 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 - **Update time:** 06:00 TST (n8n cron `0 6 * * *`)
 - **Fetch window:** Last 24 hours
 - **Duplicate check window:** Last 48 hours
-- **Publication threshold:** Score 6+
+- **Publication threshold:** Score 5+
 - **News count limit:** NONE (filtering creates a natural ceiling)
 
 ## 2. Tech Stack
@@ -30,15 +30,15 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 06:01 scraper/run.sh        (5 sources scraped in parallel)
 06:05 DuplicatePipeline      (semantic similarity over last 48 hours)
 06:08 TurkeyFilterPipeline   (GPT-5 Nano, BLOCK items are dropped)
-06:10 ScorePipeline          (Gemini 2.5 Flash-Lite, 1-5 are dropped)
-06:18 TranslatePipeline      (only score 6+, 600 words, SEO+GEO+AEO)
+06:10 ScorePipeline          (Gemini 2.5 Flash-Lite, 1-4 are dropped)
+06:18 TranslatePipeline      (only score 5+, 600 words, SEO+GEO+AEO)
 06:22 ContentCleanStep       (Gemini 2.5 Flash-Lite, removes off-topic promos from content_tr)
 06:25 ClassifyPipeline       (nav_tab + sector + region JSON)
 06:28 HashtagsPipeline       (8-15 hashtags from canonical list)
 06:30 Written to Supabase
 ```
 
-**Cost-driven ordering:** The cheapest steps (duplicate, turkey_filter, score) run first. Expensive translation is applied only to score 6+ items. 40-60% cost savings.
+**Cost-driven ordering:** The cheapest steps (duplicate, turkey_filter, score) run first. Expensive translation is applied only to score 5+ items. 40-60% cost savings.
 
 ## 4. Model Configuration
 
@@ -46,7 +46,7 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 |------|-------|-------------|------------|---------------------|
 | score | Gemini 2.5 Flash-Lite | 0.1 | 150 | All news |
 | turkey_filter | GPT-5 Nano | 0.0 | 50 | All news |
-| translate | Gemini 2.5 Flash-Lite | 0.2 | 4096 | Score 6+ only |
+| translate | Gemini 2.5 Flash-Lite | 0.2 | 4096 | Score 5+ only |
 | clean_content | Gemini 2.5 Flash-Lite | 0.0 | 4096 | Score 6+ only (after translate) |
 | classify | GPT-5 Nano | 0.0 | 200 | Score 6+ only |
 | hashtags | Gemini 2.5 Flash-Lite | 0.2 | 300 | Score 6+ only |

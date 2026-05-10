@@ -31,7 +31,7 @@ export async function searchArticles(
     .from("articles")
     .select("*", { count: "exact", head: true })
     .eq("is_suppressed", false)
-    .gte("score", 6)
+    .gte("score", 5)
     .not("title_tr", "is", null)
     .textSearch("title_tr", trimmed);
 

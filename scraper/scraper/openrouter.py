@@ -13,7 +13,7 @@ MAX_RETRIES = 3
 
 # Model aliases — update here to change models project-wide
 GEMINI_FLASH_LITE = "google/gemini-2.5-flash-lite"   # score, translate, hashtags
-GPT5_NANO        = "openai/gpt-5-nano"                 # turkey_filter, classify
+GPT5_NANO        = "openai/gpt-4o-mini"                 # turkey_filter, classify
 
 
 def chat(
