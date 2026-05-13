@@ -49,6 +49,9 @@ class CNBCAfricaSpider(scrapy.Spider):
 
         ld_json = _extract_ld_json(response)
 
+        if "video" in (ld_json.get("@type") or "").lower():
+            return
+
         pub_time_str = (
             response.css("meta[property='article:published_time']::attr(content)").get()
             or (ld_json.get("uploadDate") if ld_json else None)
@@ -123,7 +126,4 @@ def _extract_ld_json(response: Response) -> dict:
 
 
 def _is_article(url: str) -> bool:
-    return bool(
-        re.search(r"cnbcafrica\.com/media/\d+/[a-z0-9-]+/?$", url)
-        or re.search(r"cnbcafrica\.com/20\d{2}/[a-z0-9-]+/?$", url)
-    )
+    return bool(re.search(r"cnbcafrica\.com/20\d{2}/[a-z0-9-]+/?$", url))
