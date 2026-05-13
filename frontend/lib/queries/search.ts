@@ -15,7 +15,6 @@ export async function searchArticles(
   const offset = (page - 1) * SEARCH_PAGE_SIZE;
 
   // Use the search_articles RPC (full-text over title + body with ranking)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: rpcData, error } = await (supabase.rpc as any)(
     "search_articles",
     { query: trimmed, lim: SEARCH_PAGE_SIZE, off: offset }

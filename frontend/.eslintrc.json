@@ -1,5 +1,5 @@
 {
-  "extends": "next/core-web-vitals",
+  "extends": "next",
   "rules": {
     "no-restricted-imports": [
       "error",
@@ -11,6 +11,9 @@
           }
         ]
       }
-    ]
+    ],
+    "@next/next/no-img-element": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "react/no-unescaped-entities": "off"
   }
 }

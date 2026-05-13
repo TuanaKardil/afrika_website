@@ -52,7 +52,6 @@ export default function SaveButton({ articleId }: SaveButtonProps) {
     setSaved(optimistic);
 
     if (optimistic) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await supabase
         .from("saved_articles")
         .insert({ user_id: userId, article_id: articleId } as any);

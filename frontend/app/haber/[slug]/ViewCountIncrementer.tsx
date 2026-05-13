@@ -10,7 +10,6 @@ interface ViewCountIncrementerProps {
 export default function ViewCountIncrementer({ articleId }: ViewCountIncrementerProps) {
   useEffect(() => {
     const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.rpc as any)("increment_view_count", { article_id: articleId }).then(() => {});
   }, [articleId]);
 

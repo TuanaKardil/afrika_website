@@ -52,7 +52,6 @@ export default function TenderFavoriteButton({ tenderId }: TenderFavoriteButtonP
         setIsSaved(false);
       } else {
         // Type cast needed: supabase-js@2.103 + ssr@0.5 mismatches __InternalSupabase.PostgrestVersion
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)
           .from("saved_tenders")
           .insert({ user_id: userId, tender_id: tenderId });
