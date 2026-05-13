@@ -138,3 +138,5 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 8. **Output languages:** Prompts in English, outputs in Turkish.
 9. **Conventional Commits:** `feat(scrape): add CNBC Africa source`, `fix(score): handle null summary`
 10. **Translation cache:** Skip if the same news item arrives again, keyed by `content_hash`.
+11. **Never use `next/image`:** Vercel Hobby plan has a 1,000 image/month quota on `/_next/image`. All image tags must be plain `<img>` with direct Supabase Storage URLs. ESLint enforces this.
+12. **Deployments go from the repo root:** Run `vercel --prod` from `/Desktop/afrika website/` (not from `frontend/`). The `frontend` Vercel project is a ghost — `www.afrikahaberleri.tr` is served by the `afrika-website` project which is linked to the repo root.
