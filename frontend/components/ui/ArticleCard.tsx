@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Article } from "@/lib/queries/articles";
 import { formatDateShort } from "@/lib/utils";
@@ -17,12 +16,12 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       {/* Image */}
       <Link href={href} className="block overflow-hidden aspect-[16/10] relative bg-surface-2">
         {article.featured_image_url ? (
-          <Image
+          <img
             src={article.featured_image_url}
             alt={article.title_tr ?? ""}
-            fill
-            sizes="(max-width: 1024px) 50vw, 25vw"
-            className="object-cover"
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full bg-[linear-gradient(135deg,#143063,#1e6fb8)]" />

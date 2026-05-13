@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { getAllSlugs, getArticleBySlug } from "@/lib/queries/articles";
 import { sanitizeArticleContent } from "@/lib/sanitize";
 import CategoryBadge from "@/components/ui/CategoryBadge";
@@ -110,13 +109,12 @@ export default async function HaberPage({ params }: HaberPageProps) {
       {article.featured_image_url && (
         <figure className="mb-8">
           <div className="relative aspect-video rounded-sm overflow-hidden">
-            <Image
+            <img
               src={article.featured_image_url}
               alt={article.title_tr ?? ""}
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 768px"
-              className="object-cover"
+              fetchPriority="high"
+              decoding="async"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
           {article.image_credit && (

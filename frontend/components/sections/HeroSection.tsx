@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Article } from "@/lib/queries/articles";
 import { formatDateShort } from "@/lib/utils";
@@ -31,13 +30,12 @@ export default function HeroSection({
             className="group relative block overflow-hidden bg-surface-2 aspect-[4/5] md:aspect-auto md:min-h-[420px]"
           >
             {article.featured_image_url ? (
-              <Image
+              <img
                 src={article.featured_image_url}
                 alt={article.title_tr ?? ""}
-                fill
-                priority
-                sizes="(max-width: 768px) 60vw, 55vw"
-                className="object-cover"
+                fetchPriority="high"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             ) : (
               <div className="absolute inset-0 bg-[linear-gradient(135deg,#0a2351,#143063)]" />
@@ -72,12 +70,12 @@ export default function HeroSection({
               >
                 <div className="relative flex-1 overflow-hidden bg-surface-2">
                   {sec.featured_image_url ? (
-                    <Image
+                    <img
                       src={sec.featured_image_url}
                       alt={sec.title_tr ?? ""}
-                      fill
-                      sizes="(max-width: 768px) 38vw, 25vw"
-                      className="object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
                     <div className="absolute inset-0 bg-[linear-gradient(135deg,#143063,#1e6fb8)]" />

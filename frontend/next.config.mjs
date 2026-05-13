@@ -25,15 +25,7 @@ const securityHeaders = [
 
 const nextConfig = {
   images: {
-    loader: "custom",
-    loaderFile: "./lib/imageLoader.ts",
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
-      },
-    ],
+    unoptimized: true,
   },
   async headers() {
     return [
