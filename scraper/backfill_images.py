@@ -17,8 +17,8 @@ SUPABASE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 
 def main():
     from supabase import create_client
-    from scraper.scraper.image_fallback import fetch_fallback_image
-    from scraper.scraper.storage import upload_image
+    from scraper.image_fallback import fetch_fallback_image
+    from scraper.storage import upload_image
 
     sb = create_client(SUPABASE_URL, SUPABASE_KEY)
 

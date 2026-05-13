@@ -247,21 +247,24 @@ class StoragePipeline:
 
         # Image fallback when source had no image
         if not featured_image_url:
-            from scraper.image_fallback import fetch_fallback_image
-            fallback_url = fetch_fallback_image(
-                title_original=title,
-                region_slug=region_slug,
-                exclude_urls=self._used_image_urls,
-            )
-            if fallback_url:
-                featured_image_url = upload_image(
-                    image_url=fallback_url,
-                    article_id=article_id,
-                    source="pexels",
-                    published_at=published_at,
+            try:
+                from scraper.image_fallback import fetch_fallback_image
+                fallback_url = fetch_fallback_image(
+                    title_original=title,
+                    region_slug=region_slug,
+                    exclude_urls=self._used_image_urls,
                 )
-                if featured_image_url:
-                    self._used_image_urls.add(featured_image_url)
+                if fallback_url:
+                    featured_image_url = upload_image(
+                        image_url=fallback_url,
+                        article_id=article_id,
+                        source="pexels",
+                        published_at=published_at,
+                    )
+                    if featured_image_url:
+                        self._used_image_urls.add(featured_image_url)
+            except Exception as exc:
+                logger.error("Image fallback failed for %s: %s", source_url, exc)
 
         # Compute featured image fingerprint for dedup against inline images
         featured_fp = ""

@@ -36,19 +36,24 @@ def _ai_search_query(title: str) -> str:
         words = re.sub(r"[^\w\s]", " ", title).split()
         return " ".join(words[:5])
 
-    from scraper.scraper.openrouter import chat
+    try:
+        from scraper.openrouter import chat
 
-    prompt = (
-        "You are helping find a stock photo for an Africa news article.\n"
-        "Write a short 3-6 word English photo search query that would return a relevant, "
-        "visually strong HD photo for this article.\n"
-        "Focus on the main subject: infrastructure, energy, agriculture, people, landscape, etc.\n"
-        "Do NOT include brand names or very specific company names — use the category instead.\n"
-        "Return ONLY the query string, nothing else.\n\n"
-        f"Article title: {title}\n"
-    )
-    result = chat([{"role": "user", "content": prompt}], temperature=0.2, max_tokens=24)
-    return (result or "").strip().strip('"').strip("'") or "Africa news"
+        prompt = (
+            "You are helping find a stock photo for an Africa news article.\n"
+            "Write a short 3-6 word English photo search query that would return a relevant, "
+            "visually strong HD photo for this article.\n"
+            "Focus on the main subject: infrastructure, energy, agriculture, people, landscape, etc.\n"
+            "Do NOT include brand names or very specific company names — use the category instead.\n"
+            "Return ONLY the query string, nothing else.\n\n"
+            f"Article title: {title}\n"
+        )
+        result = chat([{"role": "user", "content": prompt}], temperature=0.2, max_tokens=24)
+        return (result or "").strip().strip('"').strip("'") or "Africa news"
+    except Exception as exc:
+        logger.warning("AI search query failed, falling back to title words: %s", exc)
+        words = re.sub(r"[^\w\s]", " ", title).split()
+        return " ".join(words[:5])
 
 
 # ─── Pexels ────────────────────────────────────────────────────────────────────
