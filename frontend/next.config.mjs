@@ -25,7 +25,8 @@ const securityHeaders = [
 
 const nextConfig = {
   images: {
-    unoptimized: true,
+    loader: "custom",
+    loaderFile: "./lib/imageLoader.ts",
     remotePatterns: [
       {
         protocol: "https",
