@@ -109,6 +109,12 @@ body {
   border-radius: 2px;
 }
 
+/* Defer rendering of off-screen article cards */
+.article-card-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 320px;
+}
+
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;

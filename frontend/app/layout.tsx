@@ -19,8 +19,16 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
+    : "https://krtpfjqrxhuockmckkyk.supabase.co";
+
   return (
     <html lang="tr" className={inter.variable}>
+      <head>
+        <link rel="preconnect" href={supabaseHostname} />
+        <link rel="dns-prefetch" href={supabaseHostname} />
+      </head>
       <body className="bg-background text-on-surface font-sans min-h-screen flex flex-col antialiased">
         <Header />
         <div className="flex-1">{children}</div>

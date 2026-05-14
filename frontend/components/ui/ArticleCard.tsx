@@ -12,7 +12,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
   const category = resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags);
 
   return (
-    <article className="group flex flex-col border border-outline-variant bg-surface transition-[border-color] duration-[120ms] hover:border-border-strong">
+    <article className="article-card-lazy group flex flex-col border border-outline-variant bg-surface transition-[border-color] duration-[120ms] hover:border-border-strong">
       {/* Image */}
       <Link href={href} className="block overflow-hidden aspect-[16/10] relative bg-surface-2">
         {article.featured_image_url ? (

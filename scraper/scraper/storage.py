@@ -51,13 +51,19 @@ def _remove_bbc_watermark(img: Image.Image) -> Image.Image:
     return img
 
 
+_MAX_IMAGE_WIDTH = 1200
+
+
 def _to_jpeg_bytes(raw_bytes: bytes, source: str = "") -> bytes:
     buf = io.BytesIO(raw_bytes)
     img = Image.open(buf).convert("RGB")
     if source == "bbc":
         img = _remove_bbc_watermark(img)
+    if img.width > _MAX_IMAGE_WIDTH:
+        new_height = int(img.height * _MAX_IMAGE_WIDTH / img.width)
+        img = img.resize((_MAX_IMAGE_WIDTH, new_height), Image.LANCZOS)
     out = io.BytesIO()
-    img.save(out, format="JPEG", quality=85, optimize=True)
+    img.save(out, format="JPEG", quality=80, optimize=True)
     return out.getvalue()
 
 
