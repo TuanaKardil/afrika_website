@@ -111,7 +111,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
           <div className="relative aspect-video rounded-sm overflow-hidden">
             <img
               src={article.featured_image_url}
-              alt={article.title_tr ?? ""}
+              alt=""
               fetchPriority="high"
               decoding="async"
               className="absolute inset-0 w-full h-full object-cover"
