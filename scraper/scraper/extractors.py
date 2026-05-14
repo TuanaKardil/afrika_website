@@ -136,6 +136,17 @@ def _remove_noise_elements(container) -> None:
             pass
 
 
+def _strip_leading_bullets(html: str) -> str:
+    """Remove a leading <ul> key-takeaways block that appears before the article body."""
+    soup = BeautifulSoup(html, "lxml")
+    body = soup.find("body") or soup
+    children = [t for t in body.children if hasattr(t, "name") and t.name]
+    if children and children[0].name == "ul":
+        children[0].decompose()
+        return str(soup)
+    return html
+
+
 def extract_content(response: Response, source: str = "") -> str:
     html = _fix_lazy_images(response.text)
 
@@ -148,6 +159,8 @@ def extract_content(response: Response, source: str = "") -> str:
     )
 
     if result and len(result) >= _MIN_LENGTH:
+        if source == "business_insider":
+            result = _strip_leading_bullets(result)
         return result
 
     # CSS selector fallback: concatenate matched block HTML
