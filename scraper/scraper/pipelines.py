@@ -3,7 +3,7 @@ import logging
 import os
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, date, timezone
 
 from dotenv import load_dotenv
 from scrapy.exceptions import DropItem
@@ -13,6 +13,26 @@ from scraper.sanitize import sanitize_html
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+# Per-process stats accumulator. One scrapy process = one spider = one source.
+_run_stats: dict = {}
+
+
+def _stats_inc(source: str, field: str, value: int = 1) -> None:
+    s = source or "unknown"
+    if s not in _run_stats:
+        _run_stats[s] = {
+            "total_scraped": 0,
+            "dropped_duplicate": 0,
+            "dropped_low_score": 0,
+            "dropped_turkey_filter": 0,
+            "published": 0,
+            "scores": [],
+        }
+    if field == "scores":
+        _run_stats[s]["scores"].append(value)
+    else:
+        _run_stats[s][field] += value
 
 
 def _md5(text: str) -> str:
@@ -52,6 +72,9 @@ class DeduplicationPipeline:
             logger.warning("Supabase unavailable, dedup disabled: %s", exc)
 
     def process_item(self, item, spider):
+        source = item.get("source", "")
+        _stats_inc(source, "total_scraped")
+
         if self._supabase is None:
             return item
 
@@ -74,6 +97,7 @@ class DeduplicationPipeline:
         if result and result.data:
             stored_hash = result.data.get("content_hash", "")
             if stored_hash == new_hash:
+                _stats_inc(source, "dropped_duplicate")
                 raise DropItem(f"Unchanged content, skipping: {source_url}")
             item["is_update"] = True
 
@@ -83,6 +107,7 @@ class DeduplicationPipeline:
             title = item.get("title_original", "")
             excerpt = item.get("excerpt_original", "")
             if is_duplicate(title, excerpt, self._supabase):
+                _stats_inc(source, "dropped_duplicate")
                 raise DropItem(f"AI duplicate detected, skipping: {source_url}")
 
         return item
@@ -114,6 +139,7 @@ class ScorePipeline:
         item["score"] = score
 
         if score < MIN_AFRICA_SCORE:
+            _stats_inc(item.get("source", ""), "dropped_low_score")
             raise _DropItem(
                 f"Africa score {score}/10 < {MIN_AFRICA_SCORE}, dropping: {title[:80]}"
             )
@@ -182,6 +208,7 @@ class TurkeyFilterPipeline:
         suppressed = should_suppress(title, content)
         item["turkey_filter_result"] = "SUPPRESS" if suppressed else "PUBLISH"
         if suppressed:
+            _stats_inc(item.get("source", ""), "dropped_turkey_filter")
             raise DropItem(f"Turkey filter: suppressing article: {title[:80]}")
         return item
 
@@ -394,7 +421,35 @@ class StoragePipeline:
             else:
                 self._supabase.table("articles").insert(row).execute()
                 logger.info("Inserted article: %s", source_url)
+            _stats_inc(source, "published")
+            if item.get("score"):
+                _stats_inc(source, "scores", int(item["score"]))
         except Exception as exc:
             logger.error("DB write failed for %s: %s", source_url, exc)
 
         return item
+
+    def close_spider(self, spider):
+        if self._supabase is None or not _run_stats:
+            return
+        today = date.today().isoformat()
+        for src, counts in _run_stats.items():
+            scores = counts.get("scores", [])
+            avg_score = round(sum(scores) / len(scores), 1) if scores else None
+            row = {
+                "run_date": today,
+                "source": src,
+                "total_scraped": counts["total_scraped"],
+                "dropped_duplicate": counts["dropped_duplicate"],
+                "dropped_low_score": counts["dropped_low_score"],
+                "dropped_turkey_filter": counts["dropped_turkey_filter"],
+                "published": counts["published"],
+                "avg_score": avg_score,
+            }
+            try:
+                self._supabase.table("scrape_stats").upsert(
+                    row, on_conflict="run_date,source"
+                ).execute()
+                logger.info("Scrape stats saved: %s", row)
+            except Exception as exc:
+                logger.error("Failed to write scrape_stats for %s: %s", src, exc)

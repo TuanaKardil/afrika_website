@@ -1,0 +1,123 @@
+{
+  "name": "Afrika Haberleri - Daily Report Email",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        },
+        "options": {
+          "timezone": "Europe/Istanbul"
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/scrape_stats?run_date=eq.' + $now.setZone('Europe/Istanbul').toFormat('yyyy-MM-dd') + '&order=source.asc&select=*' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-stats",
+      "name": "Fetch Scrape Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const stats = $input.first().json;\nconst today = $now.setZone('Europe/Istanbul').toFormat('d MMMM yyyy', { locale: 'tr' });\n\nconst sourceNames = {\n  business_insider: 'Business Insider Africa',\n  cnbc_africa: 'CNBC Africa',\n  africa_report: 'The Africa Report',\n  aa_africa: 'Anadolu Ajansi Africa',\n  conversation_africa: 'The Conversation Africa',\n};\n\nconst rows = Array.isArray(stats) ? stats : [];\n\nlet totalScraped = 0;\nlet totalDup = 0;\nlet totalScore = 0;\nlet totalTr = 0;\nlet totalPublished = 0;\n\nlet tableRows = '';\nfor (const row of rows) {\n  const name = sourceNames[row.source] || row.source;\n  totalScraped += row.total_scraped || 0;\n  totalDup += row.dropped_duplicate || 0;\n  totalScore += row.dropped_low_score || 0;\n  totalTr += row.dropped_turkey_filter || 0;\n  totalPublished += row.published || 0;\n  const avgScore = row.avg_score != null ? row.avg_score : '-';\n  tableRows += `<tr>\n    <td style=\"padding:8px 12px;border-bottom:1px solid #eee;\">${name}</td>\n    <td style=\"padding:8px 12px;border-bottom:1px solid #eee;text-align:center;\">${row.total_scraped || 0}</td>\n    <td style=\"padding:8px 12px;border-bottom:1px solid #eee;text-align:center;color:#888;\">${row.dropped_duplicate || 0}</td>\n    <td style=\"padding:8px 12px;border-bottom:1px solid #eee;text-align:center;color:#e67e22;\">${row.dropped_low_score || 0}</td>\n    <td style=\"padding:8px 12px;border-bottom:1px solid #eee;text-align:center;color:#c0392b;\">${row.dropped_turkey_filter || 0}</td>\n    <td style=\"padding:8px 12px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;color:#27ae60;\">${row.published || 0}</td>\n    <td style=\"padding:8px 12px;border-bottom:1px solid #eee;text-align:center;\">${avgScore}</td>\n  </tr>`;\n}\n\ntableRows += `<tr style=\"background:#f0f4f8;\">\n  <td style=\"padding:8px 12px;font-weight:bold;\">TOPLAM</td>\n  <td style=\"padding:8px 12px;text-align:center;font-weight:bold;\">${totalScraped}</td>\n  <td style=\"padding:8px 12px;text-align:center;font-weight:bold;color:#888;\">${totalDup}</td>\n  <td style=\"padding:8px 12px;text-align:center;font-weight:bold;color:#e67e22;\">${totalScore}</td>\n  <td style=\"padding:8px 12px;text-align:center;font-weight:bold;color:#c0392b;\">${totalTr}</td>\n  <td style=\"padding:8px 12px;text-align:center;font-weight:bold;color:#27ae60;\">${totalPublished}</td>\n  <td style=\"padding:8px 12px;text-align:center;\">-</td>\n</tr>`;\n\nconst noDataMsg = rows.length === 0\n  ? '<p style=\"color:#c0392b;\">Bugun pipeline verisi bulunamadi. Pipeline calismamiş olabilir.</p>'\n  : '';\n\nconst html = `<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"></head>\n<body style=\"font-family:Arial,sans-serif;max-width:720px;margin:0 auto;color:#333;\">\n  <div style=\"background:#1a3c5e;color:white;padding:20px 24px;border-radius:8px 8px 0 0;\">\n    <h1 style=\"margin:0;font-size:20px;\">Afrika Haberleri</h1>\n    <p style=\"margin:4px 0 0;opacity:0.8;font-size:14px;\">Gunluk Pipeline Raporu - ${today}</p>\n  </div>\n  <div style=\"border:1px solid #ddd;border-top:none;padding:24px;border-radius:0 0 8px 8px;\">\n    ${noDataMsg}\n    <table style=\"width:100%;border-collapse:collapse;font-size:14px;\">\n      <thead>\n        <tr style=\"background:#f0f4f8;\">\n          <th style=\"padding:10px 12px;text-align:left;border-bottom:2px solid #ddd;\">Kaynak</th>\n          <th style=\"padding:10px 12px;text-align:center;border-bottom:2px solid #ddd;\">Cekilen</th>\n          <th style=\"padding:10px 12px;text-align:center;border-bottom:2px solid #ddd;\">Kopya</th>\n          <th style=\"padding:10px 12px;text-align:center;border-bottom:2px solid #ddd;\">Dusuk Skor</th>\n          <th style=\"padding:10px 12px;text-align:center;border-bottom:2px solid #ddd;\">TR Filtresi</th>\n          <th style=\"padding:10px 12px;text-align:center;border-bottom:2px solid #ddd;\">Yayinlanan</th>\n          <th style=\"padding:10px 12px;text-align:center;border-bottom:2px solid #ddd;\">Ort. Skor</th>\n        </tr>\n      </thead>\n      <tbody>${tableRows}</tbody>\n    </table>\n    <p style=\"margin-top:20px;font-size:12px;color:#999;\">Bu rapor her sabah 08:00 TST'de otomatik olarak gonderilir.</p>\n  </div>\n</body></html>`;\n\nreturn [{ json: { html, subject: 'Afrika Haberleri Pipeline Raporu (' + today + ')' } }];"
+      },
+      "id": "build-email",
+      "name": "Build HTML Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "a.berkbaytar@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.html }}",
+        "options": {
+          "bodyContentType": "html"
+        }
+      },
+      "id": "send-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [900, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "name": "Gmail Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Scrape Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Scrape Stats": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "afrika-haberleri"
+  }
+}
