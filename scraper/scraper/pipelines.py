@@ -432,13 +432,17 @@ class StoragePipeline:
     def close_spider(self, spider):
         if self._supabase is None or not _run_stats:
             return
-        today = date.today().isoformat()
+        from zoneinfo import ZoneInfo
+        now_istanbul = datetime.now(ZoneInfo("Europe/Istanbul"))
+        today = now_istanbul.date().isoformat()
+        run_slot = "sabah" if now_istanbul.hour < 12 else "oglen"
         for src, counts in _run_stats.items():
             scores = counts.get("scores", [])
             avg_score = round(sum(scores) / len(scores), 1) if scores else None
             row = {
                 "run_date": today,
                 "source": src,
+                "run_slot": run_slot,
                 "total_scraped": counts["total_scraped"],
                 "dropped_duplicate": counts["dropped_duplicate"],
                 "dropped_low_score": counts["dropped_low_score"],
@@ -448,7 +452,7 @@ class StoragePipeline:
             }
             try:
                 self._supabase.table("scrape_stats").upsert(
-                    row, on_conflict="run_date,source"
+                    row, on_conflict="run_date,source,run_slot"
                 ).execute()
                 logger.info("Scrape stats saved: %s", row)
             except Exception as exc:
