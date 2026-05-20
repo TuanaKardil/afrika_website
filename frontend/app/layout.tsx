@@ -11,11 +11,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.afrikahaberleri.tr"),
   title: {
     default: "Afrika Haberleri",
     template: "%s | Afrika Haberleri",
   },
   description: "Afrika'dan son dakika haberleri Türkçe olarak.",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
