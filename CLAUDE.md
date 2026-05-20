@@ -7,11 +7,12 @@
 
 A Turkish-language, Africa-focused business and economy news platform. News is pulled daily from English sources (The Conversation Africa, Africa Report, CNBC Africa, AA Africa, Business Insider Africa). Items are translated to Turkish via AI, scored (1-10), classified, tagged with 8-15 hashtags, and published.
 
-- **Update time:** 06:00 TST (n8n cron `0 6 * * *`)
+- **Update times:** 07:00 TST + 13:00 TST (n8n cron, twice daily)
 - **Fetch window:** Last 24 hours
 - **Duplicate check window:** Last 48 hours
 - **Publication threshold:** Score 5+
 - **News count limit:** NONE (filtering creates a natural ceiling)
+- **Daily report:** Email to a.berkbaytar@gmail.com at 09:00 (sabah) and 15:00 (oglen) TST
 
 ## 2. Tech Stack
 
@@ -23,19 +24,21 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 - **Deploy:** Vercel
 - **CI/CD:** GitHub Actions
 
-## 3. Pipeline Flow (06:00 TST)
+## 3. Pipeline Flow (07:00 TST + 13:00 TST)
+
+Runs twice daily. The 13:00 run picks up articles published after the morning run; duplicates from the first run are caught by DeduplicationPipeline.
 
 ```
-06:00 n8n cron triggers
-06:01 scraper/run.sh        (5 sources scraped in parallel)
-06:05 DuplicatePipeline      (semantic similarity over last 48 hours)
-06:08 TurkeyFilterPipeline   (GPT-5 Nano, BLOCK items are dropped)
-06:10 ScorePipeline          (Gemini 2.5 Flash-Lite, 1-4 are dropped)
-06:18 TranslatePipeline      (only score 5+, 600 words, SEO+GEO+AEO)
-06:22 ContentCleanStep       (Gemini 2.5 Flash-Lite, removes off-topic promos from content_tr)
-06:25 ClassifyPipeline       (nav_tab + sector + region JSON)
-06:28 HashtagsPipeline       (8-15 hashtags from canonical list)
-06:30 Written to Supabase
+07:00 / 13:00  n8n cron triggers GitHub Actions scrape.yml
++00:01         DeduplicationPipeline  (source_url + content_hash + AI semantic, last 48h)
++00:05         TurkeyFilterPipeline   (GPT-5 Nano, SUPPRESS items are dropped)
++00:08         ScorePipeline          (Gemini 2.5 Flash-Lite, score < 5 are dropped)
++00:18         TranslatePipeline      (only score 5+, 600 words, SEO+GEO+AEO)
++00:22         ContentCleanStep       (Gemini 2.5 Flash-Lite, removes off-topic promos from content_tr)
++00:25         ClassifyPipeline       (nav_tab + sector + region JSON)
++00:28         HashtagsPipeline       (8-15 hashtags from canonical list)
++00:30         Written to Supabase + scrape_stats row upserted (run_slot: sabah | oglen)
+09:00 / 15:00  n8n report workflow queries scrape_stats, sends HTML email
 ```
 
 **Cost-driven ordering:** The cheapest steps (duplicate, turkey_filter, score) run first. Expensive translation is applied only to score 5+ items. 40-60% cost savings.
@@ -125,6 +128,19 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `docs/hashtags.md` | Canonical hashtag list (800+ tags) |
 | `docs/sectors.md` | Active sector slugs + merged/deleted slug map |
 | `docs/tenders.md` | Tenders module spec (schema, routes, AI pipeline, UI) |
+| `n8n/workflows/daily_scrape.json` | Scraper cron trigger (07:00 + 13:00 Istanbul) |
+| `n8n/workflows/daily_report.json` | Report email workflow (09:00 + 15:00 Istanbul) |
+
+## 12. Daily Reporting
+
+After each pipeline run, `StoragePipeline.close_spider` writes per-source stats to the `scrape_stats` Supabase table. A separate n8n workflow queries this table and emails an HTML report.
+
+**`scrape_stats` table columns:** `run_date`, `source`, `run_slot` (`sabah` | `oglen`), `total_scraped`, `dropped_duplicate`, `dropped_low_score`, `dropped_turkey_filter`, `published`, `avg_score`
+
+**Unique constraint:** `(run_date, source, run_slot)` — one row per source per run per day.
+
+**n8n report workflow ID:** `bRRgVo9LgM48NyV0` (baytara.app.n8n.cloud)
+**n8n scraper workflow ID:** `tFqlvcwvaDwcnxBY` (baytara.app.n8n.cloud)
 
 ## 11. Claude Code Working Rules
 
