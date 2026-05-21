@@ -8,7 +8,7 @@ from scrapy.http import Response
 
 from scraper.items import ArticleItem
 
-_CUTOFF_DAYS = 4
+_CUTOFF_DAYS = 1
 _BASE = "https://www.cnbcafrica.com"
 _START_URLS = [
     f"{_BASE}/",
