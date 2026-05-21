@@ -8,7 +8,7 @@ from scrapy.http import Response
 from scraper.extractors import extract_content, extract_inline_images
 from scraper.items import ArticleItem
 
-_CUTOFF_DAYS = 1
+_CUTOFF_DAYS = 4
 _MAX_PAGES = 3
 
 _SECTIONS = ["business", "politics", "health", "technology", "environment"]
