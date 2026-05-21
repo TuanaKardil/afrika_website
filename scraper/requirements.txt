@@ -1,4 +1,4 @@
-scrapy>=2.11
+scrapy>=2.11,<2.16
 trafilatura>=1.9
 bleach>=6.1
 supabase>=2.4
