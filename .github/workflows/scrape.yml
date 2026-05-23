@@ -1,8 +1,10 @@
 name: Run Scraper
 
 on:
+  schedule:
+    - cron: '0 4 * * *'   # 07:00 Istanbul (UTC+3)
+    - cron: '0 10 * * *'  # 13:00 Istanbul (UTC+3)
   workflow_dispatch:
-  # n8n handles daily scheduling at 06:00 Europe/Istanbul via workflow_dispatch
 
 jobs:
   scrape:
