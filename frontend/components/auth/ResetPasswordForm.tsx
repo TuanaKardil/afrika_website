@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
-import { loginAction, type AuthState } from "@/lib/auth/actions";
+import { resetPasswordAction, type AuthState } from "@/lib/auth/actions";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -13,24 +13,37 @@ function SubmitButton() {
       disabled={pending}
       className="w-full bg-primary text-white font-body font-medium py-2.5 rounded-lg hover:bg-tertiary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      {pending ? "Giriş yapılıyor..." : "Giriş Yap"}
+      {pending ? "Guncelleniyor..." : "Sifremi Guncelle"}
     </button>
   );
 }
 
-interface LoginFormProps {
-  redirectTo?: string;
-}
-
 const initialState: AuthState = {};
 
-export default function LoginForm({ redirectTo = "/panel" }: LoginFormProps) {
-  const [state, formAction] = useFormState(loginAction, initialState);
+export default function ResetPasswordForm() {
+  const [state, formAction] = useFormState(resetPasswordAction, initialState);
+
+  if (state.success) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div
+          role="status"
+          className="px-4 py-4 bg-green-50 border border-green-200 rounded-lg font-body text-sm text-green-800 leading-relaxed"
+        >
+          {state.message}
+        </div>
+        <Link
+          href="/giris"
+          className="w-full text-center bg-primary text-white font-body font-medium py-2.5 rounded-lg hover:bg-tertiary transition-colors"
+        >
+          Giris Yap
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <input type="hidden" name="redirect" value={redirectTo} />
-
       {state.error && (
         <div
           role="alert"
@@ -41,29 +54,30 @@ export default function LoginForm({ redirectTo = "/panel" }: LoginFormProps) {
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="font-body text-sm font-medium text-on-surface">
-          E-posta
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          placeholder="ornek@eposta.com"
-          className="px-3 py-2.5 border border-outline-variant rounded-lg font-body text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="font-body text-sm font-medium text-on-surface">
-          Şifre
+          Yeni Sifre
         </label>
         <input
           id="password"
           name="password"
           type="password"
-          autoComplete="current-password"
+          autoComplete="new-password"
+          required
+          minLength={6}
+          placeholder="En az 6 karakter"
+          className="px-3 py-2.5 border border-outline-variant rounded-lg font-body text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="confirm" className="font-body text-sm font-medium text-on-surface">
+          Yeni Sifre Tekrar
+        </label>
+        <input
+          id="confirm"
+          name="confirm"
+          type="password"
+          autoComplete="new-password"
           required
           placeholder="••••••••"
           className="px-3 py-2.5 border border-outline-variant rounded-lg font-body text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
@@ -71,15 +85,6 @@ export default function LoginForm({ redirectTo = "/panel" }: LoginFormProps) {
       </div>
 
       <SubmitButton />
-
-      <div className="text-right">
-        <Link
-          href="/sifremi-unuttum"
-          className="font-body text-sm text-primary hover:text-tertiary transition-colors"
-        >
-          Sifremi Unuttum
-        </Link>
-      </div>
     </form>
   );
 }

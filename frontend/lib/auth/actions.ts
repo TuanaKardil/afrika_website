@@ -70,6 +70,70 @@ export async function registerAction(
   };
 }
 
+export async function forgotPasswordAction(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const email = formData.get("email") as string;
+
+  if (!email) {
+    return { error: "E-posta adresi gereklidir." };
+  }
+
+  const supabase = createClient();
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.afrikahaberleri.tr";
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/callback?next=/sifre-sifirla`,
+  });
+
+  if (error) {
+    return { error: "E-posta gonderilirken hata olustu. Lutfen tekrar deneyin." };
+  }
+
+  return {
+    success: true,
+    message:
+      "Sifre sifirlama linki e-postaniza gonderildi. Lutfen e-postanizi kontrol edin.",
+  };
+}
+
+export async function resetPasswordAction(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const password = formData.get("password") as string;
+  const confirm = formData.get("confirm") as string;
+
+  if (!password) {
+    return { error: "Sifre gereklidir." };
+  }
+
+  if (password !== confirm) {
+    return { error: "Sifreler eslesmıyor." };
+  }
+
+  if (password.length < 6) {
+    return { error: "Sifre en az 6 karakter olmalidir." };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: "Sifre guncellenirken hata olustu. Lutfen tekrar deneyin." };
+  }
+
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
+
+  return {
+    success: true,
+    message: "Sifreniz basariyla guncellendi. Simdi giris yapabilirsiniz.",
+  };
+}
+
 export async function logoutAction(): Promise<void> {
   const supabase = createClient();
   await supabase.auth.signOut();
