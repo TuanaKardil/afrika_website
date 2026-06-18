@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { logoutAction } from "@/lib/auth/actions";
 
 const NAV_TABS = [
   { href: "/firsatlar", label: "Fırsatlar" },
@@ -21,7 +22,11 @@ const REGION_LINKS = [
   { href: "/bolge/guney-afrika", label: "Güney Afrika" },
 ];
 
-export default function MobileMenu() {
+interface MobileMenuProps {
+  isLoggedIn: boolean;
+}
+
+export default function MobileMenu({ isLoggedIn }: MobileMenuProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -79,13 +84,34 @@ export default function MobileMenu() {
               </li>
             ))}
             <li className="pt-4 border-t border-white/10 mt-2 pb-2">
-              <Link
-                href="/giris"
-                onClick={() => setOpen(false)}
-                className="block py-2.5 text-sm font-semibold text-amber hover:text-amber-dark transition-colors"
-              >
-                {"Giriş Yap"}
-              </Link>
+              {isLoggedIn ? (
+                <div className="flex items-center gap-4">
+                  <Link
+                    href="/panel"
+                    onClick={() => setOpen(false)}
+                    className="block py-2.5 text-sm font-semibold text-amber hover:text-amber-dark transition-colors"
+                  >
+                    {"Hesabım"}
+                  </Link>
+                  <form action={logoutAction}>
+                    <button
+                      type="submit"
+                      onClick={() => setOpen(false)}
+                      className="py-2.5 text-sm font-semibold text-white/60 hover:text-white transition-colors"
+                    >
+                      {"Çıkış Yap"}
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <Link
+                  href="/giris"
+                  onClick={() => setOpen(false)}
+                  className="block py-2.5 text-sm font-semibold text-amber hover:text-amber-dark transition-colors"
+                >
+                  {"Giriş Yap"}
+                </Link>
+              )}
             </li>
           </ul>
         </div>
