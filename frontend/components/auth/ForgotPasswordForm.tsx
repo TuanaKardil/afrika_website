@@ -36,7 +36,8 @@ export default function ForgotPasswordForm() {
           role="status"
           className="px-4 py-4 bg-green-50 border border-green-200 rounded-lg font-body text-sm text-green-800 leading-relaxed"
         >
-          Şifre sıfırlama linki e-postanıza gönderildi. Lütfen e-postanızı kontrol edin.
+          <p className="font-semibold mb-1">Sıfırlama linki gönderildi!</p>
+          <p>E-postanızı kontrol edin. Birkaç dakika içinde gelmezse <strong>spam / gereksiz</strong> klasörüne bakın.</p>
         </div>
         <Link
           href="/giris"
