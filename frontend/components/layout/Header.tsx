@@ -44,21 +44,12 @@ export default async function Header() {
                 </form>
               </>
             ) : (
-              <>
-                <Link
-                  href="/kayit"
-                  className="bg-amber text-navy font-black tracking-[0.06em] rounded-sm hover:bg-amber-dark transition-colors whitespace-nowrap text-[10px] px-2.5 py-1.5 md:text-xs md:px-3.5 md:py-2"
-                >
-                  <span className="md:hidden">ABONE OL</span>
-                  <span className="hidden md:inline">BÜLTENE ABONE OL</span>
-                </Link>
-                <Link
-                  href="/giris"
-                  className="text-white/90 text-xs md:text-sm font-semibold hover:text-white transition-colors whitespace-nowrap"
-                >
-                  {"Giriş Yap"}
-                </Link>
-              </>
+              <Link
+                href="/giris"
+                className="text-white/90 text-xs md:text-sm font-semibold hover:text-white transition-colors whitespace-nowrap"
+              >
+                {"Giriş Yap"}
+              </Link>
             )}
             <MobileMenu isLoggedIn={!!user} />
           </div>
