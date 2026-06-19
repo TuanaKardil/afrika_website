@@ -13,7 +13,7 @@ function SubmitButton() {
       disabled={pending}
       className="w-full bg-primary text-white font-body font-medium py-2.5 rounded-lg hover:bg-tertiary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      {pending ? "Guncelleniyor..." : "Sifremi Guncelle"}
+      {pending ? "Güncelleniyor..." : "Şifremi Güncelle"}
     </button>
   );
 }
@@ -36,7 +36,7 @@ export default function ResetPasswordForm() {
           href="/giris"
           className="w-full text-center bg-primary text-white font-body font-medium py-2.5 rounded-lg hover:bg-tertiary transition-colors"
         >
-          Giris Yap
+          Giriş Yap
         </Link>
       </div>
     );
@@ -55,7 +55,7 @@ export default function ResetPasswordForm() {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="font-body text-sm font-medium text-on-surface">
-          Yeni Sifre
+          Yeni Şifre
         </label>
         <input
           id="password"
@@ -71,7 +71,7 @@ export default function ResetPasswordForm() {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="confirm" className="font-body text-sm font-medium text-on-surface">
-          Yeni Sifre Tekrar
+          Yeni Şifre Tekrar
         </label>
         <input
           id="confirm"

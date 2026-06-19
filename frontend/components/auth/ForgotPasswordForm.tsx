@@ -13,7 +13,7 @@ function SubmitButton() {
       disabled={pending}
       className="w-full bg-primary text-white font-body font-medium py-2.5 rounded-lg hover:bg-tertiary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      {pending ? "Gonderiliyor..." : "Sifirlama Linki Gonder"}
+      {pending ? "Gönderiliyor..." : "Sıfırlama Linki Gönder"}
     </button>
   );
 }
@@ -36,7 +36,7 @@ export default function ForgotPasswordForm() {
           href="/giris"
           className="text-center font-body text-sm text-primary hover:text-tertiary transition-colors"
         >
-          Giris sayfasina don
+          Giriş sayfasına dön
         </Link>
       </div>
     );

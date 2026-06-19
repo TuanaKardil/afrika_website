@@ -89,13 +89,13 @@ export async function forgotPasswordAction(
   });
 
   if (error) {
-    return { error: "E-posta gonderilirken hata olustu. Lutfen tekrar deneyin." };
+    return { error: "E-posta gönderilirken hata oluştu. Lütfen tekrar deneyin." };
   }
 
   return {
     success: true,
     message:
-      "Sifre sifirlama linki e-postaniza gonderildi. Lutfen e-postanizi kontrol edin.",
+      "Şifre sıfırlama linki e-postanıza gönderildi. Lütfen e-postanızı kontrol edin.",
   };
 }
 
@@ -107,22 +107,22 @@ export async function resetPasswordAction(
   const confirm = formData.get("confirm") as string;
 
   if (!password) {
-    return { error: "Sifre gereklidir." };
+    return { error: "Şifre gereklidir." };
   }
 
   if (password !== confirm) {
-    return { error: "Sifreler eslesmıyor." };
+    return { error: "Şifreler eşleşmiyor." };
   }
 
   if (password.length < 6) {
-    return { error: "Sifre en az 6 karakter olmalidir." };
+    return { error: "Şifre en az 6 karakter olmalıdır." };
   }
 
   const supabase = createClient();
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
-    return { error: "Sifre guncellenirken hata olustu. Lutfen tekrar deneyin." };
+    return { error: "Şifre güncellenirken hata oluştu. Lütfen tekrar deneyin." };
   }
 
   await supabase.auth.signOut();
@@ -130,7 +130,7 @@ export async function resetPasswordAction(
 
   return {
     success: true,
-    message: "Sifreniz basariyla guncellendi. Simdi giris yapabilirsiniz.",
+    message: "Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.",
   };
 }
 
