@@ -8,8 +8,7 @@ const NAV_TABS = [
   { href: "/pazarlar-ekonomi", label: "Pazarlar & Ekonomi" },
   { href: "/ticaret-ihracat", label: "Ticaret & İhracat" },
   { href: "/sektorler", label: "Sektör Haberleri" },
-  { href: "/etkinlikler-fuarlar", label: "Etkinlikler & Fuarlar" },
-  { href: "/ulkeler", label: "Ülkeler" },
+{ href: "/ulkeler", label: "Ülkeler" },
   { href: "/ihaleler", label: "İhaleler" },
 ];
 
