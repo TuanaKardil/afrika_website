@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import AuthListener from "@/components/auth/AuthListener";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href={supabaseHostname} />
       </head>
       <body className="bg-background text-on-surface font-sans min-h-screen flex flex-col antialiased">
+        <AuthListener />
         <Header />
         <div className="flex-1">{children}</div>
         <Footer />
