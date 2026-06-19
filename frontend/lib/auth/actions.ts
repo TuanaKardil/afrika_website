@@ -126,12 +126,7 @@ export async function resetPasswordAction(
   }
 
   await supabase.auth.signOut();
-  revalidatePath("/", "layout");
-
-  return {
-    success: true,
-    message: "Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.",
-  };
+  redirect("/giris");
 }
 
 export async function logoutAction(): Promise<void> {
