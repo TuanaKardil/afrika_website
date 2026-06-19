@@ -77,7 +77,7 @@ export default function LoginForm({ redirectTo = "/panel" }: LoginFormProps) {
           href="/sifremi-unuttum"
           className="font-body text-sm text-primary hover:text-tertiary transition-colors"
         >
-          Sifremi Unuttum
+          Şifremi Unuttum
         </Link>
       </div>
     </form>
