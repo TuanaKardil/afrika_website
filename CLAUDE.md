@@ -74,7 +74,9 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 
 ## 6. Navigation
 
-**UI tabs (7 visible + 1 module):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, etkinlikler-fuarlar, ulkeler, ihaleler (separate module), diger (hidden)
+**UI tabs (6 visible + 1 module):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, ulkeler, ihaleler (separate module), diger (hidden)
+
+> `etkinlikler-fuarlar` was removed from the UI nav (June 2026) but remains a valid classifier nav_tab value — the AI still classifies articles into it.
 
 **Classifier nav_tab values (8):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, turk-is-dunyasi, etkinlikler-fuarlar, ulkeler, diger
 
@@ -116,12 +118,34 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 3. **Defense & Security Professionals:** UAVs, military training, security consulting
 4. **Diplomats & Researchers:** Foreign affairs, think tanks, academics
 
-## 10. File References
+## 10. Auth & Email Configuration
+
+### Password Reset Flow
+- `/sifremi-unuttum` — forgot password page (calls `supabase.auth.resetPasswordForEmail` **client-side** via browser client)
+- `/sifre-sifirla` — new password page (server component, checks session; redirects to `/giris` on success)
+- `/auth/callback` — handles both `code` (PKCE) and `token_hash` (OTP) flows; reads `next` query param for redirect target
+- `AuthListener` in root layout — catches `PASSWORD_RECOVERY` auth event and redirects to `/sifre-sifirla`
+
+**Important:** `resetPasswordForEmail` must be called from the **browser client** (`lib/supabase/client.ts`), NOT from a server action. Calling it server-side breaks the PKCE cookie flow.
+
+### Email Delivery (Resend)
+- **Provider:** Resend SMTP via `smtp.resend.com:465`
+- **Sender:** `noreply@afrikahaberleri.tr`
+- **Sender name:** Afrika Haberleri
+- **Domain:** `afrikahaberleri.tr` verified in Resend (DKIM configured)
+- **SPF/DMARC:** Not yet added to Natro DNS (pending)
+- **Supabase site_url:** `https://www.afrikahaberleri.tr`
+- **Recovery email template:** Updated to Turkish HTML with inline styles and `{{ .ConfirmationURL }}` button
+
+### Session Persistence
+- Middleware matcher covers **all non-static routes** (not just `/panel/*`) so Supabase access tokens are refreshed on every page load via refresh token rotation.
+
+## 12. File References
 
 | File | Purpose |
 |------|---------|
-| `prompts/translate.md` | Translation prompt (journalistic Turkish, HTML preservation) |
-| `prompts/clean.md` | Content cleaning prompt (removes off-topic promos from translated body) |
+| `prompts/translate.md` | Translation prompt (journalistic Turkish, HTML preservation, strips wire service datelines) |
+| `prompts/clean.md` | Content cleaning prompt (removes off-topic promos + wire service datelines from translated body) |
 | `prompts/turkey_filter.md` | Negative Turkey framing detection (SUPPRESS/PUBLISH) |
 | `prompts/classify.md` | nav_tab + sector + region JSON classification |
 | `prompts/hashtags.md` | 8-15 hashtag assignment rules |
@@ -131,7 +155,13 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `n8n/workflows/daily_scrape.json` | Scraper cron trigger (07:00 + 13:00 Istanbul) |
 | `n8n/workflows/daily_report.json` | Report email workflow (09:00 + 15:00 Istanbul) |
 
-## 12. Daily Reporting
+| `frontend/components/auth/AuthListener.tsx` | Client component in root layout; listens for PASSWORD_RECOVERY event and redirects to /sifre-sifirla |
+| `frontend/components/auth/ForgotPasswordForm.tsx` | Forgot password form (browser-side Supabase call) |
+| `frontend/components/auth/ResetPasswordForm.tsx` | New password form (server action) |
+| `frontend/app/sifremi-unuttum/page.tsx` | Forgot password page |
+| `frontend/app/sifre-sifirla/page.tsx` | Reset password page (requires active session) |
+
+## 13. Daily Reporting
 
 After each pipeline run, `StoragePipeline.close_spider` writes per-source stats to the `scrape_stats` Supabase table. A separate n8n workflow queries this table and emails an HTML report.
 
@@ -142,7 +172,7 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 **n8n report workflow ID:** `bRRgVo9LgM48NyV0` (baytara.app.n8n.cloud)
 **n8n scraper workflow ID:** `tFqlvcwvaDwcnxBY` (baytara.app.n8n.cloud)
 
-## 11. Claude Code Working Rules
+## 14. Claude Code Working Rules
 
 1. **CLAUDE.md is updated before any new feature is built.**
 2. **TypeScript types are defined for every API endpoint and function.**
