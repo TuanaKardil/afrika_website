@@ -108,7 +108,7 @@ Apply these rules so the article is easier to surface in answer snippets and voi
 1. **Question-Based H2s**: Include at least one H2 that asks a common question relevant to the source. Example: "Nijerya Nairası Neden Değer Kaybediyor?" or "AfCFTA Bölgesel Ticareti Nasıl Etkiler?"
 2. **Direct Answer Blocks**: After each question-based H2, provide the answer in 40-60 words before expanding. These blocks should be concise, self-contained, and easy to extract.
 3. **Bullet Lists for Comparisons**: When comparing entities or listing impacts, use bullet lists. Scannable lists improve readability and extraction.
-4. **FAQ-Like Closing**: End with a 2-3 sentence "Özet" paragraph that answers "Bu haber neden önemli?" in one concise block. The closing summary must stay within the article's sourced context and must not introduce Turkey, a Turkish actor, or a new implication unless already established by the source or verified supporting context.
+4. **FAQ-Like Closing**: End with a 2-3 sentence closing paragraph that answers "Bu haber neden önemli?" in one concise block. Do NOT label this paragraph with "Özet:", "Sonuç:", or any heading — it must be a plain `<p>` tag with no bold prefix. The closing summary must stay within the article's sourced context and must not introduce Turkey, a Turkish actor, or a new implication unless already established by the source or verified supporting context.
 
 ## Silent Self-Check Before Finalizing
 

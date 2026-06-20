@@ -22,6 +22,7 @@ Your task is to remove any content that does NOT belong to the main article body
 - Cookie notices, privacy banners, or security verification text
 - "Read also" / "See also" / "Don't miss" cross-promotions in any language
 - Any UI element text, sidebar content, or promotional copy that is clearly not article journalism
+- Bold summary labels at the start of any paragraph, such as `<strong>Özet:</strong>`, `<strong>Sonuç:</strong>`, `<strong>Summary:</strong>`. Remove the label only; keep the paragraph text.
 - Wire service datelines at the start of the article body, such as `JOHANNESBURG, 19 Haziran (Reuters) ,` or `NAIROBI, 18 Haziran (AFP) —` or any variation of `CITY, Date (AGENCY)` followed by punctuation. Remove the entire dateline segment; the article should begin directly with the first sentence of news content.
 
 Rules:
