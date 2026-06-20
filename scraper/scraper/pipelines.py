@@ -2,6 +2,7 @@ import hashlib
 import logging
 import os
 import re
+import unicodedata
 import uuid
 from datetime import datetime, date, timezone
 
@@ -51,7 +52,12 @@ _TR_CHARS = str.maketrans("çşığöüÇŞİĞÖÜ", "csigoucsigou")
 
 
 def _make_slug(title: str, existing_slugs: set[str]) -> str:
-    base = title.translate(_TR_CHARS).lower()
+    # First apply Turkish character map, then normalize all remaining accented
+    # characters (e.g. é→e, ã→a, ô→o) via Unicode decomposition.
+    base = title.translate(_TR_CHARS)
+    base = unicodedata.normalize("NFKD", base)
+    base = base.encode("ascii", "ignore").decode("ascii")
+    base = base.lower()
     base = re.sub(r"[^\w\s-]", "", base)
     base = re.sub(r"[\s_]+", "-", base).strip("-")
     base = base[:80]
