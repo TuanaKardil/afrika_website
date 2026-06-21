@@ -172,6 +172,15 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 **n8n report workflow ID:** `bRRgVo9LgM48NyV0` (baytara.app.n8n.cloud)
 **n8n scraper workflow ID:** `tFqlvcwvaDwcnxBY` (baytara.app.n8n.cloud)
 
+## 15. Known Bugs Fixed (June 2026)
+
+| Fix | Details |
+|-----|---------|
+| **Accented chars in slugs** | `_make_slug` in `scraper/pipelines.py` now applies NFKD Unicode normalization after the Turkish char map. Prevents 404s for titles containing Lomé, São Tomé, Abidján, etc. |
+| **Özet: label in articles** | `translate.md` AEO closing rule updated: closing paragraph must be a plain `<p>` with no bold prefix. `clean.md` strips `<strong>Özet:</strong>` as a safety net. |
+| **Favicon** | `frontend/app/favicon.ico`, `icon.png`, `apple-icon.png` added. Next.js App Router auto-serves them. |
+| **Turkish chars in auth UI** | `lib/auth/actions.ts` and `app/panel/page.tsx` corrected (Hatali→Hatalı, Cikis→Çıkış, etc.). |
+
 ## 14. Claude Code Working Rules
 
 1. **CLAUDE.md is updated before any new feature is built.**
