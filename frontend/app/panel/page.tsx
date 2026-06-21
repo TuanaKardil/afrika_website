@@ -7,7 +7,7 @@ import type { Article } from "@/lib/queries/articles";
 
 export const metadata: Metadata = {
   title: "Panelim",
-  description: "Kaydedilen haberleriniz ve hesap ayarlariniz.",
+  description: "Kaydedilen haberleriniz ve hesap ayarlarınız.",
 };
 
 export default async function PanelPage() {
@@ -47,7 +47,7 @@ export default async function PanelPage() {
             type="submit"
             className="font-body text-sm font-medium text-on-surface/60 hover:text-primary border border-outline-variant px-4 py-2 rounded-lg hover:border-primary/40 transition-colors"
           >
-            Cikis Yap
+            Çıkış Yap
           </button>
         </form>
       </div>
@@ -66,13 +66,13 @@ export default async function PanelPage() {
         {savedArticles.length === 0 ? (
           <div className="py-16 text-center">
             <p className="font-body text-on-surface/50">
-              Henuz kaydedilen haber yok.
+              Henüz kaydedilen haber yok.
             </p>
             <a
               href="/"
               className="inline-block mt-4 font-body text-sm font-medium text-primary hover:text-tertiary transition-colors"
             >
-              Haberlere Goz At
+              Haberlere Göz At
             </a>
           </div>
         ) : (

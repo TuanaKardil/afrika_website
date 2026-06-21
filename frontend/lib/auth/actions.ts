@@ -19,14 +19,14 @@ export async function loginAction(
   const redirectTo = (formData.get("redirect") as string) || "/panel";
 
   if (!email || !password) {
-    return { error: "E-posta ve sifre gereklidir." };
+    return { error: "E-posta ve şifre gereklidir." };
   }
 
   const supabase = createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { error: "Hatali e-posta veya sifre. Lutfen tekrar deneyin." };
+    return { error: "Hatalı e-posta veya şifre. Lütfen tekrar deneyin." };
   }
 
   revalidatePath("/", "layout");
@@ -42,15 +42,15 @@ export async function registerAction(
   const confirm = formData.get("confirm") as string;
 
   if (!email || !password) {
-    return { error: "E-posta ve sifre gereklidir." };
+    return { error: "E-posta ve şifre gereklidir." };
   }
 
   if (password !== confirm) {
-    return { error: "Sifreler eslesmıyor." };
+    return { error: "Şifreler eşleşmiyor." };
   }
 
   if (password.length < 6) {
-    return { error: "Sifre en az 6 karakter olmalidir." };
+    return { error: "Şifre en az 6 karakter olmalıdır." };
   }
 
   const supabase = createClient();
@@ -58,15 +58,15 @@ export async function registerAction(
 
   if (error) {
     if (error.message.includes("already registered")) {
-      return { error: "Bu e-posta adresi zaten kayitli." };
+      return { error: "Bu e-posta adresi zaten kayıtlı." };
     }
-    return { error: "Kayit sirasinda bir hata olustu. Lutfen tekrar deneyin." };
+    return { error: "Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin." };
   }
 
   return {
     success: true,
     message:
-      "Dogrulama e-postasi gonderildi. Lutfen e-postanizi kontrol edin.",
+      "Doğrulama e-postası gönderildi. Lütfen e-postanızı kontrol edin.",
   };
 }
 
