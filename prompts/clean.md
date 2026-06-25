@@ -23,7 +23,7 @@ Your task is to remove any content that does NOT belong to the main article body
 - "Read also" / "See also" / "Don't miss" cross-promotions in any language
 - Any UI element text, sidebar content, or promotional copy that is clearly not article journalism
 - Bold summary labels at the start of any paragraph, such as `<strong>Özet:</strong>`, `<strong>Sonuç:</strong>`, `<strong>Summary:</strong>`. Remove the label only; keep the paragraph text.
-- Wire service datelines at the start of the article body, such as `JOHANNESBURG, 19 Haziran (Reuters) ,` or `NAIROBI, 18 Haziran (AFP) —` or any variation of `CITY, Date (AGENCY)` followed by punctuation. Remove the entire dateline segment; the article should begin directly with the first sentence of news content.
+- Wire service datelines at the start of any paragraph, in any format: `JOHANNESBURG, 19 Haziran (Reuters) ,`, `LONDRA (Reuters) ,`, `NAIROBI (AFP) —`, or any ALL-CAPS city name followed by optional date and `(AGENCY)` and punctuation. Remove the entire dateline token up to and including the trailing punctuation (comma, dash, or em-dash). The article should begin directly with the first sentence of news content.
 
 Rules:
 - Keep ALL actual news content intact. Do not summarize, shorten, or rewrite.

@@ -48,6 +48,32 @@ def _get_supabase():
     )
 
 
+# Matches wire service datelines at the very start of an HTML paragraph's text content.
+# Handles both full format (CITY, Date (AGENCY)) and short format (CITY (AGENCY)).
+# Examples: "LONDON (Reuters) —", "LONDRA (Reuters) ,", "JOHANNESBURG, June 19 (Reuters) —"
+_DATELINE_RE = re.compile(
+    r"^(<p[^>]*>)\s*[A-ZÇŞİĞÖÜ][A-ZÇŞİĞÖÜ\s\-]{1,30}"  # ALL-CAPS city (2-30 chars)
+    r"(?:,\s*[\w\s]+?)?"                                   # optional: ", Date"
+    r"\s*\([A-Za-z/]+\)"                                   # (AGENCY)
+    r"\s*[,\-–—]\s*",                                      # trailing punctuation
+    re.UNICODE,
+)
+
+# Matches "Özet:", "Sonuç:", "Summary:", "Özet :" etc. at the start of a paragraph,
+# with or without HTML bold tags, in any capitalisation.
+_SUMMARY_LABEL_RE = re.compile(
+    r"(<p[^>]*>)\s*(?:<strong>)?\s*(?:Özet|Sonuç|Summary|Özetle)\s*:\s*(?:</strong>)?\s*",
+    re.IGNORECASE | re.UNICODE,
+)
+
+
+def _strip_datelines(html: str) -> str:
+    """Remove wire-service datelines and summary labels from HTML paragraph tags."""
+    html = _DATELINE_RE.sub(r"\1", html)
+    html = _SUMMARY_LABEL_RE.sub(r"\1", html)
+    return html
+
+
 _TR_CHARS = str.maketrans("çşığöüÇŞİĞÖÜ", "csigoucsigou")
 
 
@@ -187,7 +213,9 @@ class TranslationPipeline:
         title_tr, excerpt_tr, content_tr = result
         item["title_tr"] = title_tr
         item["excerpt_tr"] = excerpt_tr
-        item["content_tr"] = content_tr
+        # Strip datelines and summary labels immediately after translation,
+        # before the AI clean step, as a guaranteed Python-level safety net.
+        item["content_tr"] = _strip_datelines(content_tr) if content_tr else content_tr
         logger.info("Translated (score %d): %s", score, item.get("source_url", ""))
         return item
 
@@ -198,6 +226,8 @@ class ContentCleanPipeline:
     def process_item(self, item, spider):
         content_tr = item.get("content_tr") or ""
         if content_tr:
+            # Strip datelines at Python level before sending to AI clean step.
+            content_tr = _strip_datelines(content_tr)
             from scraper.clean_content import clean_article_body
             item["content_tr"] = clean_article_body(content_tr)
         return item
