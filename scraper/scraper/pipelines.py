@@ -49,13 +49,14 @@ def _get_supabase():
 
 
 # Matches wire service datelines at the very start of an HTML paragraph's text content.
-# Handles both full format (CITY, Date (AGENCY)) and short format (CITY (AGENCY)).
-# Examples: "LONDON (Reuters) —", "LONDRA (Reuters) ,", "JOHANNESBURG, June 19 (Reuters) —"
+# Handles full (CITY, Date (AGENCY)) and short (CITY (AGENCY)) formats, including
+# multi-word agency names like "Thomson Reuters Vakfı" or "AP/AFP".
+# Examples: "LONDON (Reuters) —", "JOHANNESBURG, 26 Haziran (Thomson Reuters Vakfı) ,"
 _DATELINE_RE = re.compile(
-    r"^(<p[^>]*>)\s*[A-ZÇŞİĞÖÜ][A-ZÇŞİĞÖÜ\s\-]{1,30}"  # ALL-CAPS city (2-30 chars)
-    r"(?:,\s*[\w\s]+?)?"                                   # optional: ", Date"
-    r"\s*\([A-Za-z/]+\)"                                   # (AGENCY)
-    r"\s*[,\-–—]\s*",                                      # trailing punctuation
+    r"^(<p[^>]*>)\s*[A-ZÇŞİĞÖÜ][A-ZÇŞİĞÖÜa-z\s/\-]{1,40}"  # city (2-40 chars, mixed case allowed for SINGAPORE/LONDON)
+    r"(?:,\s*[\w\s]+?)?"                                        # optional: ", Date"
+    r"\s*\([A-Za-zÇŞİĞÖÜçşığöü\s/\-\.]{2,50}\)"               # (AGENCY) — allows spaces, Turkish chars, dots
+    r"\s*[,\-–—]\s*",                                           # trailing punctuation
     re.UNICODE,
 )
 

@@ -177,9 +177,13 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 | Fix | Details |
 |-----|---------|
 | **Accented chars in slugs** | `_make_slug` in `scraper/pipelines.py` now applies NFKD Unicode normalization after the Turkish char map. Prevents 404s for titles containing Lomé, São Tomé, Abidján, etc. |
-| **Özet: label in articles** | `translate.md` AEO closing rule updated: closing paragraph must be a plain `<p>` with no bold prefix. `clean.md` strips `<strong>Özet:</strong>` as a safety net. |
+| **Özet: label in articles** | `translate.md` AEO closing rule updated: closing paragraph must be a plain `<p>` with no bold prefix. `clean.md` and `_SUMMARY_LABEL_RE` regex strip it as safety nets. |
 | **Favicon** | `frontend/app/favicon.ico`, `icon.png`, `apple-icon.png` added. Next.js App Router auto-serves them. |
 | **Turkish chars in auth UI** | `lib/auth/actions.ts` and `app/panel/page.tsx` corrected (Hatali→Hatalı, Cikis→Çıkış, etc.). |
+| **Wire service datelines** | `_DATELINE_RE` regex in `pipelines.py` catches all formats: `CITY (AGENCY)`, `CITY, Date (AGENCY)`, multi-word agencies like `(Thomson Reuters Vakfı)`. Applied in `TranslatePipeline` output and `ContentCleanPipeline` input. `translate.md` + `clean.md` also updated. |
+| **Untranslated English content** | `_is_english()` in `TranslatePipeline` raises `DropItem` when translated output is still predominantly English (stopword ratio > 8%). |
+| **Thin/paywalled articles** | `MinContentPipeline` (priority 175, between Score and Translation) drops articles with fewer than 80 words in `content_original`. Catches CNBC Africa paywall stubs. |
+| **CNBC Africa body extraction** | Spider now tries `div.article-body`, `div.post-content`, `div.entry-content`, `article p` selectors before falling back to `og:description`. |
 
 ## 14. Claude Code Working Rules
 
