@@ -74,6 +74,22 @@ def _strip_datelines(html: str) -> str:
     return html
 
 
+_EN_STOPWORDS_RE = re.compile(
+    r'\b(the|of|and|in|to|that|is|are|was|were|for|on|at|by|with|from|said|has|have|been|will)\b',
+    re.IGNORECASE,
+)
+
+
+def _is_english(html: str) -> bool:
+    """Return True if the text is predominantly English (translation failed)."""
+    text = re.sub(r"<[^>]+>", " ", html)
+    words = re.findall(r'\w+', text)
+    if len(words) < 50:
+        return False
+    en_hits = len(_EN_STOPWORDS_RE.findall(text))
+    return en_hits / len(words) > 0.08
+
+
 _TR_CHARS = str.maketrans("çşığöüÇŞİĞÖÜ", "csigoucsigou")
 
 
@@ -211,6 +227,13 @@ class TranslationPipeline:
             return item
 
         title_tr, excerpt_tr, content_tr = result
+
+        # Guard: if the "translated" body is still predominantly English, the
+        # translation silently failed. Drop the item rather than publish English.
+        if content_tr and _is_english(content_tr):
+            logger.warning("Translation produced English output, dropping: %s", item.get("source_url", ""))
+            raise DropItem(f"Translation failed (English output): {item.get('source_url', '')}")
+
         item["title_tr"] = title_tr
         item["excerpt_tr"] = excerpt_tr
         # Strip datelines and summary labels immediately after translation,
