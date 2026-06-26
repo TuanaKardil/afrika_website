@@ -195,6 +195,32 @@ class ScorePipeline:
         return item
 
 
+class MinContentPipeline:
+    """Drop articles whose original content is too short (< 80 English words).
+
+    Runs after ScorePipeline so only scored-5+ items reach this check, and
+    before TranslationPipeline so we do not waste AI translation cost on
+    stub or paywalled articles.
+    """
+
+    _THRESHOLD = 80
+
+    def process_item(self, item, spider):
+        source_url = item.get("source_url", "")
+        raw = item.get("content_original") or ""
+        text = re.sub(r"<[^>]+>", " ", raw)
+        word_count = len(re.findall(r'\w+', text))
+        if word_count < self._THRESHOLD:
+            logger.warning(
+                "Dropping thin content (%d words): %s", word_count, source_url
+            )
+            _stats_inc(item.get("source", ""), "dropped_low_score")
+            raise DropItem(
+                f"Thin content ({word_count} words < {self._THRESHOLD}): {source_url}"
+            )
+        return item
+
+
 class TranslationPipeline:
     """Translate English content to Turkish for articles scoring MIN_AFRICA_SCORE or higher.
     Articles below MIN_AFRICA_SCORE skip translation (title_tr/excerpt_tr/content_tr remain None).

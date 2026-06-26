@@ -22,6 +22,7 @@ ITEM_PIPELINES = {
     "scraper.pipelines.DeduplicationPipeline": 100,     # Hash + AI semantic dedup (48h)
     "scraper.pipelines.TurkeyFilterPipeline": 150,       # GPT-5 Nano: PASS/SUPPRESS
     "scraper.pipelines.ScorePipeline": 160,              # Gemini Flash-Lite: 1-10 score
+    "scraper.pipelines.MinContentPipeline": 175,         # Drop stub/paywalled articles (< 80 words)
     "scraper.pipelines.TranslationPipeline": 200,        # Gemini Flash-Lite: TR translate (score 5+)
     "scraper.pipelines.ContentCleanPipeline": 220,       # Gemini Flash-Lite: remove boilerplate from content_tr
     "scraper.pipelines.SanitizationPipeline": 250,       # HTML sanitize (after translate)

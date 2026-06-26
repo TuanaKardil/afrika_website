@@ -16,7 +16,7 @@ _START_URLS = [
     f"{_BASE}/tag/economy/",
 ]
 
-_MIN_DESC_LEN = 80
+_MIN_DESC_LEN = 100
 
 
 class CNBCAfricaSpider(scrapy.Spider):
@@ -96,7 +96,10 @@ class CNBCAfricaSpider(scrapy.Spider):
         )
 
         excerpt = description[:200]
-        content_html = f"<p>{description}</p>"
+
+        # Try to extract the real article body before falling back to og:description stub.
+        # CNBC Africa is semi-paywalled; some pages expose body paragraphs in the HTML.
+        content_html = _extract_body(response) or f"<p>{description}</p>"
 
         yield ArticleItem(
             source="cnbc_africa",
@@ -110,6 +113,32 @@ class CNBCAfricaSpider(scrapy.Spider):
             image_credit="",
             is_update=False,
         )
+
+
+_BODY_SELECTORS = [
+    "div.article-body p",
+    "div.post-content p",
+    "div.entry-content p",
+    "article p",
+]
+
+_MIN_BODY_PARAGRAPHS = 3
+_MIN_BODY_CHARS = 200
+
+
+def _extract_body(response: Response) -> str | None:
+    """Try CSS selectors in order and return joined <p> tags if enough content found.
+
+    Returns None if no selector produces >= 3 paragraphs with >= 200 total characters,
+    so the caller can fall back to og:description.
+    """
+    for selector in _BODY_SELECTORS:
+        paragraphs = [p.strip() for p in response.css(f"{selector}::text").getall() if p.strip()]
+        if len(paragraphs) >= _MIN_BODY_PARAGRAPHS:
+            total_text = " ".join(paragraphs)
+            if len(total_text) >= _MIN_BODY_CHARS:
+                return "".join(f"<p>{p}</p>" for p in paragraphs)
+    return None
 
 
 def _extract_ld_json(response: Response) -> dict:
