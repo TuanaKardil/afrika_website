@@ -318,7 +318,15 @@ def _translate_one(article: dict[str, Any]) -> dict[str, Any]:
     excerpt = article.get("excerpt_original") or ""
     body = article.get("content_original") or ""
     source_url = article.get("source_url") or ""
-    source_name = article.get("source") or source_url
+    _SOURCE_LABELS = {
+        "business_insider": "Business Insider Africa",
+        "cnbc_africa": "CNBC Africa",
+        "africa_report": "The Africa Report",
+        "the_conversation": "The Conversation Africa",
+        "aa_africa": "Anadolu Agency",
+    }
+    raw_source = article.get("source") or ""
+    source_name = _SOURCE_LABELS.get(raw_source) or raw_source or source_url
 
     user_message = _USER_TEMPLATE.format(
         title=title,
