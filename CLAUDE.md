@@ -19,7 +19,7 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 - **Frontend:** Next.js 14 (App Router), Tailwind CSS, TypeScript
 - **Backend:** Supabase (PostgreSQL + Auth + Storage + RLS)
 - **Scraping:** Scrapy (5 sources in parallel)
-- **Automation:** n8n (cron + pipeline orchestration)
+- **Automation:** GitHub Actions native cron (n8n account closed; scrape.yml runs independently at 07:00 + 13:00 TST via UTC cron)
 - **AI:** OpenRouter API (Gemini 2.5 Flash-Lite + GPT-5 Nano)
 - **Deploy:** Vercel
 - **CI/CD:** GitHub Actions
@@ -29,12 +29,14 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 Runs twice daily. The 13:00 run picks up articles published after the morning run; duplicates from the first run are caught by DeduplicationPipeline.
 
 ```
-07:00 / 13:00  n8n cron triggers GitHub Actions scrape.yml
+07:00 / 13:00  GitHub Actions scrape.yml triggered by native cron
 +00:01         DeduplicationPipeline  (source_url + content_hash + AI semantic, last 48h)
 +00:05         TurkeyFilterPipeline   (GPT-5 Nano, SUPPRESS items are dropped)
 +00:08         ScorePipeline          (Gemini 2.5 Flash-Lite, score < 5 are dropped)
-+00:18         TranslatePipeline      (only score 5+, 600 words, SEO+GEO+AEO)
-+00:22         ContentCleanStep       (Gemini 2.5 Flash-Lite, removes off-topic promos from content_tr)
++00:15         MinContentPipeline     (drops articles < 80 words in content_original)
++00:18         TranslatePipeline      (only score 5+, 600 words, SEO+GEO+AEO, human-readable source names)
++00:22         ContentCleanPipeline   (Gemini 2.5 Flash-Lite, removes off-topic promos + datelines from content_tr)
++00:24         QualityCheckPipeline   (drops truncated list articles ending with "şunlardır:"; warns on missing H2)
 +00:25         ClassifyPipeline       (nav_tab + sector + region JSON)
 +00:28         HashtagsPipeline       (8-15 hashtags from canonical list)
 +00:30         Written to Supabase + scrape_stats row upserted (run_slot: sabah | oglen)
@@ -184,6 +186,9 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 | **Untranslated English content** | `_is_english()` in `TranslatePipeline` raises `DropItem` when translated output is still predominantly English (stopword ratio > 8%). |
 | **Thin/paywalled articles** | `MinContentPipeline` (priority 175, between Score and Translation) drops articles with fewer than 80 words in `content_original`. Catches CNBC Africa paywall stubs. |
 | **CNBC Africa body extraction** | Spider now tries `div.article-body`, `div.post-content`, `div.entry-content`, `article p` selectors before falling back to `og:description`. |
+| **Missing H2 headings** | `translate.md` H2/H3 rule marked MANDATORY. `QualityCheckPipeline` (priority 235) logs a warning when published article has no `<h2>`. |
+| **Truncated list articles** | `QualityCheckPipeline` drops articles whose translated body ends with "şunlardır:" — these are JS-rendered list/table pages that Scrapy cannot access. |
+| **Raw source key in source-link** | `translate.py` `_SOURCE_LABELS` map converts raw keys (`business_insider`, `cnbc_africa`, etc.) to display names before passing to translate prompt. Prevents "Kaynak: business_insider" in article bodies. |
 
 ## 14. Claude Code Working Rules
 
