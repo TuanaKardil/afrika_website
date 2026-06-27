@@ -25,6 +25,7 @@ ITEM_PIPELINES = {
     "scraper.pipelines.MinContentPipeline": 175,         # Drop stub/paywalled articles (< 80 words)
     "scraper.pipelines.TranslationPipeline": 200,        # Gemini Flash-Lite: TR translate (score 5+)
     "scraper.pipelines.ContentCleanPipeline": 220,       # Gemini Flash-Lite: remove boilerplate from content_tr
+    "scraper.pipelines.QualityCheckPipeline": 235,       # Drop truncated lists; warn on missing H2
     "scraper.pipelines.SanitizationPipeline": 250,       # HTML sanitize (after translate)
     "scraper.pipelines.StoragePipeline": 300,            # classify + hashtags + images + DB write
 }

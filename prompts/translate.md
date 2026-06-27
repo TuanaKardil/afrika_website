@@ -90,7 +90,7 @@ Apply these rules so the article ranks well on Google:
 
 1. **Keyword-Rich Title**: The Turkish title must include the primary country/region name and the core topic. Example: "Nijerya'da Yeni Maden Yatırımı Bakır Üretimini Artırabilir" not "Önemli Gelişme".
 2. **First Paragraph Summary**: The first paragraph (lead) must answer Who, What, Where, When in 1-2 sentences. This becomes the meta description candidate.
-3. **H2/H3 Structure**: Use descriptive H2 and H3 headings that contain natural keywords. Avoid generic headings like "Detaylar" or "Bilgiler". Use specific headings like "Nijerya'nın Yeni Maden Politikası Nedir?" or "Yatırımın Ekonomik Etkileri Neler?" Only use a Turkey-focused H2 if the article is **Direct Relevance** or strongly supported **Indirect Relevance**.
+3. **H2/H3 Structure — MANDATORY**: Every article MUST contain at least one `<h2>` heading. Use descriptive H2 and H3 headings that contain natural keywords. Avoid generic headings like "Detaylar" or "Bilgiler". Use specific headings like "Nijerya'nın Yeni Maden Politikası Nedir?" or "Yatırımın Ekonomik Etkileri Neler?". For list-style articles, use the list category as an H2 (e.g. "En Yüksek Yakıt Fiyatları" or "Güçlü Para Birimleri"). Only use a Turkey-focused H2 if the article is **Direct Relevance** or strongly supported **Indirect Relevance**.
 4. **Internal Link Anchor Text**: If referencing a concept covered in another article on the same site, use the exact Turkish article title as anchor text. (Note: actual href URLs are handled by the CMS; you provide the anchor text only.)
 
 ## GEO Optimization (Generative Engine Optimization)

@@ -283,6 +283,41 @@ class ContentCleanPipeline:
         return item
 
 
+# Matches Turkish list-intro endings like "şunlardır:", "aşağıdakilerdir:", "bunlardır:"
+# These indicate the article was scraped without its actual list/table data.
+_TRUNCATED_LIST_RE = re.compile(
+    r'(?:şunlardır|aşağıdakilerdir|bunlardır|listesi\s*:)\s*$',
+    re.IGNORECASE | re.UNICODE,
+)
+
+
+class QualityCheckPipeline:
+    """Post-translation quality checks that drop or warn on bad output.
+
+    1. Truncated list articles — content ends with "şunlardır:" meaning the
+       list/table data was not scraped (JS-rendered or paywalled). Drop these.
+    2. Missing H2 heading — log a warning so the issue is trackable.
+    """
+
+    def process_item(self, item, spider):
+        content_tr = item.get("content_tr") or ""
+        if not content_tr:
+            return item
+
+        plain = re.sub(r"<[^>]+>", " ", content_tr).strip()
+
+        if _TRUNCATED_LIST_RE.search(plain):
+            source_url = item.get("source_url", "")
+            logger.warning("Dropping truncated list article (missing table data): %s", source_url)
+            _stats_inc(item.get("source", ""), "dropped_low_score")
+            raise DropItem(f"Truncated list (no table data scraped): {source_url}")
+
+        if not re.search(r'<h[23]', content_tr, re.I):
+            logger.warning("Article published without H2/H3 heading: %s", item.get("source_url", ""))
+
+        return item
+
+
 class TurkeyFilterPipeline:
     """Drop articles with negative Turkey framing before expensive translation."""
 
