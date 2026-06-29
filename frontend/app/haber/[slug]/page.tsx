@@ -135,12 +135,13 @@ export default async function HaberPage({ params }: HaberPageProps) {
       {article.hashtags && article.hashtags.length > 0 && (
         <div className="mt-8 pt-6 border-t border-outline-variant flex flex-wrap gap-2">
           {article.hashtags.map((tag) => (
-            <span
+            <a
               key={tag}
-              className="font-body text-xs text-on-surface/60 bg-surface-container px-2.5 py-1 rounded-sm"
+              href={`/hashtag/${encodeURIComponent(tag)}`}
+              className="font-body text-xs text-on-surface/60 bg-surface-container px-2.5 py-1 rounded-sm hover:bg-primary/10 hover:text-primary transition-colors duration-[120ms]"
             >
-              {tag}
-            </span>
+              #{tag}
+            </a>
           ))}
         </div>
       )}

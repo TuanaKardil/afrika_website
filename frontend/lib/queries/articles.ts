@@ -287,6 +287,26 @@ export async function getFilteredArticles(
   return { articles: data ?? [], count: count ?? 0 };
 }
 
+export async function getArticlesByHashtag(
+  tag: string,
+  page = 1
+): Promise<{ articles: Article[]; count: number }> {
+  const supabase = createClient();
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const { data, count } = await supabase
+    .from("articles")
+    .select("*", { count: "exact" })
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .not("title_tr", "is", null)
+    .contains("hashtags", [tag])
+    .order("published_at", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  return { articles: data ?? [], count: count ?? 0 };
+}
+
 export async function getAllSlugs(): Promise<string[]> {
   const supabase = createClient();
   const { data } = await supabase
