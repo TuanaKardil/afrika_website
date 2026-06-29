@@ -140,7 +140,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
               href={`/hashtag/${encodeURIComponent(tag)}`}
               className="font-body text-xs text-on-surface/60 bg-surface-container px-2.5 py-1 rounded-sm hover:bg-primary/10 hover:text-primary transition-colors duration-[120ms]"
             >
-              #{tag}
+              {tag}
             </a>
           ))}
         </div>
