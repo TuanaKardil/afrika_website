@@ -62,62 +62,66 @@ export default async function HaberPage({ params }: HaberPageProps) {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <ViewCountIncrementer articleId={article.id} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 items-start">
+      {/* ── Başlık bölümü: tam genişlik, sidebar yok ── */}
+      <div className="lg:pr-[340px]">
+        {/* Breadcrumb */}
+        <nav aria-label="Sayfa yolu" className="mb-6 flex items-center gap-2 font-body text-sm text-on-surface/50">
+          <a href="/" className="hover:text-primary transition-colors">Ana Sayfa</a>
+          <span>/</span>
+          {(() => {
+            const crumbLabel = article.nav_tab_slug
+              ? resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags)
+              : null;
+            return crumbLabel ? (
+              <>
+                <a href={`/${article.nav_tab_slug}`} className="hover:text-primary transition-colors capitalize">
+                  {crumbLabel}
+                </a>
+                <span>/</span>
+              </>
+            ) : null;
+          })()}
+          <span className="text-on-surface/30 truncate max-w-[200px]">{article.title_tr}</span>
+        </nav>
 
-        {/* ── Sol: makale içeriği ── */}
+        {/* Badges */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {article.nav_tab_slug && (
+            <CategoryBadge
+              slug={article.nav_tab_slug}
+              sectorSlugs={article.sector_slugs ?? []}
+              hashtags={article.hashtags}
+            />
+          )}
+          {article.region_slug && <RegionBadge slug={article.region_slug} />}
+        </div>
+
+        {/* Title */}
+        <h1 className="font-headline text-3xl md:text-4xl leading-tight text-on-surface mb-4">
+          {article.title_tr}
+        </h1>
+
+        {/* Meta */}
+        <div className="flex flex-wrap items-center gap-3 mb-6 pb-6 border-b border-outline-variant font-body text-sm text-on-surface/60">
+          <SaveButton articleId={article.id} />
+          {article.author_original && <span>{article.author_original}</span>}
+          <time dateTime={article.published_at}>
+            {formatDate(article.published_at)}
+          </time>
+          <ReadingTime minutes={article.reading_time_minutes} />
+          {article.source && (
+            <span className="ml-auto text-on-surface/40">
+              Kaynak: {SOURCE_LABELS[article.source] ?? article.source}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── İçerik + sidebar: görsel hizasından başlar ── */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10 items-start">
+
+        {/* Sol: görsel + makale gövdesi */}
         <article>
-          {/* Breadcrumb */}
-          <nav aria-label="Sayfa yolu" className="mb-6 flex items-center gap-2 font-body text-sm text-on-surface/50">
-            <a href="/" className="hover:text-primary transition-colors">Ana Sayfa</a>
-            <span>/</span>
-            {(() => {
-              const crumbLabel = article.nav_tab_slug
-                ? resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags)
-                : null;
-              return crumbLabel ? (
-                <>
-                  <a href={`/${article.nav_tab_slug}`} className="hover:text-primary transition-colors capitalize">
-                    {crumbLabel}
-                  </a>
-                  <span>/</span>
-                </>
-              ) : null;
-            })()}
-            <span className="text-on-surface/30 truncate max-w-[200px]">{article.title_tr}</span>
-          </nav>
-
-          {/* Badges */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {article.nav_tab_slug && (
-              <CategoryBadge
-                slug={article.nav_tab_slug}
-                sectorSlugs={article.sector_slugs ?? []}
-                hashtags={article.hashtags}
-              />
-            )}
-            {article.region_slug && <RegionBadge slug={article.region_slug} />}
-          </div>
-
-          {/* Title */}
-          <h1 className="font-headline text-3xl md:text-4xl leading-tight text-on-surface mb-4">
-            {article.title_tr}
-          </h1>
-
-          {/* Meta */}
-          <div className="flex flex-wrap items-center gap-3 mb-6 pb-6 border-b border-outline-variant font-body text-sm text-on-surface/60">
-            <SaveButton articleId={article.id} />
-            {article.author_original && <span>{article.author_original}</span>}
-            <time dateTime={article.published_at}>
-              {formatDate(article.published_at)}
-            </time>
-            <ReadingTime minutes={article.reading_time_minutes} />
-            {article.source && (
-              <span className="ml-auto text-on-surface/40">
-                Kaynak: {SOURCE_LABELS[article.source] ?? article.source}
-              </span>
-            )}
-          </div>
-
           {/* Featured image */}
           {article.featured_image_url && (
             <figure className="mb-8">
