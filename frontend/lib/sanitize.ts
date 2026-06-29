@@ -3,6 +3,7 @@ import sanitizeHtml from "sanitize-html";
 const ALLOWED_TAGS = [
   "h2", "h3", "p", "blockquote", "ul", "ol", "li",
   "strong", "em", "figure", "figcaption", "img",
+  "table", "thead", "tbody", "tr", "th", "td",
 ];
 
 export function sanitizeArticleContent(dirty: string): string {
