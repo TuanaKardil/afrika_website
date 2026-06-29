@@ -128,7 +128,7 @@ def upload_image(
         sb.storage.from_(_BUCKET).upload(
             path,
             jpeg_bytes,
-            {"content-type": "image/jpeg", "upsert": "true"},
+            {"content-type": "image/jpeg", "upsert": "true", "cache-control": "public, max-age=31536000, immutable"},
         )
         public_url = f"{os.environ['SUPABASE_URL']}/storage/v1/object/public/{_BUCKET}/{path}"
         return public_url
