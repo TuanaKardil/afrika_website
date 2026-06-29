@@ -116,29 +116,41 @@ body {
   font-size: 0.9rem;
   overflow-x: auto;
   display: block;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(15, 45, 92, 0.12);
 }
 
 .article-content thead {
-  background-color: #f3f4f6;
+  background-color: #0f2d5c;
 }
 
 .article-content th {
-  padding: 0.6rem 0.9rem;
+  padding: 0.65rem 1rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
-  border: 1px solid #e5e7eb;
+  color: #ffffff;
+  border: 1px solid #1a3f7a;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 .article-content td {
-  padding: 0.5rem 0.9rem;
-  border: 1px solid #e5e7eb;
-  color: #1f2937;
+  padding: 0.5rem 1rem;
+  border: 1px solid #c8d9ee;
+  color: #1a2e4a;
+}
+
+.article-content tbody tr {
+  background-color: #ffffff;
 }
 
 .article-content tbody tr:nth-child(even) {
-  background-color: #f9fafb;
+  background-color: #e8f0fb;
+}
+
+.article-content tbody tr:hover {
+  background-color: #d0e3f7;
 }
 
 /* Defer rendering of off-screen article cards */
