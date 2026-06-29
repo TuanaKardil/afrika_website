@@ -1,5 +1,4 @@
 import type { Article } from "@/lib/queries/articles";
-import { formatDateShort } from "@/lib/utils";
 import { resolveCategory } from "@/lib/labels";
 
 interface SimilarArticlesPanelProps {
@@ -15,7 +14,7 @@ export default function SimilarArticlesPanel({ articles }: SimilarArticlesPanelP
       <p className="text-[11px] font-black tracking-[0.1em] uppercase text-navy mb-4">
         Benzer Haberler
       </p>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {articles.map((article) => {
           const category = resolveCategory(
             article.nav_tab_slug,
@@ -26,17 +25,17 @@ export default function SimilarArticlesPanel({ articles }: SimilarArticlesPanelP
             <a
               key={article.id}
               href={`/haber/${article.slug}`}
-              className="group flex gap-3 items-start"
+              className="group flex flex-col gap-2"
             >
               {/* Thumbnail */}
-              <div className="shrink-0 w-20 h-[52px] overflow-hidden bg-surface-2 rounded-sm">
+              <div className="w-full h-[130px] overflow-hidden bg-surface-2 rounded-sm">
                 {article.featured_image_url ? (
                   <img
                     src={article.featured_image_url}
                     alt={article.title_tr ?? ""}
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
                   />
                 ) : (
                   <div className="w-full h-full bg-[linear-gradient(135deg,#143063,#1e6fb8)]" />
@@ -44,12 +43,13 @@ export default function SimilarArticlesPanel({ articles }: SimilarArticlesPanelP
               </div>
 
               {/* Text */}
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-semibold tracking-[0.07em] uppercase text-fg-3 mb-0.5 truncate">
-                  {formatDateShort(article.published_at)}
-                  {category ? ` • ${category.toLocaleUpperCase("tr-TR")}` : ""}
-                </p>
-                <h3 className="text-[13px] font-bold leading-[1.3] text-navy line-clamp-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
+              <div>
+                {category && (
+                  <p className="text-[10px] font-semibold tracking-[0.07em] uppercase text-primary mb-1">
+                    {category.toLocaleUpperCase("tr-TR")}
+                  </p>
+                )}
+                <h3 className="text-sm font-bold leading-[1.35] text-navy line-clamp-3 group-hover:underline group-hover:underline-offset-[3px] group-hover:decoration-[1px]">
                   {article.title_tr}
                 </h3>
               </div>
