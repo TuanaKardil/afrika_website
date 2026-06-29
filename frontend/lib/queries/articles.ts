@@ -307,6 +307,70 @@ export async function getArticlesByHashtag(
   return { articles: data ?? [], count: count ?? 0 };
 }
 
+export async function getSimilarArticles(
+  articleId: string,
+  navTabSlug: string | null,
+  sectorSlugs: string[],
+  hashtags: string[],
+  limit = 5
+): Promise<Article[]> {
+  const supabase = createClient();
+
+  const sixtyDaysAgo = new Date();
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+  // Candidate pool: same nav_tab OR overlapping sectors, last 60 days, max 50
+  const filters: string[] = [];
+  if (navTabSlug) filters.push(`nav_tab_slug.eq.${navTabSlug}`);
+  if (sectorSlugs.length > 0) {
+    filters.push(`sector_slugs.ov.{${sectorSlugs.join(",")}}`);
+  }
+
+  let query = supabase
+    .from("articles")
+    .select("*")
+    .eq("is_suppressed", false)
+    .gte("score", 5)
+    .not("title_tr", "is", null)
+    .neq("id", articleId)
+    .gte("published_at", sixtyDaysAgo.toISOString())
+    .order("published_at", { ascending: false })
+    .limit(50);
+
+  if (filters.length > 0) {
+    query = query.or(filters.join(","));
+  }
+
+  const { data } = await query;
+  const candidates = data ?? [];
+
+  // Score each candidate
+  const hashtagSet = new Set(hashtags);
+  const sectorSet = new Set(sectorSlugs);
+
+  const scored = candidates
+    .map((c) => {
+      let score = 0;
+      for (const tag of c.hashtags ?? []) {
+        if (hashtagSet.has(tag)) score += 2;
+      }
+      for (const s of c.sector_slugs ?? []) {
+        if (sectorSet.has(s)) score += 3;
+      }
+      if (navTabSlug && c.nav_tab_slug === navTabSlug) score += 1;
+      return { article: c, score };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) =>
+      b.score !== a.score
+        ? b.score - a.score
+        : new Date(b.article.published_at).getTime() -
+          new Date(a.article.published_at).getTime()
+    );
+
+  return scored.slice(0, limit).map((x) => x.article);
+}
+
 export async function getAllSlugs(): Promise<string[]> {
   const supabase = createClient();
   const { data } = await supabase
