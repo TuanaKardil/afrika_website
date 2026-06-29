@@ -283,10 +283,12 @@ class ContentCleanPipeline:
         return item
 
 
-# Matches Turkish list-intro endings like "şunlardır:", "aşağıdakilerdir:", "bunlardır:"
-# These indicate the article was scraped without its actual list/table data.
+# Matches Turkish list-intro endings that indicate JS-rendered list data was not scraped.
+# Catches both colon ("şunlardır:") and period ("şunlardır.") endings, plus English variants.
 _TRUNCATED_LIST_RE = re.compile(
-    r'(?:şunlardır|aşağıdakilerdir|bunlardır|listesi\s*:)\s*$',
+    r'(?:şunlardır|aşağıdakilerdir|bunlardır|aşağıda\s+yer\s+almaktadır|'
+    r'listesi\s*(?:şöyledir|aşağıdadır)?|'
+    r'(?:are|is)\s+as\s+follows|following\s+countries)\s*[:.]\s*$',
     re.IGNORECASE | re.UNICODE,
 )
 
