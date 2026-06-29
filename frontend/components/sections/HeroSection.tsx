@@ -107,9 +107,6 @@ export default function HeroSection({
                       href={`/haber/${top.slug}`}
                       className="group flex items-start gap-2 md:gap-3 md:py-3"
                     >
-                      <span className="text-[10px] md:text-[13px] font-bold tabular-nums leading-[1.4] tracking-[0.04em] text-fg-3 shrink-0 pt-px">
-                        {String(idx + 1).padStart(2, "0")}
-                      </span>
                       <div className="flex-1 min-w-0">
                         <div className="hidden md:flex items-center gap-1.5 mb-1">
                           <span className="w-[5px] h-[5px] rounded-full bg-amber shrink-0" />
