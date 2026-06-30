@@ -65,7 +65,7 @@ export default function SearchInput({ initialValue = "" }: SearchInputProps) {
         type="search"
         value={value}
         onChange={handleChange}
-        placeholder="Afrika haberlerinde ara..."
+        placeholder="Ülke, konu veya haber ara…"
         aria-label="Haber ara"
         className="w-full pl-10 pr-10 py-3 bg-surface border border-outline-variant rounded-xl font-body text-sm text-on-surface placeholder:text-on-surface/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
       />

@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import Navigation from "./Navigation";
 import MobileMenu from "./MobileMenu";
+import MobileSearchOverlay from "./MobileSearchOverlay";
+import HeaderSearch from "./HeaderSearch";
 import RegionBar from "./RegionBar";
 import { createClient } from "@/lib/supabase/server";
 import { logoutAction } from "@/lib/auth/actions";
@@ -24,8 +26,11 @@ export default async function Header() {
             <span className="text-white font-black text-xl tracking-[-0.02em] leading-none ml-1.5">{"HABERLERİ"}</span>
           </Link>
 
+          {/* Search bar — desktop only, sits between logo and actions */}
+          <HeaderSearch />
+
           {/* Actions */}
-          <div className="ml-auto flex items-center gap-2 md:gap-3.5 shrink-0">
+          <div className="ml-auto md:ml-6 flex items-center gap-2 md:gap-3.5 shrink-0">
             {user ? (
               <>
                 <Link
@@ -51,6 +56,7 @@ export default async function Header() {
                 {"Giriş Yap"}
               </Link>
             )}
+            <MobileSearchOverlay />
             <MobileMenu isLoggedIn={!!user} />
           </div>
         </div>
