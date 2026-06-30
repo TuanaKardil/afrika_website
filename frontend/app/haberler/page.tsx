@@ -25,8 +25,6 @@ const CATEGORIES = [
   { slug: "pazarlar-ekonomi", label: "Pazarlar & Ekonomi" },
   { slug: "ticaret-ihracat", label: "Ticaret & İhracat" },
   { slug: "sektorler", label: "Sektörler" },
-  { slug: "turk-is-dunyasi", label: "Türk İş Dünyası" },
-  { slug: "etkinlikler-fuarlar", label: "Etkinlikler & Fuarlar" },
   { slug: "ulkeler", label: "Ülkeler" },
   { slug: "diger", label: "Diğer" },
 ];
