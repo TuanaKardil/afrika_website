@@ -14,7 +14,7 @@ export default function SimilarArticlesPanel({ articles }: SimilarArticlesPanelP
       <p className="text-[11px] font-black tracking-[0.1em] uppercase text-navy mb-4">
         Benzer Haberler
       </p>
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col divide-y divide-gray-200">
         {articles.map((article) => {
           const category = resolveCategory(
             article.nav_tab_slug,
@@ -25,7 +25,7 @@ export default function SimilarArticlesPanel({ articles }: SimilarArticlesPanelP
             <a
               key={article.id}
               href={`/haber/${article.slug}`}
-              className="group flex flex-col gap-2"
+              className="group flex flex-col gap-2 pt-5 first:pt-0"
             >
               {/* Thumbnail */}
               <div className="w-full h-[130px] overflow-hidden bg-surface-2 rounded-sm">
