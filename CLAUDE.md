@@ -10,7 +10,7 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 - **Update times:** 07:00 TST + 13:00 TST (n8n cron, twice daily)
 - **Fetch window:** Last 24 hours
 - **Duplicate check window:** Last 48 hours
-- **Publication threshold:** Score 5+
+- **Publication threshold:** Score 6+
 - **News count limit:** NONE (filtering creates a natural ceiling)
 - **Daily report:** Email to a.berkbaytar@gmail.com at 09:00 (sabah) and 15:00 (oglen) TST
 

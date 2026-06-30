@@ -172,7 +172,7 @@ class SanitizationPipeline:
         return item
 
 
-MIN_AFRICA_SCORE = 5
+MIN_AFRICA_SCORE = 6
 
 
 class ScorePipeline:
