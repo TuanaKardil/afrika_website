@@ -78,7 +78,8 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 
 **UI tabs (6 visible + 1 module):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, ulkeler, ihaleler (separate module), diger (hidden)
 
-> `etkinlikler-fuarlar` was removed from the UI nav (June 2026) but remains a valid classifier nav_tab value — the AI still classifies articles into it.
+> `etkinlikler-fuarlar` was removed from the UI nav, footer, and `/haberler` filters (June 2026) but remains a valid classifier nav_tab value — the AI still classifies articles into it.
+> `turk-is-dunyasi` was also removed from the UI nav, footer, and `/haberler` filters (June 2026) but remains a valid classifier nav_tab value.
 
 **Classifier nav_tab values (8):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, turk-is-dunyasi, etkinlikler-fuarlar, ulkeler, diger
 
@@ -162,6 +163,9 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `frontend/components/auth/ResetPasswordForm.tsx` | New password form (server action) |
 | `frontend/app/sifremi-unuttum/page.tsx` | Forgot password page |
 | `frontend/app/sifre-sifirla/page.tsx` | Reset password page (requires active session) |
+| `frontend/app/hashtag/[tag]/page.tsx` | Hashtag listing page — shows all articles containing a given hashtag, paginated |
+| `frontend/components/ui/SimilarArticlesPanel.tsx` | Sidebar component showing up to 5 similar articles scored by shared hashtags/sectors |
+| `frontend/lib/labels.ts` | `resolveCategory()` — maps nav_tab+sector+hashtags to a display label; never shows "Sektörler", "Ülkeler", "Türk İş Dünyası", or "Etkinlikler & Fuarlar" as badge text |
 
 ## 13. Daily Reporting
 
@@ -174,9 +178,9 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 **n8n report workflow ID:** `bRRgVo9LgM48NyV0` (baytara.app.n8n.cloud)
 **n8n scraper workflow ID:** `tFqlvcwvaDwcnxBY` (baytara.app.n8n.cloud)
 
-## 15. Known Bugs Fixed (June 2026)
+## 15. Known Bugs Fixed & Features Added (June 2026)
 
-| Fix | Details |
+| Fix / Feature | Details |
 |-----|---------|
 | **Accented chars in slugs** | `_make_slug` in `scraper/pipelines.py` now applies NFKD Unicode normalization after the Turkish char map. Prevents 404s for titles containing Lomé, São Tomé, Abidján, etc. |
 | **Özet: label in articles** | `translate.md` AEO closing rule updated: closing paragraph must be a plain `<p>` with no bold prefix. `clean.md` and `_SUMMARY_LABEL_RE` regex strip it as safety nets. |
@@ -189,6 +193,14 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 | **Missing H2 headings** | `translate.md` H2/H3 rule marked MANDATORY. `QualityCheckPipeline` (priority 235) logs a warning when published article has no `<h2>`. |
 | **Truncated list articles** | `QualityCheckPipeline` drops articles whose translated body ends with "şunlardır:" — these are JS-rendered list/table pages that Scrapy cannot access. |
 | **Raw source key in source-link** | `translate.py` `_SOURCE_LABELS` map converts raw keys (`business_insider`, `cnbc_africa`, etc.) to display names before passing to translate prompt. Prevents "Kaynak: business_insider" in article bodies. |
+| **Table rendering in articles** | `sanitize-html` ALLOWED_TAGS in `frontend/lib/sanitize.ts` was missing `table`, `thead`, `tbody`, `tr`, `th`, `td`. Added. Navy/white table styles added to `globals.css`. |
+| **Image cache-control** | Supabase Storage was serving images with `Cache-Control: no-cache` (default). `scraper/scraper/storage.py` now uploads with `public, max-age=31536000, immutable`. All 482 existing images were retroactively re-uploaded. |
+| **"En Çok Okunanlar" numbers** | Ranking numbers (1-5) removed from the sidebar list in `HeroSection.tsx`. |
+| **Category badge "Sektörler"** | `resolveCategory()` in `frontend/lib/labels.ts` now shows the specific sector name (e.g. "Enerji") for `sektorler` nav_tab instead of the generic "Sektörler" label. |
+| **Category badge generic labels** | `resolveCategory()` extended: `ulkeler`, `turk-is-dunyasi`, and `etkinlikler-fuarlar` nav_tabs also resolve to sector name or best hashtag instead of their generic label. Badge is hidden if neither is available. |
+| **Clickable hashtags** | Hashtag chips in article detail page are now `<a>` links to `/hashtag/[tag]`. New page `frontend/app/hashtag/[tag]/page.tsx` lists all articles sharing that tag, paginated, with `revalidate = 1800`. Query: `.contains("hashtags", [tag])`. |
+| **Similar articles sidebar** | Article detail page (`app/haber/[slug]/page.tsx`) has a 2-column layout on desktop: article on left, "Benzer Haberler" sidebar on right (300px, sticky). Mobile: sidebar appears below the article. Similarity scoring: +2 per common hashtag, +3 per common sector, +1 same nav_tab. Tiebreaker: most recent first. Top 5 from last 60 days. Sidebar starts at the same vertical position as the featured image. Component: `frontend/components/ui/SimilarArticlesPanel.tsx`. |
+| **Nav cleanup (UI-only tabs)** | `etkinlikler-fuarlar` and `turk-is-dunyasi` removed from `/haberler` category filters (`app/haberler/page.tsx`) and from the footer (`components/layout/Footer.tsx`). These slugs remain valid classifier values. |
 
 ## 14. Claude Code Working Rules
 
