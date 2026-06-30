@@ -81,8 +81,9 @@ export function resolveCategory(
   sectorSlugs: string[],
   hashtags?: string[] | null,
 ): string | null {
-  // For sektorler/ulkeler: show sector name, then hashtag — never the generic label
-  if (navTabSlug === "sektorler" || navTabSlug === "ulkeler") {
+  // These nav_tabs never appear as-is — show sector name or best hashtag instead
+  const GENERIC_TABS = new Set(["sektorler", "ulkeler", "turk-is-dunyasi", "etkinlikler-fuarlar"]);
+  if (navTabSlug && GENERIC_TABS.has(navTabSlug)) {
     const specificSector = sectorSlugs.find((s) => s !== "diger-sektor");
     if (specificSector) return SECTOR_LABELS[specificSector] ?? null;
     if (navTabSlug === "sektorler") return SECTOR_LABELS["diger-sektor"] ?? "Sektörler";
