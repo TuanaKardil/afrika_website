@@ -81,11 +81,12 @@ export function resolveCategory(
   sectorSlugs: string[],
   hashtags?: string[] | null,
 ): string | null {
-  // For sektorler articles, show the specific sector name instead of "Sektörler"
-  if (navTabSlug === "sektorler") {
+  // For sektorler/ulkeler: show sector name, then hashtag — never the generic label
+  if (navTabSlug === "sektorler" || navTabSlug === "ulkeler") {
     const specificSector = sectorSlugs.find((s) => s !== "diger-sektor");
     if (specificSector) return SECTOR_LABELS[specificSector] ?? null;
-    return SECTOR_LABELS["diger-sektor"] ?? "Sektörler";
+    if (navTabSlug === "sektorler") return SECTOR_LABELS["diger-sektor"] ?? "Sektörler";
+    return pickBestHashtag(hashtags ?? []);
   }
   if (navTabSlug && navTabSlug !== "diger") {
     return NAV_LABELS[navTabSlug] ?? null;
