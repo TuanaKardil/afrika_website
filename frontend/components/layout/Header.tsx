@@ -26,11 +26,10 @@ export default async function Header() {
             <span className="text-white font-black text-xl tracking-[-0.02em] leading-none ml-1.5">{"HABERLERİ"}</span>
           </Link>
 
-          {/* Search bar — desktop only, sits between logo and actions */}
-          <HeaderSearch />
-
-          {/* Actions */}
-          <div className="ml-auto md:ml-6 flex items-center gap-2 md:gap-3.5 shrink-0">
+          {/* Actions — pushed to the right; search bar is part of this group */}
+          <div className="ml-auto flex items-center gap-3 md:gap-4 shrink-0">
+            {/* Search bar — desktop only */}
+            <HeaderSearch />
             {user ? (
               <>
                 <Link

@@ -15,7 +15,7 @@ export default function HeaderSearch() {
         if (trimmed.length >= 2) router.push(`/arama?q=${encodeURIComponent(trimmed)}`);
       }}
       role="search"
-      className="hidden md:flex items-center flex-1 max-w-[460px] bg-white/[0.08] border border-white/[0.14] rounded-sm h-[38px] px-3 gap-2 focus-within:border-white/40 transition-colors"
+      className="hidden md:flex items-center w-[280px] lg:w-[360px] bg-white/[0.08] border border-white/[0.14] rounded-sm h-[38px] px-3 gap-2 focus-within:border-white/40 transition-colors"
     >
       <svg
         width="14" height="14" viewBox="0 0 24 24"
