@@ -149,7 +149,6 @@ export default async function AramaPage({ searchParams }: AramaPageProps) {
               { label: "Pazarlar & Ekonomi", href: "/pazarlar-ekonomi" },
               { label: "Ticaret & İhracat", href: "/ticaret-ihracat" },
               { label: "Sektörler", href: "/sektorler" },
-              { label: "İhaleler", href: "/ihaleler" },
             ].map(({ label, href }) => (
               <a
                 key={href}

@@ -6,7 +6,6 @@ const NAV_TAB_LINKS = [
   { href: "/ticaret-ihracat", label: "Ticaret & İhracat" },
   { href: "/sektorler", label: "Sektör Haberleri" },
   { href: "/ulkeler", label: "Ülkeler" },
-  { href: "/ihaleler", label: "İhaleler" },
 ];
 
 const REGION_LINKS = [

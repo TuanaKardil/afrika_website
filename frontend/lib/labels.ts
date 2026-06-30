@@ -7,7 +7,6 @@ export const NAV_LABELS: Record<string, string> = {
   "etkinlikler-fuarlar": "Etkinlikler & Fuarlar",
   ulkeler: "Ülkeler",
   diger: "Diğer",
-  ihaleler: "İhaleler",
 };
 
 export const SECTOR_LABELS: Record<string, string> = {

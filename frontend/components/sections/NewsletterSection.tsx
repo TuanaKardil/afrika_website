@@ -27,13 +27,12 @@ export default function NewsletterSection() {
             Afrika gündemi her sabah saat 06:00&apos;da kutunuzda
           </h2>
           <p className="text-[15px] leading-[1.6] text-white/80 mb-5">
-            İhracat fırsatları, ihaleler, sektör haberleri ve ülke analizleri.
+            İhracat fırsatları, sektör haberleri ve ülke analizleri.
             24.000+ Türk iş insanı zaten abone.
           </p>
           <ul className="flex flex-col gap-2">
             {[
               "Sektör bazlı filtreleme",
-              "Aktif ihale bildirimleri",
               "Haftalık analiz raporu (PDF)",
             ].map((item) => (
               <li key={item} className="flex items-center gap-2.5 text-sm text-white/90">

@@ -9,7 +9,6 @@ import HeroSection from "@/components/sections/HeroSection";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import ArticlesFeed from "@/components/sections/ArticlesFeed";
 import BreakingTicker from "@/components/sections/BreakingTicker";
-import IhaleStrip from "@/components/sections/IhaleStrip";
 import NewsletterSection from "@/components/sections/NewsletterSection";
 
 export const revalidate = 1800;
@@ -55,10 +54,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <ArticlesFeed page={page} excludeIds={heroIds} />
           </Suspense>
         </div>
-
-        <Suspense fallback={null}>
-          <IhaleStrip />
-        </Suspense>
 
         {firsatlar.length > 0 && (
           <div className="max-w-container mx-auto px-6 pt-12">

@@ -111,7 +111,6 @@ export default function MobileSearchOverlay() {
                 { label: "Pazarlar & Ekonomi", href: "/pazarlar-ekonomi" },
                 { label: "Ticaret & İhracat", href: "/ticaret-ihracat" },
                 { label: "Sektör Haberleri", href: "/sektorler" },
-                { label: "İhaleler", href: "/ihaleler" },
               ].map(({ label, href }) => (
                 <a
                   key={href}
