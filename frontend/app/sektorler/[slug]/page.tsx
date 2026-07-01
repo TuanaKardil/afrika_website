@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: SektorSlugPageProps): Promise
   const sector = await getSectorBySlug(params.slug);
   if (!sector) return {};
   return {
-    title: `${sector.name_tr} Haberleri`,
-    description: `Afrika'dan ${sector.name_tr.toLowerCase()} sektörü haberleri.`,
+    title: `Afrika'da Son Dakika ${sector.name_tr} Haberleri | Afrika Haberleri`,
+    description: `Afrika ${sector.name_tr.toLowerCase()} sektöründen güncel haberler. Piyasa, yatırım ve sektörel gelişmeler.`,
   };
 }
 
@@ -51,7 +51,7 @@ export default async function SektorSlugPage({ params, searchParams }: SektorSlu
     <main className="container mx-auto px-4 py-8">
       <header className="mb-6">
         <h1 className="font-headline text-3xl text-on-surface">
-          {sector.name_tr} Haberleri
+          Afrika&apos;da Son Dakika {sector.name_tr} Haberleri
         </h1>
         {count > 0 && (
           <p className="font-body text-sm text-on-surface/50 mt-1">{count} haber</p>

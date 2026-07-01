@@ -19,13 +19,13 @@ export async function generateMetadata({
   const hashtag = slug ? COUNTRY_SLUG_TO_HASHTAG[slug] : null;
   if (hashtag) {
     return {
-      title: `${hashtag} Haberleri`,
-      description: `${hashtag} ile ilgili Afrika haberleri.`,
+      title: `Son Dakika ${hashtag} Haberleri | Afrika Haberleri`,
+      description: `${hashtag} ile ilgili güncel Afrika haberleri. Ekonomi, ticaret ve yatırım gelişmeleri.`,
     };
   }
   return {
-    title: "Ülkeler",
-    description: "Afrika ülkelerinden haberler.",
+    title: "Afrika Ülke Haberleri | Son Dakika",
+    description: "Afrika ülkelerinden son dakika haberleri. Ülke bazında ekonomi, ticaret ve siyasi gelişmeleri takip edin.",
   };
 }
 
@@ -39,7 +39,7 @@ export default async function UlkelerPage({ searchParams }: UlkelerPageProps) {
     : await getArticlesByNavTab("ulkeler", page);
 
   const basePath = hashtag ? `/ulkeler?ulke=${ulkeSlug}` : "/ulkeler";
-  const heading = hashtag ? `${hashtag} Haberleri` : "Ülkeler";
+  const heading = hashtag ? `Son Dakika ${hashtag} Haberleri` : "Afrika Ülke Haberleri";
 
   return (
     <main className="max-w-container mx-auto px-6 py-8">

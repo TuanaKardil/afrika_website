@@ -19,8 +19,8 @@ export async function generateMetadata({ params }: BolgePageProps): Promise<Meta
   const region = await getRegionBySlug(params.slug);
   if (!region) return {};
   return {
-    title: `${region.name_tr} Haberleri`,
-    description: `${region.name_tr} bölgesinden haberler Türkçe olarak.`,
+    title: `Son Dakika ${region.name_tr} Haberleri | Afrika Haberleri`,
+    description: `${region.name_tr} bölgesinden güncel haberler. Ekonomi, ticaret ve yatırım gelişmelerini Türkçe takip edin.`,
   };
 }
 
@@ -37,7 +37,7 @@ export default async function BolgePage({ params, searchParams }: BolgePageProps
     <main className="container mx-auto px-4 py-8">
       <header className="mb-6">
         <h1 className="font-headline text-3xl text-on-surface">
-          {region.name_tr} Haberleri
+          Son Dakika {region.name_tr} Haberleri
         </h1>
         {count > 0 && (
           <p className="font-body text-sm text-on-surface/50 mt-1">{count} haber</p>
