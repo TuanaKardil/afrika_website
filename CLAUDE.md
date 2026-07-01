@@ -32,9 +32,9 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 07:00 / 13:00  GitHub Actions scrape.yml triggered by native cron
 +00:01         DeduplicationPipeline  (source_url + content_hash + AI semantic, last 48h)
 +00:05         TurkeyFilterPipeline   (GPT-5 Nano, SUPPRESS items are dropped)
-+00:08         ScorePipeline          (Gemini 2.5 Flash-Lite, score < 5 are dropped)
++00:08         ScorePipeline          (Gemini 2.5 Flash-Lite, score < 6 are dropped)
 +00:15         MinContentPipeline     (drops articles < 80 words in content_original)
-+00:18         TranslatePipeline      (only score 5+, 600 words, SEO+GEO+AEO, human-readable source names)
++00:18         TranslatePipeline      (only score 6+, 600 words, SEO+GEO+AEO, human-readable source names)
 +00:22         ContentCleanPipeline   (Gemini 2.5 Flash-Lite, removes off-topic promos + datelines from content_tr)
 +00:24         QualityCheckPipeline   (drops truncated list articles ending with "şunlardır:"; warns on missing H2)
 +00:25         ClassifyPipeline       (nav_tab + sector + region JSON)
@@ -43,7 +43,7 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 09:00 / 15:00  n8n report workflow queries scrape_stats, sends HTML email
 ```
 
-**Cost-driven ordering:** The cheapest steps (duplicate, turkey_filter, score) run first. Expensive translation is applied only to score 5+ items. 40-60% cost savings.
+**Cost-driven ordering:** The cheapest steps (duplicate, turkey_filter, score) run first. Expensive translation is applied only to score 6+ items. 40-60% cost savings.
 
 ## 4. Model Configuration
 
@@ -51,7 +51,7 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 |------|-------|-------------|------------|---------------------|
 | score | Gemini 2.5 Flash-Lite | 0.1 | 150 | All news |
 | turkey_filter | GPT-5 Nano | 0.0 | 50 | All news |
-| translate | Gemini 2.5 Flash-Lite | 0.2 | 4096 | Score 5+ only |
+| translate | Gemini 2.5 Flash-Lite | 0.2 | 4096 | Score 6+ only |
 | clean_content | Gemini 2.5 Flash-Lite | 0.0 | 4096 | Score 6+ only (after translate) |
 | classify | GPT-5 Nano | 0.0 | 200 | Score 6+ only |
 | hashtags | Gemini 2.5 Flash-Lite | 0.2 | 300 | Score 6+ only |
@@ -76,7 +76,7 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 
 ## 6. Navigation
 
-**UI tabs (6 visible + 1 module):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, ulkeler, ihaleler (separate module), diger (hidden)
+**UI tabs (5 visible):** firsatlar, pazarlar-ekonomi, ticaret-ihracat, sektorler, ulkeler, diger (hidden)
 
 > `etkinlikler-fuarlar` was removed from the UI nav, footer, and `/haberler` filters (June 2026) but remains a valid classifier nav_tab value — the AI still classifies articles into it.
 > `turk-is-dunyasi` was also removed from the UI nav, footer, and `/haberler` filters (June 2026) but remains a valid classifier nav_tab value.
@@ -92,7 +92,6 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 | turk-is-dunyasi | Turkish companies, joint ventures, government initiatives (classifier only, removed from UI nav) |
 | etkinlikler-fuarlar | Conferences, fairs, expos, summits |
 | ulkeler | Country profiles, political developments, bilateral relations |
-| ihaleler | Tender listings module (separate AI pipeline, not a nav_tab classifier value) |
 | diger | General Africa news that does not fit the categories above |
 
 ## 7. Regions (6)
@@ -140,6 +139,15 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 - **Supabase site_url:** `https://www.afrikahaberleri.tr`
 - **Recovery email template:** Updated to Turkish HTML with inline styles and `{{ .ConfirmationURL }}` button
 
+### Google OAuth (Custom Proxy)
+- **Flow:** Client → `/api/auth/google` → Google → `/api/auth/google/callback` → `supabase.auth.signInWithIdToken` → `/panel`
+- **Why custom proxy:** Supabase free plan uses `*.supabase.co` as redirect_uri; custom proxy routes the callback through `afrikahaberleri.tr` so Google shows "Afrika Haberleri" in the account picker instead of the Supabase domain.
+- **Env vars:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (set in Vercel production)
+- **Google Cloud Console:** Authorized redirect URI: `https://www.afrikahaberleri.tr/api/auth/google/callback`
+- **Supabase Dashboard:** Authentication → Providers → Google enabled with same Client ID + Secret
+- **CSRF protection:** `google_oauth_state` cookie (UUID, httpOnly, 5 min TTL) validated on callback
+- Button component: `frontend/components/auth/GoogleSignInButton.tsx` — used in LoginForm and RegisterForm
+
 ### Session Persistence
 - Middleware matcher covers **all non-static routes** (not just `/panel/*`) so Supabase access tokens are refreshed on every page load via refresh token rotation.
 
@@ -161,11 +169,20 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `frontend/components/auth/AuthListener.tsx` | Client component in root layout; listens for PASSWORD_RECOVERY event and redirects to /sifre-sifirla |
 | `frontend/components/auth/ForgotPasswordForm.tsx` | Forgot password form (browser-side Supabase call) |
 | `frontend/components/auth/ResetPasswordForm.tsx` | New password form (server action) |
+| `frontend/components/auth/GoogleSignInButton.tsx` | Google OAuth button — navigates to /api/auth/google (custom proxy, not Supabase OAuth) |
+| `frontend/app/api/auth/google/route.ts` | Initiates Google OAuth; sets state cookie, redirects to Google |
+| `frontend/app/api/auth/google/callback/route.ts` | Handles Google callback; exchanges code for id_token, calls signInWithIdToken, redirects |
 | `frontend/app/sifremi-unuttum/page.tsx` | Forgot password page |
 | `frontend/app/sifre-sifirla/page.tsx` | Reset password page (requires active session) |
 | `frontend/app/hashtag/[tag]/page.tsx` | Hashtag listing page — shows all articles containing a given hashtag, paginated |
 | `frontend/components/ui/SimilarArticlesPanel.tsx` | Sidebar component showing up to 5 similar articles scored by shared hashtags/sectors |
 | `frontend/lib/labels.ts` | `resolveCategory()` — maps nav_tab+sector+hashtags to a display label; never shows "Sektörler", "Ülkeler", "Türk İş Dünyası", or "Etkinlikler & Fuarlar" as badge text |
+| `frontend/app/arama/page.tsx` | Full-text search page with category + date filters; URL params: q, sayfa, kategori, tarih |
+| `frontend/app/api/search-suggest/route.ts` | Autocomplete API — ilike search on title_tr with Turkish char normalization, returns up to 6 suggestions |
+| `frontend/lib/search_synonyms.ts` | Synonym expansion + Turkish char normalization for search queries; `buildTsQuery()` builds pg tsquery string |
+| `frontend/lib/queries/search.ts` | `searchArticles()` — calls `search_articles_v2` + `count_search_articles_v2` Supabase RPCs |
+| `frontend/components/layout/HeaderSearch.tsx` | Desktop search bar (right side of header) with autocomplete dropdown and submit button |
+| `supabase/migrations/021_search_v2.sql` | pg_trgm extension + `search_articles_v2` + `count_search_articles_v2` RPCs |
 
 ## 13. Daily Reporting
 
@@ -201,6 +218,12 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 | **Clickable hashtags** | Hashtag chips in article detail page are now `<a>` links to `/hashtag/[tag]`. New page `frontend/app/hashtag/[tag]/page.tsx` lists all articles sharing that tag, paginated, with `revalidate = 1800`. Query: `.contains("hashtags", [tag])`. |
 | **Similar articles sidebar** | Article detail page (`app/haber/[slug]/page.tsx`) has a 2-column layout on desktop: article on left, "Benzer Haberler" sidebar on right (300px, sticky). Mobile: sidebar appears below the article. Similarity scoring: +2 per common hashtag, +3 per common sector, +1 same nav_tab. Tiebreaker: most recent first. Top 5 from last 60 days. Sidebar starts at the same vertical position as the featured image. Component: `frontend/components/ui/SimilarArticlesPanel.tsx`. |
 | **Nav cleanup (UI-only tabs)** | `etkinlikler-fuarlar` and `turk-is-dunyasi` removed from `/haberler` category filters (`app/haberler/page.tsx`) and from the footer (`components/layout/Footer.tsx`). These slugs remain valid classifier values. |
+| **İhaleler module removed** | Entire tenders module deleted: DB table dropped, all routes/components/queries removed from frontend. `/ihaleler` URLs no longer exist. `docs/tenders.md` retained for reference only. |
+| **Score threshold raised to 6** | `MIN_AFRICA_SCORE` in `scraper/pipelines.py` changed from 5 to 6. Articles scoring 1-5 are now dropped before translation. All existing score-5 articles removed from DB. |
+| **Full-text search** | `/arama` page with weighted pg_trgm search (`search_articles_v2` RPC), synonym expansion (50+ groups TR/EN), typo tolerance via `word_similarity()`. Category + date filter chips. |
+| **Header search autocomplete** | `HeaderSearch.tsx` shows dropdown with up to 6 article suggestions as user types (250ms debounce). Turkish char normalization so "mis" matches "Mısır". Arrow key nav, ESC closes. Query stays in input after submit. |
+| **Header layout** | Search bar and login button moved to RIGHT side of header. Logo stays left. Submit arrow button added inside search input for mouse users. |
+| **Google OAuth (custom proxy)** | Google sign-in via `/api/auth/google` proxy — account picker shows "Afrika Haberleri" instead of Supabase domain. No Pro plan needed. Button on both /giris and /kayit pages. |
 
 ## 14. Claude Code Working Rules
 
