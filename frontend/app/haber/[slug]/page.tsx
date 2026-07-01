@@ -134,9 +134,18 @@ export default async function HaberPage({ params }: HaberPageProps) {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               </div>
-              {article.image_credit && (
-                <figcaption className="mt-1.5 font-body text-xs text-on-surface/40 text-right">
-                  {article.image_credit}
+              {(article.image_alt_tr || article.image_credit) && (
+                <figcaption className="mt-2 flex items-start justify-between gap-4">
+                  {article.image_alt_tr && (
+                    <span className="font-body text-xs text-on-surface/60 italic">
+                      {article.image_alt_tr}
+                    </span>
+                  )}
+                  {article.image_credit && (
+                    <span className="font-body text-xs text-on-surface/40 text-right shrink-0">
+                      {article.image_credit}
+                    </span>
+                  )}
                 </figcaption>
               )}
             </figure>
