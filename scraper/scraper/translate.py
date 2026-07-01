@@ -390,6 +390,75 @@ def translate_article(
     return result["title_tr"], result["excerpt_tr"], result["content_tr"]
 
 
+# ---------------------------------------------------------------------------
+# Image alt text translation — completely separate from article translation
+# ---------------------------------------------------------------------------
+
+_MEANINGLESS_ALT_RE = re.compile(
+    r"^(photo|image|picture|img|banner|file photo|ap photo|reuters|afp|epa|"
+    r"getty|handout|archive|file|stock photo|stock|generic|illustration|logo|"
+    r"video|thumbnail|cover|hero|featured|\d+[\w\s]*)$",
+    re.I,
+)
+
+_ALT_SYSTEM = (
+    "Translate the image alt text to Turkish. "
+    "Rules: "
+    "(1) MAXIMUM 10 WORDS — this is a short image description, NOT an article. "
+    "(2) Use Turkish country/city name conventions: Nigeria→Nijerya, South Africa→Güney Afrika, "
+    "Egypt→Mısır, Ethiopia→Etiyopya, Ghana→Gana, Kenya→Kenya. "
+    "(3) No em dashes. "
+    "(4) Return ONLY valid JSON with a single key: "
+    '{"image_alt_tr": "translated text"} '
+    "or "
+    '{"image_alt_tr": null} '
+    "if the text is generic/meaningless (e.g. just 'photo', 'image', 'banner', "
+    "an agency name alone, or a number)."
+)
+
+
+def _is_meaningless_alt(text: str) -> bool:
+    t = text.strip()
+    if not t or len(t) < 5:
+        return True
+    words = t.split()
+    if len(words) <= 2 and _MEANINGLESS_ALT_RE.match(t):
+        return True
+    return False
+
+
+def translate_image_alt(alt_en: str) -> str | None:
+    """Translate image alt text to Turkish (max 10 words). Returns None if generic/meaningless.
+    This is a separate API call — never mixed with article translation."""
+    if _is_meaningless_alt(alt_en):
+        return None
+
+    raw = chat(
+        [{"role": "user", "content": f"Image alt text to translate: {alt_en}"}],
+        model=GEMINI_FLASH_LITE,
+        system=_ALT_SYSTEM,
+        temperature=0.1,
+        max_tokens=80,
+    )
+
+    if not raw:
+        return None
+
+    try:
+        cleaned = _CODEBLOCK_RE.sub("", raw).strip()
+        parsed = json.loads(cleaned)
+        result = parsed.get("image_alt_tr")
+        if not result:
+            return None
+        # Hard cap: 15 words as safety net
+        words = str(result).split()
+        if len(words) > 15:
+            result = " ".join(words[:15])
+        return str(result).strip() or None
+    except (json.JSONDecodeError, AttributeError, TypeError):
+        return None
+
+
 def translate_articles(articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Translate a list of article dicts. Returns the same list with
     title_tr, excerpt_tr, content_tr populated. Articles whose content_hash

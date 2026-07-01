@@ -24,6 +24,7 @@ export type Database = {
           featured_image_url: string | null
           hashtags: string[]
           id: string
+          image_alt_tr: string | null
           image_credit: string | null
           is_featured: boolean
           is_suppressed: boolean
@@ -54,6 +55,7 @@ export type Database = {
           featured_image_url?: string | null
           hashtags?: string[]
           id?: string
+          image_alt_tr?: string | null
           image_credit?: string | null
           is_featured?: boolean
           is_suppressed?: boolean
@@ -84,6 +86,7 @@ export type Database = {
           featured_image_url?: string | null
           hashtags?: string[]
           id?: string
+          image_alt_tr?: string | null
           image_credit?: string | null
           is_featured?: boolean
           is_suppressed?: boolean
@@ -310,6 +313,7 @@ export type Database = {
           featured_image_url: string | null
           hashtags: string[]
           id: string
+          image_alt_tr: string | null
           image_credit: string | null
           is_featured: boolean
           is_suppressed: boolean

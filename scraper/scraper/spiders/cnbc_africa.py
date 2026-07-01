@@ -101,6 +101,11 @@ class CNBCAfricaSpider(scrapy.Spider):
         # CNBC Africa is semi-paywalled; some pages expose body paragraphs in the HTML.
         content_html = _extract_body(response) or f"<p>{description}</p>"
 
+        image_alt_en = (
+            response.css("meta[property='og:image:alt']::attr(content)").get()
+            or ""
+        ).strip()
+
         yield ArticleItem(
             source="cnbc_africa",
             source_url=response.url,
@@ -111,6 +116,7 @@ class CNBCAfricaSpider(scrapy.Spider):
             published_at=published_at.isoformat(),
             featured_image_source_url=featured_image_url,
             image_credit="",
+            image_alt_en=image_alt_en,
             is_update=False,
         )
 

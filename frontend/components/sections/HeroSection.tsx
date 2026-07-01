@@ -32,7 +32,7 @@ export default function HeroSection({
             {article.featured_image_url ? (
               <img
                 src={article.featured_image_url}
-                alt={article.title_tr ?? ""}
+                alt={article.image_alt_tr ?? article.title_tr ?? ""}
                 fetchPriority="high"
                 decoding="async"
                 className="absolute inset-0 w-full h-full object-cover"
@@ -72,7 +72,7 @@ export default function HeroSection({
                   {sec.featured_image_url ? (
                     <img
                       src={sec.featured_image_url}
-                      alt={sec.title_tr ?? ""}
+                      alt={sec.image_alt_tr ?? sec.title_tr ?? ""}
                       loading="lazy"
                       decoding="async"
                       className="absolute inset-0 w-full h-full object-cover"

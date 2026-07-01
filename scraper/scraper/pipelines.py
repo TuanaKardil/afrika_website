@@ -266,6 +266,16 @@ class TranslationPipeline:
         # Strip datelines and summary labels immediately after translation,
         # before the AI clean step, as a guaranteed Python-level safety net.
         item["content_tr"] = _strip_datelines(content_tr) if content_tr else content_tr
+
+        # Translate image alt text — separate call, not mixed with article translation
+        from scraper.translate import translate_image_alt
+        alt_en = (item.get("image_alt_en") or "").strip()
+        if alt_en:
+            item["image_alt_tr"] = translate_image_alt(alt_en)
+            logger.debug("image_alt_tr: %s → %s", alt_en[:60], item["image_alt_tr"])
+        else:
+            item["image_alt_tr"] = None
+
         logger.info("Translated (score %d): %s", score, item.get("source_url", ""))
         return item
 
@@ -511,6 +521,7 @@ class StoragePipeline:
             "featured_image_url": featured_image_url,
             "featured_image_source_url": item.get("featured_image_source_url"),
             "image_credit": item.get("image_credit"),
+            "image_alt_tr": item.get("image_alt_tr"),
             "nav_tab_slug": nav_tab_slug,
             "sector_slugs": sector_slugs,
             "region_slug": region_slug,

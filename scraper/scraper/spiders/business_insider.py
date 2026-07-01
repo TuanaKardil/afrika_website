@@ -89,6 +89,13 @@ class BusinessInsiderAfricaSpider(scrapy.Spider):
             or ""
         ).strip()
 
+        image_alt_en = (
+            response.css(".hero-image img::attr(alt)").get()
+            or response.css("figure img::attr(alt)").get()
+            or response.css("meta[property='og:image:alt']::attr(content)").get()
+            or ""
+        ).strip()
+
         content_html = extract_content(response, source="business_insider")
         inline_images = extract_inline_images(response)
 
@@ -105,6 +112,7 @@ class BusinessInsiderAfricaSpider(scrapy.Spider):
             published_at=published_at.isoformat(),
             featured_image_source_url=featured_image_url,
             image_credit=image_credit,
+            image_alt_en=image_alt_en,
             inline_image_urls=inline_images,
             is_update=False,
         )
