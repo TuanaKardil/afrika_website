@@ -22,7 +22,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from("articles")
     .select("slug, updated_at")
     .eq("is_suppressed", false)
-    .not("title_tr", "is", null);
+    .not("title_tr", "is", null)
+    .gte("score", 6);
 
   const articleEntries: MetadataRoute.Sitemap = (articles ?? []).map((a) => ({
     url: `${BASE_URL}/haber/${a.slug}`,
