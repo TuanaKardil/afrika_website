@@ -44,6 +44,8 @@ export async function generateMetadata({ params }: HaberPageProps): Promise<Meta
   };
 }
 
+const SITE_URL = "https://www.afrikahaberleri.tr";
+
 export default async function HaberPage({ params }: HaberPageProps) {
   const article = await getArticleBySlug(params.slug);
   if (!article || !article.title_tr || article.is_suppressed || (article.score !== null && article.score < 4)) notFound();
@@ -58,8 +60,83 @@ export default async function HaberPage({ params }: HaberPageProps) {
     ),
   ]);
 
+  const crumbLabel = article.nav_tab_slug
+    ? resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags)
+    : null;
+
+  const articleUrl = `${SITE_URL}/haber/${params.slug}`;
+
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": article.title_tr,
+    "description": article.excerpt_tr ?? article.excerpt_original ?? "",
+    "datePublished": article.published_at,
+    "dateModified": article.published_at,
+    "inLanguage": "tr",
+    "url": articleUrl,
+    "mainEntityOfPage": { "@type": "WebPage", "@id": articleUrl },
+    ...(article.featured_image_url ? {
+      "image": {
+        "@type": "ImageObject",
+        "url": article.featured_image_url,
+        "caption": article.image_alt_tr ?? "",
+      },
+    } : {}),
+    "author": {
+      "@type": "Organization",
+      "name": SOURCE_LABELS[article.source ?? ""] ?? "Afrika Haberleri",
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Afrika Haberleri",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_URL}/icon.png`,
+        "width": 512,
+        "height": 512,
+      },
+    },
+    ...(article.hashtags && article.hashtags.length > 0
+      ? { "keywords": article.hashtags.join(", ") }
+      : {}),
+    ...(crumbLabel ? { "articleSection": crumbLabel } : {}),
+  };
+
+  const breadcrumbItems: { "@type": string; position: number; name: string; item: string }[] = [
+    { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: SITE_URL },
+  ];
+  if (crumbLabel && article.nav_tab_slug) {
+    breadcrumbItems.push({
+      "@type": "ListItem",
+      position: 2,
+      name: crumbLabel,
+      item: `${SITE_URL}/${article.nav_tab_slug}`,
+    });
+  }
+  breadcrumbItems.push({
+    "@type": "ListItem",
+    position: breadcrumbItems.length + 1,
+    name: article.title_tr,
+    item: articleUrl,
+  });
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": breadcrumbItems,
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <ViewCountIncrementer articleId={article.id} />
 
       {/* ── Başlık bölümü: tam genişlik, sidebar yok ── */}
@@ -68,19 +145,14 @@ export default async function HaberPage({ params }: HaberPageProps) {
         <nav aria-label="Sayfa yolu" className="mb-6 flex items-center gap-2 font-body text-sm text-on-surface/50">
           <a href="/" className="hover:text-primary transition-colors">Ana Sayfa</a>
           <span>/</span>
-          {(() => {
-            const crumbLabel = article.nav_tab_slug
-              ? resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags)
-              : null;
-            return crumbLabel ? (
-              <>
-                <a href={`/${article.nav_tab_slug}`} className="hover:text-primary transition-colors capitalize">
-                  {crumbLabel}
-                </a>
-                <span>/</span>
-              </>
-            ) : null;
-          })()}
+          {crumbLabel && article.nav_tab_slug ? (
+            <>
+              <a href={`/${article.nav_tab_slug}`} className="hover:text-primary transition-colors capitalize">
+                {crumbLabel}
+              </a>
+              <span>/</span>
+            </>
+          ) : null}
           <span className="text-on-surface/30 truncate max-w-[200px]">{article.title_tr}</span>
         </nav>
 
