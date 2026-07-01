@@ -101,10 +101,12 @@ class CNBCAfricaSpider(scrapy.Spider):
         # CNBC Africa is semi-paywalled; some pages expose body paragraphs in the HTML.
         content_html = _extract_body(response) or f"<p>{description}</p>"
 
-        image_alt_en = (
-            response.css("meta[property='og:image:alt']::attr(content)").get()
+        raw_caption = (
+            response.css("figcaption::text").get()
+            or response.css("meta[property='og:image:alt']::attr(content)").get()
             or ""
         ).strip()
+        image_alt_en = _strip_caption_credit(raw_caption)
 
         yield ArticleItem(
             source="cnbc_africa",
@@ -158,6 +160,18 @@ def _extract_ld_json(response: Response) -> dict:
         except Exception:
             pass
     return {}
+
+
+_CREDIT_RE = re.compile(
+    r"\s*[.\|]\s*(REUTERS|AFP|AP Photo|AP|Getty Images?|EPA|NurPhoto|Bloomberg|"
+    r"Shutterstock|File Photo|©\s*\w+)[^$]*$",
+    re.I,
+)
+
+
+def _strip_caption_credit(text: str) -> str:
+    """Remove agency credits from figcaption, keeping only the visual description."""
+    return _CREDIT_RE.sub("", text).strip().rstrip(",").strip()
 
 
 def _is_article(url: str) -> bool:
