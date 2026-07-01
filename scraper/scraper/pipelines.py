@@ -521,7 +521,7 @@ class StoragePipeline:
             "featured_image_url": featured_image_url,
             "featured_image_source_url": item.get("featured_image_source_url"),
             "image_credit": item.get("image_credit"),
-            "image_alt_tr": item.get("image_alt_tr"),
+            "image_alt_tr": item.get("image_alt_tr") or item.get("title_tr"),
             "nav_tab_slug": nav_tab_slug,
             "sector_slugs": sector_slugs,
             "region_slug": region_slug,
