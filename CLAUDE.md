@@ -55,6 +55,7 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 | clean_content | Gemini 2.5 Flash-Lite | 0.0 | 4096 | Score 6+ only (after translate) |
 | classify | GPT-5 Nano | 0.0 | 200 | Score 6+ only |
 | hashtags | Gemini 2.5 Flash-Lite | 0.2 | 300 | Score 6+ only |
+| image_alt | Gemini 2.5 Flash-Lite | 0.1 | 80 | Score 6+ only (inside TranslatePipeline, separate call) |
 
 **Why Flash-Lite (not Flash):** Flash is $0.30/M input, Flash-Lite is $0.10/M input. 84% savings on the translation step with negligible quality difference.
 
@@ -183,6 +184,10 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `frontend/lib/queries/search.ts` | `searchArticles()` — calls `search_articles_v2` + `count_search_articles_v2` Supabase RPCs |
 | `frontend/components/layout/HeaderSearch.tsx` | Desktop search bar (right side of header) with autocomplete dropdown and submit button |
 | `supabase/migrations/021_search_v2.sql` | pg_trgm extension + `search_articles_v2` + `count_search_articles_v2` RPCs |
+| `supabase/migrations/022_image_alt_tr.sql` | Adds `image_alt_tr TEXT` column; backfills existing rows with `title_tr` |
+| `scraper/scraper/items.py` | Scrapy item fields — includes `image_alt_en` (raw English from source) and `image_alt_tr` (translated Turkish, max 10 words) |
+| `scraper/scraper/translate.py` | `translate_image_alt()` — separate Gemini call (max 80 tokens) for image alt; NEVER mixed with article body translation |
+| `scraper/backfill_image_alt.py` | One-time backfill: fetches source pages, extracts real alt text, translates and updates DB |
 
 ## 13. Daily Reporting
 
@@ -224,6 +229,8 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 | **Header search autocomplete** | `HeaderSearch.tsx` shows dropdown with up to 6 article suggestions as user types (250ms debounce). Turkish char normalization so "mis" matches "Mısır". Arrow key nav, ESC closes. Query stays in input after submit. |
 | **Header layout** | Search bar and login button moved to RIGHT side of header. Logo stays left. Submit arrow button added inside search input for mouse users. |
 | **Google OAuth (custom proxy)** | Google sign-in via `/api/auth/google` proxy — account picker shows "Afrika Haberleri" instead of Supabase domain. No Pro plan needed. Button on both /giris and /kayit pages. |
+| **Image alt text (`image_alt_tr`)** | New `image_alt_tr` DB column (migration 022). All 5 spiders capture `image_alt_en` from source HTML. `translate_image_alt()` in `translate.py` translates it to Turkish (max 10 words) as a **separate API call** — never mixed with article body. `StoragePipeline` falls back to `title_tr` if alt unavailable so the field is never NULL. Article detail page shows visible Turkish caption below featured image via `<figcaption>`. `ArticleCard`, `HeroSection`, `SimilarArticlesPanel` use `image_alt_tr ?? title_tr ?? ""`. |
+| **CNBC Africa figcaption** | CNBC Africa is Next.js — `<img alt>` is empty in server HTML (client-side rendered). Fix: spider reads `figcaption.wp-element-caption::text` instead. `_strip_caption_credit()` regex removes agency credits (REUTERS, AFP, Getty, etc.) from figcaption text, keeping only the visual description. Both spider and `backfill_image_alt.py` use this logic. |
 
 ## 14. Claude Code Working Rules
 
@@ -239,4 +246,4 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 10. **Translation cache:** Skip if the same news item arrives again, keyed by `content_hash`.
 11. **Never use `next/image`:** Vercel Hobby plan has a 1,000 image/month quota on `/_next/image`. All image tags must be plain `<img>` with direct Supabase Storage URLs. ESLint enforces this.
 12. **Deployments go from the repo root:** Run `vercel --prod` from `/Desktop/afrika website/` (not from `frontend/`). The `frontend` Vercel project is a ghost — `www.afrikahaberleri.tr` is served by the `afrika-website` project which is linked to the repo root.
-13. **Article detail page featured image must use `alt=""`:** In `app/haber/[slug]/page.tsx`, the featured image is decorative — the title is already in the adjacent `<h1>`. Setting `alt={title}` causes the browser to include the title text in clipboard copy, making it appear twice when users select and paste page content. Rule: decorative images with an adjacent text equivalent always get `alt=""`. ArticleCard and HeroSection images keep `alt={title}` since those components have no adjacent H1.
+13. **Article detail page featured image uses `alt={image_alt_tr ?? ""}`:** In `app/haber/[slug]/page.tsx`, use `alt={article.image_alt_tr ?? ""}`. If `image_alt_tr` exists it provides a real image description; if null, falls back to empty string (decorative). Do NOT use `alt={title_tr}` — it causes the title to appear twice when users copy-paste page content since the `<h1>` is adjacent. `ArticleCard`, `HeroSection`, and `SimilarArticlesPanel` use `alt={image_alt_tr ?? title_tr ?? ""}` since those components have no adjacent H1.
