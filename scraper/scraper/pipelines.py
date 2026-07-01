@@ -346,11 +346,41 @@ class TurkeyFilterPipeline:
         return item
 
 
+_INDEXNOW_KEY = "b821579c4bc8450dab6f8ec6bd0f0fc4"
+_INDEXNOW_HOST = "www.afrikahaberleri.tr"
+_SITE_URL = "https://www.afrikahaberleri.tr"
+
+
+def _ping_indexnow(slugs: list[str]) -> None:
+    if not slugs:
+        return
+    import urllib.request, json as _json
+    urls = [f"{_SITE_URL}/haber/{s}" for s in slugs]
+    payload = _json.dumps({
+        "host": _INDEXNOW_HOST,
+        "key": _INDEXNOW_KEY,
+        "keyLocation": f"{_SITE_URL}/{_INDEXNOW_KEY}.txt",
+        "urlList": urls,
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.indexnow.org/indexnow",
+        data=payload,
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            logger.info("IndexNow ping: %d URLs → HTTP %s", len(urls), resp.status)
+    except Exception as exc:
+        logger.warning("IndexNow ping failed: %s", exc)
+
+
 class StoragePipeline:
     def __init__(self):
         self._supabase = None
         self._known_slugs: set[str] = set()
         self._used_image_urls: set[str] = set()
+        self._new_slugs: list[str] = []
 
     def open_spider(self, spider):
         try:
@@ -555,6 +585,7 @@ class StoragePipeline:
             else:
                 self._supabase.table("articles").insert(row).execute()
                 logger.info("Inserted article: %s", source_url)
+                self._new_slugs.append(slug)
             _stats_inc(source, "published")
             if item.get("score"):
                 _stats_inc(source, "scores", int(item["score"]))
@@ -564,6 +595,7 @@ class StoragePipeline:
         return item
 
     def close_spider(self, spider):
+        _ping_indexnow(self._new_slugs)
         if self._supabase is None or not _run_stats:
             return
         from zoneinfo import ZoneInfo
