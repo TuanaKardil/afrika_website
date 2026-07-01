@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 interface GoogleSignInButtonProps {
   redirectTo?: string;
@@ -10,16 +9,9 @@ interface GoogleSignInButtonProps {
 export default function GoogleSignInButton({ redirectTo = "/panel" }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false);
 
-  async function handleClick() {
+  function handleClick() {
     setLoading(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
-      },
-    });
-    // Page will redirect; no need to setLoading(false)
+    window.location.href = `/api/auth/google?next=${encodeURIComponent(redirectTo)}`;
   }
 
   return (
