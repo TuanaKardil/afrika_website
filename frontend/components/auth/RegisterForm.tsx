@@ -3,6 +3,7 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { registerAction, type AuthState } from "@/lib/auth/actions";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -91,6 +92,14 @@ export default function RegisterForm() {
       </div>
 
       <SubmitButton />
+
+      <div className="flex items-center gap-3 my-1">
+        <span className="flex-1 h-px bg-outline-variant" />
+        <span className="font-body text-xs text-on-surface/40">veya</span>
+        <span className="flex-1 h-px bg-outline-variant" />
+      </div>
+
+      <GoogleSignInButton />
     </form>
   );
 }
