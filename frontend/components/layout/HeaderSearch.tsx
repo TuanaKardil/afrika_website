@@ -59,7 +59,8 @@ export default function HeaderSearch() {
   function navigate(url: string) {
     setOpen(false);
     setSuggestions([]);
-    setQ("");
+    // Clear query only when going to an article, keep it for search results page
+    if (!url.startsWith("/arama")) setQ("");
     router.push(url);
   }
 
@@ -113,6 +114,15 @@ export default function HeaderSearch() {
           autoComplete="off"
           className="bg-transparent border-0 outline-none text-white text-[13px] flex-1 placeholder:text-white/45 font-sans min-w-0"
         />
+        <button
+          type="submit"
+          aria-label="Ara"
+          className="shrink-0 text-white/50 hover:text-white transition-colors p-0.5"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
       </form>
 
       {/* Autocomplete dropdown */}
