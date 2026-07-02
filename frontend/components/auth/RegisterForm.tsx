@@ -93,6 +93,14 @@ export default function RegisterForm() {
 
       <SubmitButton />
 
+      <p className="font-body text-xs text-on-surface/50 text-center leading-relaxed">
+        Kayıt olarak{" "}
+        <a href="/kvkk" className="underline hover:text-primary transition-colors">
+          KVKK Aydınlatma Metni
+        </a>
+        &apos;ni okuduğunuzu kabul etmiş sayılırsınız.
+      </p>
+
       <div className="flex items-center gap-3 my-1">
         <span className="flex-1 h-px bg-outline-variant" />
         <span className="font-body text-xs text-on-surface/40">veya</span>

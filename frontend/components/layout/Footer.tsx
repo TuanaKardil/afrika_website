@@ -74,7 +74,11 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-container mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] font-semibold text-white/50 tracking-[0.06em] uppercase">
           <span>&copy; {new Date().getFullYear()} {"AFRİKA HABERLERİ. TÜM HAKLARI SAKLIDIR."}</span>
-          <span className="text-white/40">{"GİZLİLİK"} &bull; {"KULLANIM KOŞULLARI"} &bull; {"ÇEREZ POLİTİKASI"}</span>
+          <span className="text-white/40 flex gap-3">
+            <a href="/kvkk" className="hover:text-white/70 transition-colors">GİZLİLİK & KVKK</a>
+            <span>&bull;</span>
+            <a href="/cerez-politikasi" className="hover:text-white/70 transition-colors">ÇEREZ POLİTİKASI</a>
+          </span>
         </div>
       </div>
     </footer>
