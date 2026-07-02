@@ -64,14 +64,6 @@ export default function EditoryelPolitikaPage() {
         </p>
       </section>
 
-      <section>
-        <h2 className="font-headline text-xl text-on-surface mb-3">İçerik Güncelliği</h2>
-        <p className="font-body text-base text-on-surface/80 leading-relaxed">
-          Haberler her gün sabah ve öğlen olmak üzere iki kez güncellenir. Editöryel
-          ekibimiz güncel kaynakları takip ederek yalnızca Türk iş dünyası için değer
-          taşıyan içerikleri seçer ve yayınlar.
-        </p>
-      </section>
     </main>
   );
 }
