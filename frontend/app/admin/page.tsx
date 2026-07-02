@@ -6,6 +6,13 @@ import type { Database } from "@/lib/database.types";
 export const metadata: Metadata = { title: "Dashboard" };
 export const revalidate = 300;
 
+interface TopArticle {
+  title_tr: string | null;
+  slug: string;
+  view_count: number;
+  published_at: string;
+}
+
 async function getStats() {
   const cookieStore = cookies();
   const supabase = createServerClient<Database>(
@@ -26,7 +33,7 @@ async function getStats() {
   return {
     total: totalRes.count ?? 0,
     today: todayRes.count ?? 0,
-    topArticles: topRes.data ?? [],
+    topArticles: (topRes.data ?? []) as TopArticle[],
     scrapeStats: scrapeRes.data ?? [],
   };
 }
