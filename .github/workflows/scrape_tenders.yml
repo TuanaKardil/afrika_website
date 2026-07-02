@@ -20,8 +20,11 @@ jobs:
     steps:
       - name: Verify webhook secret
         if: github.event_name == 'workflow_dispatch'
+        env:
+          INPUT_SECRET: ${{ github.event.inputs.secret }}
+          EXPECTED: ${{ secrets.SCRAPER_WEBHOOK_SECRET }}
         run: |
-          if [ "${{ github.event.inputs.secret }}" != "${{ secrets.SCRAPER_WEBHOOK_SECRET }}" ]; then
+          if [ "$INPUT_SECRET" != "$EXPECTED" ]; then
             echo "Invalid webhook secret."
             exit 1
           fi

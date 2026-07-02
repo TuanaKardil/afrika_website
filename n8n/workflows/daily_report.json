@@ -60,7 +60,7 @@
       "parameters": {
         "resource": "message",
         "operation": "send",
-        "sendTo": "a.berkbaytar@gmail.com",
+        "sendTo": "={{ $env.REPORT_EMAIL }}",
         "subject": "={{ $json.subject }}",
         "message": "={{ $json.html }}",
         "options": {

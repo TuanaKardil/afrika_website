@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -69,6 +71,10 @@ async function getStats() {
 }
 
 export default async function AdminDashboard() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.email !== process.env.ADMIN_EMAIL) redirect("/");
+
   const { total, today, topArticles, topScored, scrapeStats } = await getStats();
 
   return (

@@ -12,7 +12,7 @@ A Turkish-language, Africa-focused business and economy news platform. News is p
 - **Duplicate check window:** Last 48 hours
 - **Publication threshold:** Score 6+
 - **News count limit:** NONE (filtering creates a natural ceiling)
-- **Daily report:** Email to a.berkbaytar@gmail.com at 09:00 (sabah) and 15:00 (oglen) TST
+- **Daily report:** Email to the configured report address (REPORT_EMAIL env var in n8n) at 09:00 (sabah) and 15:00 (oglen) TST
 
 ## 2. Tech Stack
 
@@ -208,8 +208,7 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 
 **Unique constraint:** `(run_date, source, run_slot)` — one row per source per run per day.
 
-**n8n report workflow ID:** `bRRgVo9LgM48NyV0` (baytara.app.n8n.cloud)
-**n8n scraper workflow ID:** `tFqlvcwvaDwcnxBY` (baytara.app.n8n.cloud)
+**n8n workflow IDs:** stored privately — not documented here.
 
 ## 16. Features Added & Security Fixes (July 2026)
 

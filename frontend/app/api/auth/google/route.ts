@@ -4,7 +4,8 @@ import type { NextRequest } from "next/server";
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
 export async function GET(req: NextRequest) {
-  const next = req.nextUrl.searchParams.get("next") ?? "/panel";
+  const rawNext = req.nextUrl.searchParams.get("next") ?? "/panel";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/panel";
   const origin = req.nextUrl.origin;
   const state = crypto.randomUUID();
 
