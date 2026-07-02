@@ -179,7 +179,7 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `frontend/components/ui/SimilarArticlesPanel.tsx` | Sidebar component showing up to 5 similar articles scored by shared hashtags/sectors |
 | `frontend/lib/labels.ts` | `resolveCategory()` — maps nav_tab+sector+hashtags to a display label; never shows "Sektörler", "Ülkeler", "Türk İş Dünyası", or "Etkinlikler & Fuarlar" as badge text |
 | `frontend/app/arama/page.tsx` | Full-text search page with category + date filters; URL params: q, sayfa, kategori, tarih |
-| `frontend/app/api/search-suggest/route.ts` | Autocomplete API — ilike search on title_tr with Turkish char normalization, returns up to 6 suggestions |
+| `frontend/app/api/search-suggest/route.ts` | Autocomplete API — returns sector matches, hashtag matches (via `search_hashtags` RPC), then article title matches; typed `SuggestItem[]` response |
 | `frontend/lib/search_synonyms.ts` | Synonym expansion + Turkish char normalization for search queries; `buildTsQuery()` builds pg tsquery string |
 | `frontend/lib/queries/search.ts` | `searchArticles()` — calls `search_articles_v2` + `count_search_articles_v2` Supabase RPCs |
 | `frontend/components/layout/HeaderSearch.tsx` | Desktop search bar (right side of header) with autocomplete dropdown and submit button |
@@ -188,6 +188,17 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `scraper/scraper/items.py` | Scrapy item fields — includes `image_alt_en` (raw English from source) and `image_alt_tr` (translated Turkish, max 10 words) |
 | `scraper/scraper/translate.py` | `translate_image_alt()` — separate Gemini call (max 80 tokens) for image alt; NEVER mixed with article body translation |
 | `scraper/backfill_image_alt.py` | One-time backfill: fetches source pages, extracts real alt text, translates and updates DB |
+| `scraper/backfill_meta_description.py` | One-time backfill: generates meta_description_tr for articles where it is NULL (4 parallel workers) |
+| `frontend/app/admin/` | Admin panel — protected by server-side middleware (ADMIN_EMAIL env var check). Never expose credentials in code or docs. |
+| `frontend/app/admin/haberler/[id]/page.tsx` | Article edit page: title_tr, excerpt_tr, content_tr (Tiptap), meta_description_tr, featured_image_url (upload or URL) |
+| `frontend/app/admin/blog/` | Blog editor — list, new post (`/yeni`), edit (`/[id]`). Tiptap rich text. Status: draft / published. |
+| `frontend/app/api/admin/upload/route.ts` | Image upload to Supabase Storage `article-images` bucket; max 5MB; JPEG/PNG/WebP/GIF |
+| `frontend/app/api/admin/blog/route.ts` | Blog CRUD (GET/POST/PATCH/DELETE); service role auth; auto-generates slug from title |
+| `frontend/app/blog/page.tsx` | Public blog listing (published posts only, revalidate 1800) |
+| `frontend/app/blog/[slug]/page.tsx` | Public blog post detail with sanitized content |
+| `frontend/lib/ga-data.ts` | `fetchGaOverview()` — fetches active users, sessions, page views, top pages/countries via GA4 Data API (JWT service account auth) |
+| `frontend/app/admin/analytics/page.tsx` | Real GA4 data panel: 4 metric cards, 7-day bar chart, top pages, top countries. Revalidates hourly. |
+| `prompts/metadescription.md` | Meta description generation prompt — 140-160 chars, Turkish, no em dashes, no proper noun apostrophes |
 
 ## 13. Daily Reporting
 
@@ -199,6 +210,26 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 
 **n8n report workflow ID:** `bRRgVo9LgM48NyV0` (baytara.app.n8n.cloud)
 **n8n scraper workflow ID:** `tFqlvcwvaDwcnxBY` (baytara.app.n8n.cloud)
+
+## 16. Features Added & Security Fixes (July 2026)
+
+| Feature / Fix | Details |
+|-----|---------|
+| **Admin panel** | `/admin` — protected by Next.js middleware (server-side, ADMIN_EMAIL env var). Sub-pages: Dashboard, Haberler, Blog, Analitik. Uses service role key for DB writes. Access restricted to one email; details stored only in Vercel env vars, never in code or docs. |
+| **Article editor** | `/admin/haberler/[id]` — edit title, excerpt, content (Tiptap HTML editor), meta description (char counter), featured image (file upload to Supabase Storage or URL). PATCH API allows all these fields. |
+| **Blog system** | `blog_posts` table (migration 024): id, slug, title, content, excerpt, featured_image_url, status (draft/published), published_at. Admin editor at `/admin/blog`. Public pages at `/blog` and `/blog/[slug]`. |
+| **Image upload API** | `POST /api/admin/upload` — uploads to `article-images` bucket, max 5MB, returns public URL. Used by both article and blog editors. |
+| **Google Analytics GA4** | Measurement ID: `G-TWW2BKCGWR`, Property ID: `544012567`. Installed via `@next/third-parties` in root layout. Data API credentials in Vercel env vars: `GA_PROPERTY_ID`, `GA_SERVICE_ACCOUNT_JSON`. |
+| **Real-time analytics panel** | `/admin/analytics` — fetches live GA4 data (active users, sessions, page views, avg session duration, top pages, top countries, daily chart). `fetchGaOverview()` in `frontend/lib/ga-data.ts` uses JWT service account via `google-auth-library`. Revalidates hourly. |
+| **Search: sector + hashtag suggestions** | `search-suggest` API now returns `SuggestItem[]` with `type: "sector" \| "hashtag" \| "article"`. Sectors from DB, hashtags via `search_hashtags` RPC (migration 025/026). Categories appear first in dropdown with amber icon. |
+| **Search hashtags RPC fixed** | Migration 026 fixes `search_hashtags` to use `unnest` correctly — returns only hashtags that match the query, not all tags from matching articles. |
+| **Dashboard: top scored this week** | Admin dashboard shows top 10 highest-scored articles from last 7 days (rolling window). Score-colored badge (green ≥9, amber ≥7). |
+| **Dashboard: scrape stats expanded** | Scrape stats table now shows `dropped_duplicate`, `dropped_low_score` (red), `dropped_turkey_filter` columns in addition to existing fields. |
+| **Meta descriptions pipeline** | `MetaDescriptionPipeline` (priority 260) generates 140-160 char Turkish meta descriptions via Gemini 2.5 Flash-Lite. Stored in `meta_description_tr` column (migration 023). Backfill script updated 520/526 existing articles. |
+| **Security hardening** | Migration 027: dropped `temp_anon_insert_seeding` policy (allowed anonymous article inserts); enabled RLS on `video_log`; fixed `search_path` on all SQL functions; switched `search_articles_v2`, `count_search_articles_v2`, `search_hashtags` from SECURITY DEFINER to SECURITY INVOKER. |
+| **KVKK / Çerez pages** | `/kvkk` and `/cerez-politikasi` static pages added. |
+| **Editorial cleanup** | Removed AI/automation references from `/editoryal-politika` and `/hakkimizda`. |
+| **Google OAuth on register page** | `GoogleSignInButton` accepts optional `label` prop; register page shows "Google ile Kayıt Ol". |
 
 ## 15. Known Bugs Fixed & Features Added (June 2026)
 
