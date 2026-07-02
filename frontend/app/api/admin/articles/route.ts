@@ -67,7 +67,7 @@ export async function PATCH(request: NextRequest) {
   );
 
   const supabase = adminSupabase();
-  const { error } = await supabase.from("articles").update(filtered).eq("id", id);
+  const { error } = await supabase.from("articles").update(filtered as Database["public"]["Tables"]["articles"]["Update"]).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
