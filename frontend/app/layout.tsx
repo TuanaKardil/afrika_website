@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     default: "Afrika Haberleri",
     template: "%s | Afrika Haberleri",
   },
-  description: "Afrika'dan son dakika haberleri Türkçe olarak.",
+  description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",
   robots: {
     index: true,
     follow: true,

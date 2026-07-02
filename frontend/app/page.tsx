@@ -14,7 +14,13 @@ export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "Afrika Haberleri",
-  description: "Afrika'dan son dakika haberleri Türkçe olarak.",
+  description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",
+  openGraph: {
+    description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",
+  },
+  twitter: {
+    description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",
+  },
 };
 
 interface HomePageProps {
