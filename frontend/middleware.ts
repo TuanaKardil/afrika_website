@@ -1,7 +1,23 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { DELETED_HABER_SLUGS } from "@/lib/deleted-slugs";
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 410 Gone: tenders module permanently removed
+  if (pathname.startsWith("/ihaleler")) {
+    return new NextResponse(null, { status: 410 });
+  }
+
+  // 410 Gone: specific deleted articles confirmed via Google Search Console
+  if (pathname.startsWith("/haber/")) {
+    const slug = pathname.slice(7);
+    if (DELETED_HABER_SLUGS.has(slug)) {
+      return new NextResponse(null, { status: 410 });
+    }
+  }
+
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
