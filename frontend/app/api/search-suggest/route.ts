@@ -63,9 +63,10 @@ export async function GET(request: NextRequest) {
   const seenHashtags = new Set<string>();
   for (const row of (hashtagsRes.data ?? []) as { tag: string }[]) {
     const tag = row.tag;
-    if (!seenHashtags.has(tag) && normalizeTr(tag).includes(normalized)) {
+    if (!seenHashtags.has(tag)) {
       seenHashtags.add(tag);
-      results.push({ type: "hashtag", label: `#${tag}`, url: `/hashtag/${tag}` });
+      const displayLabel = tag.replace(/-/g, " ");
+      results.push({ type: "hashtag", label: `#${displayLabel}`, url: `/hashtag/${tag}` });
     }
   }
 
