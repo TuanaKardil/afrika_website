@@ -27,6 +27,9 @@ interface ScrapeStatRow {
   source: string;
   run_slot: string;
   total_scraped: number;
+  dropped_duplicate: number;
+  dropped_low_score: number;
+  dropped_turkey_filter: number;
   published: number;
   avg_score: number | null;
 }
@@ -165,6 +168,9 @@ export default async function AdminDashboard() {
                 <th className="text-left px-6 py-3 text-gray-500 font-medium">Slot</th>
                 <th className="text-left px-6 py-3 text-gray-500 font-medium">Kaynak</th>
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Çekilen</th>
+                <th className="text-right px-6 py-3 text-gray-500 font-medium">Duplikat</th>
+                <th className="text-right px-6 py-3 text-gray-500 font-medium">Düşük Skor</th>
+                <th className="text-right px-6 py-3 text-gray-500 font-medium">Türkiye Filtresi</th>
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Yayınlanan</th>
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Ort. Skor</th>
               </tr>
@@ -172,7 +178,7 @@ export default async function AdminDashboard() {
             <tbody className="divide-y divide-gray-800">
               {scrapeStats.map((s) => (
                 <tr key={`${s.run_date}-${s.source}-${s.run_slot}`} className="hover:bg-gray-800/40">
-                  <td className="px-6 py-3 text-gray-300">{s.run_date}</td>
+                  <td className="px-6 py-3 text-gray-300 whitespace-nowrap">{s.run_date}</td>
                   <td className="px-6 py-3">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${s.run_slot === "sabah" ? "bg-blue-900/50 text-blue-300" : "bg-orange-900/50 text-orange-300"}`}>
                       {s.run_slot}
@@ -180,6 +186,9 @@ export default async function AdminDashboard() {
                   </td>
                   <td className="px-6 py-3 text-gray-300">{s.source}</td>
                   <td className="px-6 py-3 text-right text-gray-300">{s.total_scraped}</td>
+                  <td className="px-6 py-3 text-right text-gray-500">{s.dropped_duplicate ?? 0}</td>
+                  <td className="px-6 py-3 text-right text-red-400">{s.dropped_low_score ?? 0}</td>
+                  <td className="px-6 py-3 text-right text-gray-500">{s.dropped_turkey_filter ?? 0}</td>
                   <td className="px-6 py-3 text-right text-green-400 font-medium">{s.published}</td>
                   <td className="px-6 py-3 text-right text-gray-300">{s.avg_score?.toFixed(1) ?? "-"}</td>
                 </tr>
