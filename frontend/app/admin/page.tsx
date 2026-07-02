@@ -13,6 +13,15 @@ interface TopArticle {
   published_at: string;
 }
 
+interface ScrapeStatRow {
+  run_date: string;
+  source: string;
+  run_slot: string;
+  total_scraped: number;
+  published: number;
+  avg_score: number | null;
+}
+
 async function getStats() {
   const cookieStore = cookies();
   const supabase = createServerClient<Database>(
@@ -34,7 +43,7 @@ async function getStats() {
     total: totalRes.count ?? 0,
     today: todayRes.count ?? 0,
     topArticles: (topRes.data ?? []) as TopArticle[],
-    scrapeStats: scrapeRes.data ?? [],
+    scrapeStats: (scrapeRes.data ?? []) as ScrapeStatRow[],
   };
 }
 
