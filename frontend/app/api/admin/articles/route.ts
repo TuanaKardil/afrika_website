@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
 
 function adminSupabase() {
-  const cookieStore = cookies();
-  return createServerClient<Database>(
+  return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -57,17 +56,21 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { id, ...updates } = body;
+  const { id, ...updates } = body as { id: string; [k: string]: unknown };
 
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const allowed = ["meta_description_tr", "is_suppressed", "is_featured"];
+  const allowed: Array<keyof Database["public"]["Tables"]["articles"]["Update"]> = [
+    "meta_description_tr",
+    "is_suppressed",
+    "is_featured",
+  ];
   const filtered = Object.fromEntries(
-    Object.entries(updates).filter(([k]) => allowed.includes(k))
-  );
+    Object.entries(updates).filter(([k]) => allowed.includes(k as never))
+  ) as Database["public"]["Tables"]["articles"]["Update"];
 
   const supabase = adminSupabase();
-  const { error } = await supabase.from("articles").update(filtered as Database["public"]["Tables"]["articles"]["Update"]).eq("id", id);
+  const { error } = await supabase.from("articles").update(filtered).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
