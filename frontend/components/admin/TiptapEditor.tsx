@@ -34,7 +34,7 @@ export default function TiptapEditor({ content, onChange, placeholder }: TiptapE
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content, false);
+      editor.commands.setContent(content);
     }
   }, [content, editor]);
 

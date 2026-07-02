@@ -37,17 +37,17 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  const supabase = adminSupabase();
+  const db = adminSupabase();
 
   if (id) {
-    const { data, error } = await (supabase as ReturnType<typeof createClient>)
-      .from("blog_posts").select("*").eq("id", id).single();
+    const { data, error } = await db.from("blog_posts").select("*").eq("id", id).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 404 });
     return NextResponse.json({ post: data });
   }
 
-  const { data, count, error } = await (supabase as ReturnType<typeof createClient>)
-    .from("blog_posts").select("id,slug,title,status,published_at,created_at", { count: "exact" })
+  const { data, count, error } = await db
+    .from("blog_posts")
+    .select("id,slug,title,status,published_at,created_at", { count: "exact" })
     .order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ posts: data, total: count ?? 0 });
@@ -63,11 +63,20 @@ export async function POST(request: NextRequest) {
   const slug = makeSlug(title) + "-" + Date.now().toString(36);
   const publishedAt = status === "published" ? new Date().toISOString() : null;
 
-  const supabase = adminSupabase();
-  const { data, error } = await (supabase as ReturnType<typeof createClient>)
+  const db = adminSupabase();
+  const { data, error } = await db
     .from("blog_posts")
-    .insert({ title, slug, content: content ?? "", excerpt, featured_image_url, status: status ?? "draft", published_at: publishedAt })
-    .select("id,slug").single();
+    .insert({
+      title,
+      slug,
+      content: content ?? "",
+      excerpt: excerpt ?? null,
+      featured_image_url: featured_image_url ?? null,
+      status: status ?? "draft",
+      published_at: publishedAt,
+    })
+    .select("id,slug")
+    .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ post: data });
@@ -77,17 +86,24 @@ export async function PATCH(request: NextRequest) {
   if (!await requireAdmin(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { id, ...updates } = body;
+  const { id, ...rest } = body;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  if (updates.status === "published") {
-    updates.published_at = updates.published_at ?? new Date().toISOString();
+  const updates: Database["public"]["Tables"]["blog_posts"]["Update"] = {};
+  if (rest.title !== undefined) updates.title = rest.title;
+  if (rest.content !== undefined) updates.content = rest.content;
+  if (rest.excerpt !== undefined) updates.excerpt = rest.excerpt;
+  if (rest.featured_image_url !== undefined) updates.featured_image_url = rest.featured_image_url;
+  if (rest.status !== undefined) {
+    updates.status = rest.status;
+    if (rest.status === "published") {
+      updates.published_at = rest.published_at ?? new Date().toISOString();
+    }
   }
   updates.updated_at = new Date().toISOString();
 
-  const supabase = adminSupabase();
-  const { error } = await (supabase as ReturnType<typeof createClient>)
-    .from("blog_posts").update(updates).eq("id", id);
+  const db = adminSupabase();
+  const { error } = await db.from("blog_posts").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
@@ -99,9 +115,8 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const supabase = adminSupabase();
-  const { error } = await (supabase as ReturnType<typeof createClient>)
-    .from("blog_posts").delete().eq("id", id);
+  const db = adminSupabase();
+  const { error } = await db.from("blog_posts").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
