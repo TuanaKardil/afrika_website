@@ -37,8 +37,8 @@ export default function EditoryelPolitikaPage() {
           <li>Business Insider Africa (businessinsider.africa)</li>
         </ul>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
-          İçerikler özet ve çeviri niteliğinde sunulmakta; tam metne erişmek için her zaman
-          kaynak bağlantısı sağlanmaktadır.
+          İçerikler Türk okuyucuya tarafsız biçimde aktarılmakta; tam metne erişmek için
+          her zaman kaynak bağlantısı sağlanmaktadır.
         </p>
       </section>
 
@@ -46,8 +46,8 @@ export default function EditoryelPolitikaPage() {
         <h2 className="font-headline text-xl text-on-surface mb-3">Çeviri Süreci</h2>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
           İngilizce kaynak içerikler, editörlerimiz tarafından Türkçeye çevrilerek
-          yayınlanmaktadır. Çevirilerde orijinal haberin anlamı ve bağlamı korunmakta;
-          uzun içerikler okuyucu için özetlenerek sunulmaktadır.
+          yayınlanmaktadır. Çevirilerde orijinal haberin anlamı, bağlamı ve tarafsızlığı
+          titizlikle korunmaktadır.
         </p>
       </section>
 
