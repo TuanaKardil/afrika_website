@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 interface Article {
   id: string;
@@ -15,6 +16,7 @@ interface Article {
 }
 
 export default function AdminHaberler() {
+  const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -152,12 +154,20 @@ export default function AdminHaberler() {
                   </td>
                   <td className="px-4 py-3 text-right text-gray-300 text-sm">{a.view_count.toLocaleString("tr")}</td>
                   <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => toggleSuppress(a.id, a.is_suppressed)}
-                      className={`px-2 py-0.5 rounded text-xs font-medium ${a.is_suppressed ? "bg-red-900/50 text-red-400 hover:bg-red-900" : "bg-green-900/50 text-green-400 hover:bg-green-900"}`}
-                    >
-                      {a.is_suppressed ? "Gizli" : "Yayında"}
-                    </button>
+                    <div className="flex items-center gap-2 justify-center">
+                      <button
+                        onClick={() => toggleSuppress(a.id, a.is_suppressed)}
+                        className={`px-2 py-0.5 rounded text-xs font-medium ${a.is_suppressed ? "bg-red-900/50 text-red-400 hover:bg-red-900" : "bg-green-900/50 text-green-400 hover:bg-green-900"}`}
+                      >
+                        {a.is_suppressed ? "Gizli" : "Yayında"}
+                      </button>
+                      <button
+                        onClick={() => router.push(`/admin/haberler/${a.id}`)}
+                        className="px-2 py-0.5 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
+                      >
+                        Düzenle
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

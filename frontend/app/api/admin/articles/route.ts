@@ -28,21 +28,29 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+  const db = adminSupabase();
+
+  if (id) {
+    const { data, error } = await db.from("articles")
+      .select("id,slug,title_tr,excerpt_tr,content_tr,meta_description_tr,featured_image_url,score,source,published_at")
+      .eq("id", id).single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 404 });
+    return NextResponse.json({ article: data });
+  }
+
   const page = Math.max(1, Number(searchParams.get("page") ?? 1));
   const limit = Math.min(100, Number(searchParams.get("limit") ?? 30));
   const q = searchParams.get("q") ?? "";
   const offset = (page - 1) * limit;
 
-  const supabase = adminSupabase();
-  let query = supabase
+  let query = db
     .from("articles")
     .select("id,slug,title_tr,meta_description_tr,score,view_count,published_at,source,is_suppressed", { count: "exact" })
     .order("published_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
-  if (q) {
-    query = query.ilike("title_tr", `%${q}%`);
-  }
+  if (q) query = query.ilike("title_tr", `%${q}%`);
 
   const { data, count, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -61,7 +69,11 @@ export async function PATCH(request: NextRequest) {
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const allowed: Array<keyof Database["public"]["Tables"]["articles"]["Update"]> = [
+    "title_tr",
+    "excerpt_tr",
+    "content_tr",
     "meta_description_tr",
+    "featured_image_url",
     "is_suppressed",
     "is_featured",
   ];
@@ -69,8 +81,8 @@ export async function PATCH(request: NextRequest) {
     Object.entries(updates).filter(([k]) => allowed.includes(k as never))
   ) as Database["public"]["Tables"]["articles"]["Update"];
 
-  const supabase = adminSupabase();
-  const { error } = await supabase.from("articles").update(filtered).eq("id", id);
+  const db = adminSupabase();
+  const { error } = await db.from("articles").update(filtered).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
