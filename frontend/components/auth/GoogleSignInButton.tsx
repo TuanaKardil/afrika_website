@@ -4,9 +4,10 @@ import { useState } from "react";
 
 interface GoogleSignInButtonProps {
   redirectTo?: string;
+  label?: string;
 }
 
-export default function GoogleSignInButton({ redirectTo = "/panel" }: GoogleSignInButtonProps) {
+export default function GoogleSignInButton({ redirectTo = "/panel", label = "Google ile Giriş Yap" }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false);
 
   function handleClick() {
@@ -29,7 +30,7 @@ export default function GoogleSignInButton({ redirectTo = "/panel" }: GoogleSign
         <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
         <path fill="none" d="M0 0h48v48H0z"/>
       </svg>
-      {loading ? "Yönlendiriliyor…" : "Google ile Giriş Yap"}
+      {loading ? "Yönlendiriliyor…" : label}
     </button>
   );
 }

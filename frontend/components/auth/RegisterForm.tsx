@@ -107,7 +107,7 @@ export default function RegisterForm() {
         <span className="flex-1 h-px bg-outline-variant" />
       </div>
 
-      <GoogleSignInButton />
+      <GoogleSignInButton label="Google ile Kayıt Ol" />
     </form>
   );
 }
