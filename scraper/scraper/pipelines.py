@@ -330,6 +330,31 @@ class QualityCheckPipeline:
         return item
 
 
+class MetaDescriptionPipeline:
+    """Generate AI-powered SEO meta descriptions for translated articles.
+
+    Runs after SanitizationPipeline (250) so content_tr is clean HTML.
+    Uses Gemini 2.5 Flash-Lite — same model as article translation.
+    Only processes articles that have content_tr set (score 6+).
+    """
+
+    def process_item(self, item, spider):
+        content_tr = item.get("content_tr") or ""
+        title_tr = item.get("title_tr") or ""
+        if not content_tr or not title_tr:
+            item["meta_description_tr"] = None
+            return item
+
+        from scraper.translate import generate_meta_description
+        meta_desc = generate_meta_description(title_tr, content_tr)
+        item["meta_description_tr"] = meta_desc
+        if meta_desc:
+            logger.info("meta_description_tr (%d chars): %.80s", len(meta_desc), meta_desc)
+        else:
+            logger.warning("meta_description_tr generation failed for %s", item.get("source_url", ""))
+        return item
+
+
 class TurkeyFilterPipeline:
     """Drop articles with negative Turkey framing before expensive translation."""
 
@@ -556,6 +581,7 @@ class StoragePipeline:
             "sector_slugs": sector_slugs,
             "region_slug": region_slug,
             "hashtags": hashtags,
+            "meta_description_tr": item.get("meta_description_tr"),
             "score": item.get("score"),
             "turkey_filter_result": item.get("turkey_filter_result"),
             "is_suppressed": False,

@@ -459,6 +459,67 @@ def translate_image_alt(alt_en: str) -> str | None:
         return None
 
 
+# ---------------------------------------------------------------------------
+# Meta description generation — separate from article translation
+# ---------------------------------------------------------------------------
+
+def _load_meta_description_prompt() -> str:
+    """Load the meta description system prompt from prompts/metadescription.md."""
+    import pathlib
+    prompt_path = pathlib.Path(__file__).parent.parent.parent / "prompts" / "metadescription.md"
+    try:
+        return prompt_path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return (
+            "Generate a single SEO-optimized Turkish meta description for the news article. "
+            "140-155 characters. Plain text only, no explanation."
+        )
+
+
+_META_DESC_SYSTEM: str | None = None
+
+
+def generate_meta_description(title_tr: str, content_tr: str) -> str | None:
+    """Generate a Turkish SEO meta description for a translated article.
+
+    Uses GEMINI_FLASH_LITE (same model as article translation).
+    Returns a plain-text string of 140-155 chars, or None on failure.
+    This is a separate API call — never mixed with article translation.
+    """
+    global _META_DESC_SYSTEM
+    if _META_DESC_SYSTEM is None:
+        _META_DESC_SYSTEM = _load_meta_description_prompt()
+
+    if not title_tr or not content_tr:
+        return None
+
+    plain = re.sub(r"<[^>]+>", " ", content_tr)
+    plain = re.sub(r"\s+", " ", plain).strip()[:800]
+
+    user_message = f"Title (Turkish): {title_tr}\n\nArticle text (Turkish): {plain}"
+
+    raw = chat(
+        [{"role": "user", "content": user_message}],
+        model=GEMINI_FLASH_LITE,
+        system=_META_DESC_SYSTEM,
+        temperature=0.1,
+        max_tokens=200,
+    )
+
+    if not raw:
+        return None
+
+    result = raw.strip()
+    result = _EM_DASH_RE.sub(",", result)
+    result = result.strip('"').strip("'").strip()
+
+    if len(result) < 80 or len(result) > 200:
+        logger.warning("meta_description_tr out of range (%d chars): %.100s", len(result), result)
+        return None
+
+    return result
+
+
 def translate_articles(articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Translate a list of article dicts. Returns the same list with
     title_tr, excerpt_tr, content_tr populated. Articles whose content_hash

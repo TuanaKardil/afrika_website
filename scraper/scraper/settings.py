@@ -27,6 +27,7 @@ ITEM_PIPELINES = {
     "scraper.pipelines.ContentCleanPipeline": 220,       # Gemini Flash-Lite: remove boilerplate from content_tr
     "scraper.pipelines.QualityCheckPipeline": 235,       # Drop truncated lists; warn on missing H2
     "scraper.pipelines.SanitizationPipeline": 250,       # HTML sanitize (after translate)
+    "scraper.pipelines.MetaDescriptionPipeline": 260,    # Gemini Flash-Lite: SEO meta description (score 6+)
     "scraper.pipelines.StoragePipeline": 300,            # classify + hashtags + images + DB write
 }
 

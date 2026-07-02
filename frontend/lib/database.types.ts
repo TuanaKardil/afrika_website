@@ -26,6 +26,7 @@ export type Database = {
           id: string
           image_alt_tr: string | null
           image_credit: string | null
+          meta_description_tr: string | null
           is_featured: boolean
           is_suppressed: boolean
           nav_tab_slug: string | null
@@ -57,6 +58,7 @@ export type Database = {
           id?: string
           image_alt_tr?: string | null
           image_credit?: string | null
+          meta_description_tr?: string | null
           is_featured?: boolean
           is_suppressed?: boolean
           nav_tab_slug?: string | null
@@ -88,6 +90,7 @@ export type Database = {
           id?: string
           image_alt_tr?: string | null
           image_credit?: string | null
+          meta_description_tr?: string | null
           is_featured?: boolean
           is_suppressed?: boolean
           nav_tab_slug?: string | null

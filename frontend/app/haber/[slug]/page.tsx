@@ -33,13 +33,21 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: HaberPageProps): Promise<Metadata> {
   const article = await getArticleBySlug(params.slug);
   if (!article) return {};
+  const description =
+    article.meta_description_tr
+    ?? article.excerpt_tr
+    ?? article.excerpt_original
+    ?? "";
   return {
     title: article.title_tr ?? article.title_original ?? "",
-    description: article.excerpt_tr ?? article.excerpt_original ?? "",
+    description,
     openGraph: {
       title: article.title_tr ?? undefined,
-      description: article.excerpt_tr ?? undefined,
+      description: description || undefined,
       images: article.featured_image_url ? [article.featured_image_url] : [],
+    },
+    twitter: {
+      description: description || undefined,
     },
   };
 }

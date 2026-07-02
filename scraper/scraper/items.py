@@ -26,3 +26,4 @@ class ArticleItem(scrapy.Item):
     score = scrapy.Field()              # 1-10 Africa relevance score
     turkey_filter_result = scrapy.Field()  # "PASS" or "SUPPRESS"
     image_alt_tr = scrapy.Field()       # translated image alt text (Turkish, max ~10 words)
+    meta_description_tr = scrapy.Field()  # AI-generated SEO meta description (Turkish, 140-155 chars)
