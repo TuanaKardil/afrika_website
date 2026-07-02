@@ -342,6 +342,7 @@ export type Database = {
     Views: { [_ in never]: never }
     Functions: {
       increment_view_count: { Args: { article_id: string }; Returns: undefined }
+      search_hashtags: { Args: { q: string; lim?: number }; Returns: { tag: string }[] }
       search_articles: {
         Args: { lim?: number; off?: number; query: string }
         Returns: {
