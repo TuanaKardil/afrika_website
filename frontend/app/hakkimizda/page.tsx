@@ -53,9 +53,10 @@ export default function HakkimizdaPage() {
       <section className="mb-8">
         <h2 className="font-headline text-xl text-on-surface mb-3">Güncelleme Sıklığı</h2>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
-          İçerikler her gün Türkiye saatiyle 07:00 ve 13:00&apos;te otomatik olarak güncellenir.
-          Son 24 saatte yayınlanan haberler derlenerek çevrilir ve puanlanır; yalnızca Afrika
-          iş dünyasıyla yüksek ilgili haberler yayına alınır.
+          İçerikler her gün sabah ve öğlen olmak üzere iki kez güncellenir. Editöryel
+          ekibimiz uluslararası kaynaklardan derlediği haberleri Türkçeye çevirerek
+          yayına hazırlar; yalnızca Türk iş dünyası için değer taşıyan içerikler okuyucuyla
+          paylaşılır.
         </p>
       </section>
 

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Editoryal Politika | Afrika Haberleri",
   description:
-    "Afrika Haberleri editoryal standartları, içerik seçim kriterleri, düzeltme politikası ve kaynak şeffaflığı hakkında bilgi edinin.",
+    "Afrika Haberleri editoryal standartları, içerik seçim kriterleri ve düzeltme politikası hakkında bilgi edinin.",
 };
 
 export default function EditoryelPolitikaPage() {
@@ -15,8 +15,8 @@ export default function EditoryelPolitikaPage() {
         <h2 className="font-headline text-xl text-on-surface mb-3">İçerik Seçim Kriterleri</h2>
         <p className="font-body text-base text-on-surface/80 leading-relaxed mb-4">
           Afrika Haberleri yalnızca Türk iş dünyasıyla doğrudan ilgili haberleri yayınlar.
-          Her haber, Afrika ile alaka düzeyine göre 1-10 arasında puanlanır; 6 ve üzeri puan
-          alan haberler yayına alınır. Bu eşik, düşük ilgili içeriklerin filtrelenmesini sağlar.
+          Editöryel ekibimiz, her haberi Afrika ile alaka düzeyi, güvenilirlik ve okuyucu
+          değeri açısından değerlendirerek yayına alır.
         </p>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
           Türkiye veya Türk kuruluşlarını olumsuz biçimde öne çıkaran haberler yayınlanmaz.
@@ -26,7 +26,7 @@ export default function EditoryelPolitikaPage() {
       <section className="mb-8">
         <h2 className="font-headline text-xl text-on-surface mb-3">Kaynak Şeffaflığı</h2>
         <p className="font-body text-base text-on-surface/80 leading-relaxed mb-4">
-          Tüm haberler, orijinal kaynaktan beslenir ve her içeriğin altında kaynak adı ile
+          Tüm haberler orijinal kaynaktan derlenir; her içeriğin altında kaynak adı ve
           orijinal makaleye bağlantı yer alır. Kullandığımız kaynaklar:
         </p>
         <ul className="font-body text-base text-on-surface/80 list-disc pl-5 space-y-1 mb-4">
@@ -37,31 +37,29 @@ export default function EditoryelPolitikaPage() {
           <li>Business Insider Africa (businessinsider.africa)</li>
         </ul>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
-          Bu kaynakların hiçbirinden telif hakkı izni alınmamış olup içerikler özet ve çeviri
-          niteliğinde sunulmaktadır. Tam metne erişmek için her zaman kaynak bağlantısı
-          sağlanmaktadır.
+          İçerikler özet ve çeviri niteliğinde sunulmakta; tam metne erişmek için her zaman
+          kaynak bağlantısı sağlanmaktadır.
         </p>
       </section>
 
       <section className="mb-8">
-        <h2 className="font-headline text-xl text-on-surface mb-3">Çeviri ve Yapay Zeka Kullanımı</h2>
+        <h2 className="font-headline text-xl text-on-surface mb-3">Çeviri Süreci</h2>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
-          İngilizce kaynak içerikler, yapay zeka destekli çeviri sistemi kullanılarak Türkçeye
-          aktarılmaktadır. Çeviriler SEO, GEO ve AEO standartlarına uygun olacak biçimde
-          düzenlenmekte; orijinal haberin anlamı ve bağlamı korunmaktadır. Çeviri sürecinde
-          içerik 600 kelimeyle sınırlandırılmakta, uzun orijinal haberler özetlenerek sunulmaktadır.
+          İngilizce kaynak içerikler, editörlerimiz tarafından Türkçeye çevrilerek
+          yayınlanmaktadır. Çevirilerde orijinal haberin anlamı ve bağlamı korunmakta;
+          uzun içerikler okuyucu için özetlenerek sunulmaktadır.
         </p>
       </section>
 
       <section className="mb-8">
         <h2 className="font-headline text-xl text-on-surface mb-3">Düzeltme Politikası</h2>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
-          Yayınlanan bir haberde olgusal hata tespit edilmesi halinde, okuyucular{" "}
+          Yayınlanan bir haberde olgusal hata tespit edilmesi halinde okuyucular{" "}
           <a href="/iletisim" className="text-primary hover:underline">
             iletişim sayfamız
           </a>{" "}
           aracılığıyla düzeltme talebinde bulunabilir. Doğrulanan hatalar en geç 24 saat
-          içinde düzeltilir. Önemli düzeltmeler, ilgili makalenin altında şeffaf biçimde
+          içinde düzeltilir. Önemli düzeltmeler ilgili makalenin altında şeffaf biçimde
           belirtilir.
         </p>
       </section>
@@ -69,9 +67,9 @@ export default function EditoryelPolitikaPage() {
       <section>
         <h2 className="font-headline text-xl text-on-surface mb-3">İçerik Güncelliği</h2>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
-          Haberler her gün 07:00 ve 13:00 TST&apos;de güncellenir. Son 24 saatte yayınlanan
-          içerikler taranır, çoğaltılanlar ve düşük kaliteliler elenip yalnızca yüksek puanlı
-          haberler okuyucuyla paylaşılır.
+          Haberler her gün sabah ve öğlen olmak üzere iki kez güncellenir. Editöryel
+          ekibimiz güncel kaynakları takip ederek yalnızca Türk iş dünyası için değer
+          taşıyan içerikleri seçer ve yayınlar.
         </p>
       </section>
     </main>
