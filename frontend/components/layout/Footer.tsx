@@ -21,7 +21,6 @@ const CORPORATE_LINKS = [
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/iletisim", label: "İletişim" },
   { href: "/editoryal-politika", label: "Editoryal Politika" },
-  { href: "/kayit", label: "Bülten" },
 ];
 
 export default function Footer() {

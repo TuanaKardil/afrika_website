@@ -9,7 +9,6 @@ import HeroSection from "@/components/sections/HeroSection";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import ArticlesFeed from "@/components/sections/ArticlesFeed";
 import BreakingTicker from "@/components/sections/BreakingTicker";
-import NewsletterSection from "@/components/sections/NewsletterSection";
 
 export const revalidate = 1800;
 
@@ -66,8 +65,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
         )}
       </main>
-
-      <NewsletterSection />
     </>
   );
 }
