@@ -38,6 +38,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Admin panel: only the designated admin email can access /admin/*
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!user || user.email !== adminEmail) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
   return response;
 }
 
