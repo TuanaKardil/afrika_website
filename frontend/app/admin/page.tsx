@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/database.types";
@@ -37,11 +36,9 @@ interface ScrapeStatRow {
 }
 
 async function getStats() {
-  const cookieStore = cookies();
-  const supabase = createServerClient<Database>(
+  const supabase = createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();

@@ -14,10 +14,10 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       `img-src 'self' data: https://${SUPABASE_HOSTNAME} https://ichef.bbci.co.uk https://images.theconversation.com`,
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      `connect-src 'self' https://${SUPABASE_HOSTNAME}`,
+      `connect-src 'self' https://${SUPABASE_HOSTNAME} https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com`,
       "frame-ancestors 'none'",
     ].join("; "),
   },
