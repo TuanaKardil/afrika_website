@@ -224,7 +224,7 @@ export default function Navigation() {
                 {"AFRİKA ÜLKELERİ"}
               </div>
               <div className="text-xs text-fg-3 mt-1">
-                {"54 ülke — ülkeye tıklayarak o ülkeye ait haberleri görün"}
+                {"Afrika'nın 54 ülkesine ait güncel ekonomi, ticaret ve yatırım haberlerini keşfedin."}
               </div>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-4 gap-0.5 max-h-[50vh] overflow-y-auto pr-1 mb-3.5">
