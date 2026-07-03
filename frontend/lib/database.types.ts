@@ -165,6 +165,48 @@ export type Database = {
         }
         Relationships: []
       }
+      scrape_stats: {
+        Row: {
+          id: string
+          run_date: string
+          source: string
+          run_slot: string
+          total_scraped: number
+          dropped_duplicate: number
+          dropped_low_score: number
+          dropped_turkey_filter: number
+          published: number
+          avg_score: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          run_date: string
+          source: string
+          run_slot: string
+          total_scraped?: number
+          dropped_duplicate?: number
+          dropped_low_score?: number
+          dropped_turkey_filter?: number
+          published?: number
+          avg_score?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          run_date?: string
+          source?: string
+          run_slot?: string
+          total_scraped?: number
+          dropped_duplicate?: number
+          dropped_low_score?: number
+          dropped_turkey_filter?: number
+          published?: number
+          avg_score?: number | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       nav_tabs: {
         Row: { display_order: number; name_tr: string; slug: string }
         Insert: { display_order?: number; name_tr: string; slug: string }
