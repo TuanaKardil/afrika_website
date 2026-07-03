@@ -35,7 +35,10 @@ export default function Footer() {
             <span className="text-amber font-black text-[17px] tracking-[-0.02em] leading-none ml-1.5">{"HABERLERİ"}</span>
           </div>
           <p className="text-sm text-white/65 leading-[1.6] max-w-xs">
-            {"Türk iş dünyası için Afrika pazarlarından editöryal haberler. Her sabah Türkiye saatiyle 06:00"}&apos;{"da güncellenir."}
+            {"Afrika pazarlarında iş yapmak isteyen profesyoneller için güncel haberler, fırsatlar ve sektör gelişmeleri."}
+          </p>
+          <p className="text-sm text-white/50 leading-[1.6] max-w-xs mt-2">
+            {"Yeni fırsatları takip edin."}
           </p>
         </div>
 
