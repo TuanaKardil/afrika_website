@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "KVKK Aydınlatma Metni | Afrika Haberleri",
+  title: "KVKK Aydınlatma Metni",
   description:
     "Afrika Haberleri kişisel verilerin korunması kanunu kapsamında aydınlatma metni.",
+  alternates: { canonical: "/kvkk" },
 };
 
 export default function KvkkPage() {

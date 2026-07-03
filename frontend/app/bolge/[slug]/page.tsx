@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticlesByRegion } from "@/lib/queries/articles";
 import { getRegionBySlug, getRegions } from "@/lib/queries/regions";
+import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
@@ -15,12 +16,14 @@ export async function generateStaticParams() {
   return regions.map((r) => ({ slug: r.slug }));
 }
 
-export async function generateMetadata({ params }: BolgePageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: BolgePageProps): Promise<Metadata> {
   const region = await getRegionBySlug(params.slug);
   if (!region) return {};
+  const page = parsePageParam(searchParams.sayfa);
   return {
-    title: `Son Dakika ${region.name_tr} Haberleri | Afrika Haberleri`,
+    title: titleWithPage(`Son Dakika ${region.name_tr} Haberleri`, page),
     description: `${region.name_tr} bölgesinden güncel haberler. Ekonomi, ticaret ve yatırım gelişmelerini Türkçe takip edin.`,
+    alternates: { canonical: buildCanonical(`/bolge/${params.slug}`, { sayfa: String(page) }) },
   };
 }
 

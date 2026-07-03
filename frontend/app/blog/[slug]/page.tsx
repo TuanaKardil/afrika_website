@@ -31,10 +31,11 @@ async function getPost(slug: string): Promise<BlogPost | null> {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const post = await getPost(params.slug);
-  if (!post) return { title: "Bulunamadı | Afrika Haberleri" };
+  if (!post) return { title: "Bulunamadı" };
   return {
-    title: `${post.title} | Afrika Haberleri`,
+    title: post.title,
     description: post.excerpt ?? undefined,
+    alternates: { canonical: `/blog/${params.slug}` },
     openGraph: {
       title: post.title,
       description: post.excerpt ?? undefined,

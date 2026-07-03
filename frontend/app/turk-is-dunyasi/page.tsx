@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
+import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
-export const metadata: Metadata = {
-  title: "Türk İş Dünyası Afrika'da",
-  description: "Afrika'daki Türk şirketleri ve iş insanları haberleri.",
-};
-
-export default async function TurkIsDunyasiPage({
-  searchParams,
-}: {
+interface TurkIsDunyasiPageProps {
   searchParams: { sayfa?: string };
-}) {
+}
+
+export async function generateMetadata({ searchParams }: TurkIsDunyasiPageProps): Promise<Metadata> {
+  const page = parsePageParam(searchParams.sayfa);
+  return {
+    title: titleWithPage("Türk İş Dünyası Afrika'da", page),
+    description: "Afrika'daki Türk şirketleri ve iş insanları haberleri.",
+    alternates: { canonical: buildCanonical("/turk-is-dunyasi", { sayfa: String(page) }) },
+  };
+}
+
+export default async function TurkIsDunyasiPage({ searchParams }: TurkIsDunyasiPageProps) {
   const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
   const { articles, count } = await getArticlesByNavTab("turk-is-dunyasi", page);
 

@@ -5,6 +5,7 @@ import {
   getTopScoredRecent,
   getTopArticles,
 } from "@/lib/queries/articles";
+import { buildCanonical, parsePageParam } from "@/lib/seo";
 import HeroSection from "@/components/sections/HeroSection";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import ArticlesFeed from "@/components/sections/ArticlesFeed";
@@ -12,19 +13,36 @@ import BreakingTicker from "@/components/sections/BreakingTicker";
 
 export const revalidate = 1800;
 
-export const metadata: Metadata = {
-  title: "Afrika Haberleri",
-  description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",
-  openGraph: {
-    description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",
-  },
-  twitter: {
-    description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",
-  },
-};
+const HOME_DESCRIPTION = "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.";
 
 interface HomePageProps {
   searchParams: { sayfa?: string };
+}
+
+export async function generateMetadata({ searchParams }: HomePageProps): Promise<Metadata> {
+  const page = parsePageParam(searchParams.sayfa);
+  if (page > 1) {
+    // Next 14.2 strips the query string from canonical URLs on the root path,
+    // so paginated home variants cannot self-canonicalize. The same articles
+    // are indexable via /haberler with correct canonicals; keep these out of
+    // the index but let crawlers follow the article links.
+    return {
+      title: { absolute: `Afrika Haberleri | Sayfa ${page}` },
+      description: HOME_DESCRIPTION,
+      robots: { index: false, follow: true },
+    };
+  }
+  return {
+    title: { absolute: "Afrika Haberleri" },
+    description: HOME_DESCRIPTION,
+    alternates: { canonical: buildCanonical("/") },
+    openGraph: {
+      description: HOME_DESCRIPTION,
+    },
+    twitter: {
+      description: HOME_DESCRIPTION,
+    },
+  };
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {

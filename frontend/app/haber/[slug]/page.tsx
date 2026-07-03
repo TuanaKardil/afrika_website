@@ -41,6 +41,7 @@ export async function generateMetadata({ params }: HaberPageProps): Promise<Meta
   return {
     title: article.title_tr ?? article.title_original ?? "",
     description,
+    alternates: { canonical: `/haber/${params.slug}` },
     openGraph: {
       title: article.title_tr ?? undefined,
       description: description || undefined,

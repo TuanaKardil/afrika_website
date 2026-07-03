@@ -2,19 +2,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSectors } from "@/lib/queries/sectors";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
+import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
-export const metadata: Metadata = {
-  title: "Sektörler",
-  description: "Afrika'dan sektörel haberler.",
-};
-
-export default async function SektorlerPage({
-  searchParams,
-}: {
+interface SektorlerPageProps {
   searchParams: { sayfa?: string; sektor?: string };
-}) {
+}
+
+export async function generateMetadata({ searchParams }: SektorlerPageProps): Promise<Metadata> {
+  const page = parsePageParam(searchParams.sayfa);
+  return {
+    title: titleWithPage("Sektörler", page),
+    description: "Afrika'dan sektörel haberler.",
+    alternates: { canonical: buildCanonical("/sektorler", { sayfa: String(page) }) },
+  };
+}
+
+export default async function SektorlerPage({ searchParams }: SektorlerPageProps) {
   const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
   const sectors = await getSectors();
   const { articles, count } = await getArticlesByNavTab("sektorler", page);

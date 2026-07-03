@@ -5,7 +5,7 @@ import SearchInput from "@/components/search/SearchInput";
 import SearchResults from "@/components/search/SearchResults";
 
 export const metadata: Metadata = {
-  title: "Haber Ara | Afrika Haberleri",
+  title: "Haber Ara",
   description: "Afrika haberlerinde arama yapın.",
   robots: { index: false, follow: false },
 };

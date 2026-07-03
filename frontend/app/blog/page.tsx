@@ -5,8 +5,9 @@ import type { Metadata } from "next";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "Blog | Afrika Haberleri",
+  title: "Blog",
   description: "Afrika iş dünyası, ekonomi ve güncel gelişmeler hakkında analizler ve yazılar.",
+  alternates: { canonical: "/blog" },
 };
 
 interface BlogPost {

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "İletişim | Afrika Haberleri",
+  title: "İletişim",
   description:
     "Afrika Haberleri ile iletişime geçin. İçerik, iş birliği ve düzeltme talepleriniz için bize ulaşın.",
+  alternates: { canonical: "/iletisim" },
 };
 
 export default function IletisimPage() {

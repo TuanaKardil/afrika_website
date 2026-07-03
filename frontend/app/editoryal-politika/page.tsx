@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Editoryal Politika | Afrika Haberleri",
+  title: "Editoryal Politika",
   description:
     "Afrika Haberleri editoryal standartları, içerik seçim kriterleri ve düzeltme politikası hakkında bilgi edinin.",
+  alternates: { canonical: "/editoryal-politika" },
 };
 
 export default function EditoryelPolitikaPage() {

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Hakkımızda | Afrika Haberleri",
+  title: "Hakkımızda",
   description:
     "Afrika Haberleri, Türk iş dünyası için Afrika kıtasından derlenen güncel ekonomi, ticaret ve yatırım haberlerini Türkçe olarak sunan bir yayın platformudur.",
+  alternates: { canonical: "/hakkimizda" },
 };
 
 export default function HakkimizdaPage() {

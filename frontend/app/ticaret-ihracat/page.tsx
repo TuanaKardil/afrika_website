@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
+import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
-export const metadata: Metadata = {
-  title: "Ticaret & İhracat",
-  description: "Afrika ile ticaret ve ihracat haberleri.",
-};
-
-export default async function TicaretIhracatPage({
-  searchParams,
-}: {
+interface TicaretIhracatPageProps {
   searchParams: { sayfa?: string };
-}) {
+}
+
+export async function generateMetadata({ searchParams }: TicaretIhracatPageProps): Promise<Metadata> {
+  const page = parsePageParam(searchParams.sayfa);
+  return {
+    title: titleWithPage("Ticaret & İhracat", page),
+    description: "Afrika ile ticaret ve ihracat haberleri.",
+    alternates: { canonical: buildCanonical("/ticaret-ihracat", { sayfa: String(page) }) },
+  };
+}
+
+export default async function TicaretIhracatPage({ searchParams }: TicaretIhracatPageProps) {
   const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
   const { articles, count } = await getArticlesByNavTab("ticaret-ihracat", page);
 

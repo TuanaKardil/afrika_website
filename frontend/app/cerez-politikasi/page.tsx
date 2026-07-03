@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Çerez Politikası | Afrika Haberleri",
+  title: "Çerez Politikası",
   description: "Afrika Haberleri çerez kullanım politikası hakkında bilgi edinin.",
+  alternates: { canonical: "/cerez-politikasi" },
 };
 
 export default function CerezPolitikasiPage() {

@@ -178,6 +178,7 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `frontend/app/hashtag/[tag]/page.tsx` | Hashtag listing page — shows all articles containing a given hashtag, paginated |
 | `frontend/components/ui/SimilarArticlesPanel.tsx` | Sidebar component showing up to 5 similar articles scored by shared hashtags/sectors |
 | `frontend/lib/labels.ts` | `resolveCategory()` — maps nav_tab+sector+hashtags to a display label; never shows "Sektörler", "Ülkeler", "Türk İş Dünyası", or "Etkinlikler & Fuarlar" as badge text |
+| `frontend/lib/seo.ts` | Canonical URL helpers: `buildCanonical()` (absolute URL, whitelisted params ulke/bolge/kategori/sayfa, sayfa=1 normalized to clean URL), `parsePageParam()`, `titleWithPage()` ("Sayfa N" title suffix). Used by every listing page's generateMetadata. Page titles must NOT include "| Afrika Haberleri" (root layout template adds it). Homepage ?sayfa>1 variants are noindex,follow because Next 14.2 strips the query from canonical on the root path. |
 | `frontend/app/arama/page.tsx` | Full-text search page with category + date filters; URL params: q, sayfa, kategori, tarih |
 | `frontend/app/api/search-suggest/route.ts` | Autocomplete API — returns sector matches, hashtag matches (via `search_hashtags` RPC), then article title matches; typed `SuggestItem[]` response |
 | `frontend/lib/search_synonyms.ts` | Synonym expansion + Turkish char normalization for search queries; `buildTsQuery()` builds pg tsquery string |

@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
+import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
-export const metadata: Metadata = {
-  title: "Diğer",
-  description: "Diğer Afrika haberleri.",
-};
-
-export default async function DigerPage({
-  searchParams,
-}: {
+interface DigerPageProps {
   searchParams: { sayfa?: string };
-}) {
+}
+
+export async function generateMetadata({ searchParams }: DigerPageProps): Promise<Metadata> {
+  const page = parsePageParam(searchParams.sayfa);
+  return {
+    title: titleWithPage("Diğer", page),
+    description: "Diğer Afrika haberleri.",
+    alternates: { canonical: buildCanonical("/diger", { sayfa: String(page) }) },
+  };
+}
+
+export default async function DigerPage({ searchParams }: DigerPageProps) {
   const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
   const { articles, count } = await getArticlesByNavTab("diger", page);
 

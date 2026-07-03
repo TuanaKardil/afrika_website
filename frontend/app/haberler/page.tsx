@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFilteredArticles } from "@/lib/queries/articles";
+import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
@@ -34,40 +35,53 @@ const CATEGORY_SEO_LABELS: Record<string, string> = {
 };
 
 interface HaberlerMetaProps {
-  searchParams: { bolge?: string; kategori?: string };
+  searchParams: { bolge?: string; kategori?: string; sayfa?: string };
 }
 
 export async function generateMetadata({ searchParams }: HaberlerMetaProps): Promise<Metadata> {
   const bolge = searchParams.bolge ?? null;
   const kategori = searchParams.kategori ?? null;
+  const page = parsePageParam(searchParams.sayfa);
   const regionLabel = REGIONS.find((r) => r.slug === (bolge ?? "afrika"))?.label ?? null;
   const categoryLabel = kategori ? CATEGORY_SEO_LABELS[kategori] : null;
 
+  const alternates = {
+    canonical: buildCanonical("/haberler", {
+      bolge: bolge && bolge !== "afrika" ? bolge : null,
+      kategori,
+      sayfa: String(page),
+    }),
+  };
+
   if (kategori && bolge && bolge !== "afrika") {
     return {
-      title: `${regionLabel} ${categoryLabel} | Afrika Haberleri`,
+      title: titleWithPage(`${regionLabel} ${categoryLabel}`, page),
       description: `${regionLabel} bölgesinden güncel ${CATEGORIES.find((c) => c.slug === kategori)?.label.toLowerCase()} haberleri.`,
+      alternates,
     };
   }
   if (kategori) {
     return {
-      title: `Afrika'da ${categoryLabel} | Afrika Haberleri`,
+      title: titleWithPage(`Afrika'da ${categoryLabel}`, page),
       description: `Afrika'dan güncel ${CATEGORIES.find((c) => c.slug === kategori)?.label.toLowerCase()} haberleri. Son dakika gelişmeleri Türkçe.`,
+      alternates,
     };
   }
   if (bolge && bolge !== "afrika") {
     return {
-      title: `Son Dakika ${regionLabel} Haberleri | Afrika Haberleri`,
+      title: titleWithPage(`Son Dakika ${regionLabel} Haberleri`, page),
       description: `${regionLabel} bölgesinden son dakika haberleri. Ekonomi, ticaret ve yatırım gelişmeleri.`,
+      alternates,
     };
   }
   return {
-    title: "Son Dakika Afrika Haberleri | Afrika Haberleri",
+    title: titleWithPage("Son Dakika Afrika Haberleri", page),
     description: "Afrika'dan tüm son dakika haberleri. Bölge ve kategori filtresiyle arama yapın.",
+    alternates,
   };
 }
 
-type HaberlerPageProps = HaberlerMetaProps & { searchParams: { sayfa?: string } };
+type HaberlerPageProps = HaberlerMetaProps;
 
 function buildFilterUrl(
   bolge: string | null,
