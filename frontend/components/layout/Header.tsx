@@ -4,16 +4,13 @@ import Navigation from "./Navigation";
 import MobileMenu from "./MobileMenu";
 import MobileSearchOverlay from "./MobileSearchOverlay";
 import HeaderSearch from "./HeaderSearch";
+import HeaderAuth from "./HeaderAuth";
 import RegionBar from "./RegionBar";
-import { createClient } from "@/lib/supabase/server";
-import { logoutAction } from "@/lib/auth/actions";
 
-export default async function Header() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+// IMPORTANT: keep this a cookie-free server component. Reading cookies()
+// here (root layout) forces EVERY page dynamic and kills ISR/SSG caching
+// site-wide; auth state is resolved client-side in HeaderAuth/MobileMenu.
+export default function Header() {
   return (
     <header className="sticky top-0 z-50">
       {/* Navy main bar */}
@@ -30,33 +27,9 @@ export default async function Header() {
           <div className="ml-auto flex items-center gap-3 md:gap-4 shrink-0">
             {/* Search bar — desktop only */}
             <HeaderSearch />
-            {user ? (
-              <>
-                <Link
-                  href="/panel"
-                  className="text-white/90 text-xs md:text-sm font-semibold hover:text-white transition-colors whitespace-nowrap"
-                >
-                  {"Hesabım"}
-                </Link>
-                <form action={logoutAction}>
-                  <button
-                    type="submit"
-                    className="text-white/60 text-xs md:text-sm font-semibold hover:text-white transition-colors whitespace-nowrap"
-                  >
-                    {"Çıkış Yap"}
-                  </button>
-                </form>
-              </>
-            ) : (
-              <Link
-                href="/giris"
-                className="text-white/90 text-xs md:text-sm font-semibold hover:text-white transition-colors whitespace-nowrap"
-              >
-                {"Giriş Yap"}
-              </Link>
-            )}
+            <HeaderAuth />
             <MobileSearchOverlay />
-            <MobileMenu isLoggedIn={!!user} />
+            <MobileMenu />
           </div>
         </div>
       </div>

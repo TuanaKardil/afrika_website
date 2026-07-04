@@ -18,6 +18,26 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Anonymous visitors (no Supabase auth cookie) have no session to refresh:
+  // skip the auth round-trip entirely. This keeps the hot path fast for
+  // readers and crawlers; auth-gated paths still redirect.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+
+  if (!hasAuthCookie) {
+    if (pathname.startsWith("/panel")) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/giris";
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: { headers: request.headers },
   });

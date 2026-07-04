@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { logoutAction } from "@/lib/auth/actions";
+import { useIsLoggedIn } from "@/lib/auth/useIsLoggedIn";
 
 const NAV_TABS = [
   { href: "/firsatlar", label: "Fırsatlar" },
@@ -20,11 +21,8 @@ const REGION_LINKS = [
   { href: "/bolge/guney-afrika", label: "Güney Afrika" },
 ];
 
-interface MobileMenuProps {
-  isLoggedIn: boolean;
-}
-
-export default function MobileMenu({ isLoggedIn }: MobileMenuProps) {
+export default function MobileMenu() {
+  const isLoggedIn = useIsLoggedIn();
   const [open, setOpen] = useState(false);
 
   return (

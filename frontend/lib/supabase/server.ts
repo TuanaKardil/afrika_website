@@ -4,7 +4,10 @@ import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
 
 // Cookie-free client for build-time and server-side use.
-// Passes cache: 'no-store' so Next.js 14 data cache never stales article queries.
+// Data cache: 30 min bounded staleness via next.revalidate. Do NOT switch
+// back to cache: 'no-store' — a no-store fetch forces every page that uses
+// these queries into dynamic rendering, silently disabling ISR/SSG for the
+// whole site (articles included).
 export function createBuildClient() {
   return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,7 +15,7 @@ export function createBuildClient() {
     {
       global: {
         fetch: (url: RequestInfo | URL, options: RequestInit = {}) =>
-          fetch(url, { ...options, cache: "no-store" }),
+          fetch(url, { ...options, next: { revalidate: 1800 } } as RequestInit),
       },
     }
   );
