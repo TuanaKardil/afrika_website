@@ -202,6 +202,7 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `frontend/app/admin/analytics/page.tsx` | Real GA4 data panel: 4 metric cards, 7-day bar chart, top pages, top countries. Revalidates hourly. |
 | `prompts/metadescription.md` | Meta description generation prompt — 140-160 chars, Turkish, no em dashes, no proper noun apostrophes |
 | `frontend/app/opengraph-image.png` | Site-wide default OG/Twitter share image (1200x630, navy brand card). Served automatically by Next file convention; pages/articles with their own `openGraph.images` override it. Use `images: ... : undefined` (never `[]`) so the fallback applies. Root layout sets og site_name/locale/type + twitter summary_large_image; article/blog pages set og:type=article + published/modified times inline (child openGraph replaces the parent object wholesale). |
+| `frontend/app/rss.xml/route.ts` | RSS 2.0 feed: latest 50 published articles (score>=6, not suppressed) with title, meta description, pubDate (RFC 822), media:content image. Revalidate 1800. Powers Google Discover "Follow", URL discovery, aggregators and AI systems. The feed discovery `<link rel="alternate" type="application/rss+xml">` lives in the root layout `<head>` JSX (NOT metadata alternates, which child canonicals would wipe). |
 
 ## 13. Daily Reporting
 

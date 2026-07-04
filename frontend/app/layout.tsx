@@ -51,6 +51,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href={supabaseHostname} />
         <link rel="dns-prefetch" href={supabaseHostname} />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Afrika Haberleri RSS"
+          href="https://www.afrikahaberleri.tr/rss.xml"
+        />
       </head>
       <body className="bg-background text-on-surface font-sans min-h-screen flex flex-col antialiased">
         <AuthListener />
