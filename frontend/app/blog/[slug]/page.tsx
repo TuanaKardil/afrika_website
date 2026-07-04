@@ -55,14 +55,46 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+const SITE_URL = "https://www.afrikahaberleri.tr";
+
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getPost(params.slug);
   if (!post) notFound();
 
   const safeContent = sanitizeArticleContent(post.content);
+  const postUrl = `${SITE_URL}/blog/${params.slug}`;
+
+  const blogPostingSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    ...(post.excerpt ? { "description": post.excerpt } : {}),
+    "datePublished": post.published_at,
+    "inLanguage": "tr",
+    "url": postUrl,
+    "mainEntityOfPage": { "@type": "WebPage", "@id": postUrl },
+    ...(post.featured_image_url
+      ? { "image": { "@type": "ImageObject", "url": post.featured_image_url } }
+      : {}),
+    "author": { "@type": "Organization", "name": "Afrika Haberleri" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Afrika Haberleri",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_URL}/icon.png`,
+        "width": 512,
+        "height": 512,
+      },
+    },
+  };
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
+      />
       <article>
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">{post.title}</h1>

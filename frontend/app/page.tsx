@@ -52,6 +52,38 @@ export async function generateMetadata({ searchParams }: HomePageProps): Promise
   };
 }
 
+const SITE_URL = "https://www.afrikahaberleri.tr";
+
+// NewsMediaOrganization + WebSite schema live on the homepage only (Google's
+// recommended placement). No SearchAction: the sitelinks search box was
+// retired in November 2024. Add sameAs here when social profiles exist.
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "NewsMediaOrganization",
+  "@id": `${SITE_URL}/#organization`,
+  "name": "Afrika Haberleri",
+  "url": SITE_URL,
+  "logo": {
+    "@type": "ImageObject",
+    "url": `${SITE_URL}/icon.png`,
+    "width": 512,
+    "height": 512,
+  },
+  "email": "iletisim@afrikahaberleri.tr",
+  "description":
+    "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için Türkçe sunan haber platformu.",
+};
+
+const webSiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
+  "url": SITE_URL,
+  "name": "Afrika Haberleri",
+  "inLanguage": "tr",
+  "publisher": { "@id": `${SITE_URL}/#organization` },
+};
+
 export default async function HomePage({ searchParams }: HomePageProps) {
   const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
 
@@ -67,6 +99,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
+      />
       <BreakingTicker />
 
       {heroArticle && (
