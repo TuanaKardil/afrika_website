@@ -21,6 +21,7 @@ function findPages(dir) {
 }
 
 const failures = [];
+const titleFailures = [];
 for (const file of findPages(appDir)) {
   const rel = relative(appDir, file).replace(/\\/g, "/");
   if (SKIP_PREFIXES.some((p) => rel === `${p}/page.tsx` || rel.startsWith(`${p}/`))) continue;
@@ -29,6 +30,10 @@ for (const file of findPages(appDir)) {
   const hasCanonical = /\bcanonical\b/.test(src) || /\bbuildCanonical\b/.test(src);
   const hasNoindex = /index:\s*false/.test(src);
   if (!hasCanonical && !hasNoindex) failures.push(rel);
+
+  // The root layout template already appends "| Afrika Haberleri"; a page
+  // title containing it would render the brand twice in the <title>.
+  if (/\|\s*Afrika Haberleri/.test(src)) titleFailures.push(rel);
 }
 
 if (failures.length > 0) {
@@ -38,7 +43,17 @@ if (failures.length > 0) {
     "\nAdd alternates.canonical via buildCanonical() from lib/seo.ts, " +
       "or robots: { index: false } if the page must stay out of search.\n"
   );
-  process.exit(1);
 }
 
-console.log("[check-canonical] OK: all public pages declare canonical or noindex.");
+if (titleFailures.length > 0) {
+  console.error("\n[check-canonical] Page titles must not contain \"| Afrika Haberleri\":\n");
+  for (const f of titleFailures) console.error(`  - app/${f}`);
+  console.error(
+    "\nThe root layout title template appends the brand automatically; " +
+      "remove the suffix from the page title to avoid duplication.\n"
+  );
+}
+
+if (failures.length > 0 || titleFailures.length > 0) process.exit(1);
+
+console.log("[check-canonical] OK: all public pages declare canonical or noindex, no duplicated brand titles.");
