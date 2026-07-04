@@ -7,6 +7,7 @@ import RegionBadge from "@/components/ui/RegionBadge";
 import ReadingTime from "@/components/ui/ReadingTime";
 import ViewCountIncrementer from "./ViewCountIncrementer";
 import SaveButton from "@/components/ui/SaveButton";
+import ShareButtons from "@/components/ui/ShareButtons";
 import SimilarArticlesPanel from "@/components/ui/SimilarArticlesPanel";
 import { formatDate } from "@/lib/utils";
 import { resolveCategory } from "@/lib/labels";
@@ -218,6 +219,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
             </time>
           )}
           <ReadingTime minutes={article.reading_time_minutes} />
+          <ShareButtons url={articleUrl} title={article.title_tr ?? ""} />
           {article.source && (
             <span className="ml-auto text-on-surface/40">
               Kaynak: {SOURCE_LABELS[article.source] ?? article.source}
