@@ -8,6 +8,7 @@ import type { Article } from "@/lib/queries/articles";
 export const metadata: Metadata = {
   title: "Panelim",
   description: "Kaydedilen haberleriniz ve hesap ayarlarınız.",
+  robots: { index: false, follow: false },
 };
 
 export default async function PanelPage() {

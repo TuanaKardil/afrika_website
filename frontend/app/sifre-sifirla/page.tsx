@@ -6,6 +6,7 @@ import ResetPasswordForm from "@/components/auth/ResetPasswordForm";
 export const metadata: Metadata = {
   title: "Şifre Sıfırla",
   description: "Afrika Haberleri hesabınız için yeni şifre belirleyin.",
+  robots: { index: false, follow: false },
 };
 
 export default async function SifreSifirlaPage() {

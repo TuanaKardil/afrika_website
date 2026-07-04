@@ -5,6 +5,7 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 export const metadata: Metadata = {
   title: "Şifremi Unuttum",
   description: "Afrika Haberleri hesabınız için şifre sıfırlama linki alın.",
+  robots: { index: false, follow: false },
 };
 
 export default function SifremiUnuttumPage() {
