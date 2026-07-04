@@ -15,7 +15,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.afrikahaberleri.tr"),
   title: {
-    default: "Afrika Haberleri",
+    default: "Afrika Haberleri: Afrika Ekonomi, Ticaret ve Yatırım Haberleri",
     template: "%s | Afrika Haberleri",
   },
   description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",

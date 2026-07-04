@@ -33,7 +33,7 @@ export async function generateMetadata({ searchParams }: HomePageProps): Promise
     };
   }
   return {
-    title: { absolute: "Afrika Haberleri" },
+    title: { absolute: "Afrika Haberleri: Afrika Ekonomi, Ticaret ve Yatırım Haberleri" },
     description: HOME_DESCRIPTION,
     alternates: { canonical: buildCanonical("/") },
     openGraph: {
