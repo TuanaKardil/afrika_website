@@ -200,6 +200,7 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 | `frontend/lib/ga-data.ts` | `fetchGaOverview()` — fetches active users, sessions, page views, top pages/countries via GA4 Data API (JWT service account auth) |
 | `frontend/app/admin/analytics/page.tsx` | Real GA4 data panel: 4 metric cards, 7-day bar chart, top pages, top countries. Revalidates hourly. |
 | `prompts/metadescription.md` | Meta description generation prompt — 140-160 chars, Turkish, no em dashes, no proper noun apostrophes |
+| `frontend/app/opengraph-image.png` | Site-wide default OG/Twitter share image (1200x630, navy brand card). Served automatically by Next file convention; pages/articles with their own `openGraph.images` override it. Use `images: ... : undefined` (never `[]`) so the fallback applies. Root layout sets og site_name/locale/type + twitter summary_large_image; article/blog pages set og:type=article + published/modified times inline (child openGraph replaces the parent object wholesale). |
 
 ## 13. Daily Reporting
 

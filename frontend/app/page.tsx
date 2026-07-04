@@ -37,9 +37,16 @@ export async function generateMetadata({ searchParams }: HomePageProps): Promise
     description: HOME_DESCRIPTION,
     alternates: { canonical: buildCanonical("/") },
     openGraph: {
+      type: "website",
+      siteName: "Afrika Haberleri",
+      locale: "tr_TR",
+      url: "/",
+      title: "Afrika Haberleri: Afrika Ekonomi, Ticaret ve Yatırım Haberleri",
       description: HOME_DESCRIPTION,
     },
     twitter: {
+      card: "summary_large_image",
+      title: "Afrika Haberleri: Afrika Ekonomi, Ticaret ve Yatırım Haberleri",
       description: HOME_DESCRIPTION,
     },
   };

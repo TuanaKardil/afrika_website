@@ -37,9 +37,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     description: post.excerpt ?? undefined,
     alternates: { canonical: `/blog/${params.slug}` },
     openGraph: {
+      type: "article",
       title: post.title,
       description: post.excerpt ?? undefined,
-      images: post.featured_image_url ? [{ url: post.featured_image_url }] : [],
+      url: `/blog/${params.slug}`,
+      siteName: "Afrika Haberleri",
+      locale: "tr_TR",
+      publishedTime: post.published_at,
+      images: post.featured_image_url ? [{ url: post.featured_image_url }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      images: post.featured_image_url ? [post.featured_image_url] : undefined,
     },
   };
 }

@@ -39,17 +39,33 @@ export async function generateMetadata({ params }: HaberPageProps): Promise<Meta
     ?? article.excerpt_tr
     ?? article.excerpt_original
     ?? "";
+  const { dateModified } = resolveModifiedDate(
+    article.published_at,
+    article.updated_at,
+    article.scraped_at
+  );
   return {
     title: article.title_tr ?? article.title_original ?? "",
     description,
     alternates: { canonical: `/haber/${params.slug}` },
     openGraph: {
+      type: "article",
       title: article.title_tr ?? undefined,
       description: description || undefined,
-      images: article.featured_image_url ? [article.featured_image_url] : [],
+      url: `/haber/${params.slug}`,
+      siteName: "Afrika Haberleri",
+      locale: "tr_TR",
+      publishedTime: article.published_at,
+      modifiedTime: dateModified,
+      // undefined (not []) lets articles without a featured image fall back
+      // to the site-wide app/opengraph-image.png
+      images: article.featured_image_url ? [article.featured_image_url] : undefined,
     },
     twitter: {
+      card: "summary_large_image",
+      title: article.title_tr ?? undefined,
       description: description || undefined,
+      images: article.featured_image_url ? [article.featured_image_url] : undefined,
     },
   };
 }

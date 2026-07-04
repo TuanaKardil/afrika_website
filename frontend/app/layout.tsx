@@ -19,6 +19,15 @@ export const metadata: Metadata = {
     template: "%s | Afrika Haberleri",
   },
   description: "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için seçilmiş güncel haberlerle takip edin. Haberleri incele.",
+  openGraph: {
+    type: "website",
+    siteName: "Afrika Haberleri",
+    locale: "tr_TR",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
   robots: {
     index: true,
     follow: true,
