@@ -31,3 +31,24 @@ export function buildCanonical(path: string, params: CanonicalParams = {}): stri
 export function titleWithPage(title: string, page: number): string {
   return page > 1 ? `${title} | Sayfa ${page}` : title;
 }
+
+const MODIFIED_EPSILON_MS = 10 * 60 * 1000;
+
+/**
+ * Resolves the real modification date of an article. updated_at equals
+ * scraped_at at insert time and is only bumped by genuine re-writes (the
+ * scraper's is_update path, admin content edits), so it counts as a
+ * modification only when it is meaningfully later than scraped_at.
+ * Never fake-freshen dates: fall back to published_at otherwise.
+ */
+export function resolveModifiedDate(
+  publishedAt: string,
+  updatedAt: string | null,
+  scrapedAt: string | null
+): { dateModified: string; isUpdated: boolean } {
+  if (updatedAt && scrapedAt) {
+    const diff = new Date(updatedAt).getTime() - new Date(scrapedAt).getTime();
+    if (diff > MODIFIED_EPSILON_MS) return { dateModified: updatedAt, isUpdated: true };
+  }
+  return { dateModified: publishedAt, isUpdated: false };
+}

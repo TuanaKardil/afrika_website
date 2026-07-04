@@ -81,6 +81,13 @@ export async function PATCH(request: NextRequest) {
     Object.entries(updates).filter(([k]) => allowed.includes(k as never))
   ) as Database["public"]["Tables"]["articles"]["Update"];
 
+  // Content edits refresh the modification signal (JSON-LD dateModified,
+  // sitemap lastmod). Visibility toggles alone do not count as an edit.
+  const contentFields = ["title_tr", "excerpt_tr", "content_tr", "meta_description_tr", "featured_image_url"];
+  if (Object.keys(filtered).some((k) => contentFields.includes(k))) {
+    filtered.updated_at = new Date().toISOString();
+  }
+
   const db = adminSupabase();
   const { error } = await db.from("articles").update(filtered).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

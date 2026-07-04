@@ -600,7 +600,12 @@ class StoragePipeline:
                 update_fields = {k: v for k, v in row.items()
                                  if k not in ("id", "view_count", "is_featured",
                                               "title_tr", "excerpt_tr", "content_tr")}
-                update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+                # Do NOT bump updated_at here: this path never changes the
+                # Turkish content readers see (title_tr/excerpt_tr/content_tr
+                # are excluded above). updated_at means "visible content
+                # changed" and is only set by admin content edits, keeping
+                # sitemap lastmod, JSON-LD dateModified and the UI
+                # "Güncellendi:" badge honest.
                 (
                     self._supabase.table("articles")
                     .update(update_fields)

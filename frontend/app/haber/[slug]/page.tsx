@@ -10,6 +10,7 @@ import SaveButton from "@/components/ui/SaveButton";
 import SimilarArticlesPanel from "@/components/ui/SimilarArticlesPanel";
 import { formatDate } from "@/lib/utils";
 import { resolveCategory } from "@/lib/labels";
+import { resolveModifiedDate } from "@/lib/seo";
 
 const SOURCE_LABELS: Record<string, string> = {
   business_insider: "Business Insider Africa",
@@ -75,13 +76,19 @@ export default async function HaberPage({ params }: HaberPageProps) {
 
   const articleUrl = `${SITE_URL}/haber/${params.slug}`;
 
+  const { dateModified, isUpdated } = resolveModifiedDate(
+    article.published_at,
+    article.updated_at,
+    article.scraped_at
+  );
+
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     "headline": article.title_tr,
     "description": article.excerpt_tr ?? article.excerpt_original ?? "",
     "datePublished": article.published_at,
-    "dateModified": article.published_at,
+    "dateModified": dateModified,
     "inLanguage": "tr",
     "url": articleUrl,
     "mainEntityOfPage": { "@type": "WebPage", "@id": articleUrl },
@@ -189,6 +196,11 @@ export default async function HaberPage({ params }: HaberPageProps) {
           <time dateTime={article.published_at}>
             {formatDate(article.published_at)}
           </time>
+          {isUpdated && (
+            <time dateTime={dateModified} className="text-on-surface/50">
+              Güncellendi: {formatDate(dateModified)}
+            </time>
+          )}
           <ReadingTime minutes={article.reading_time_minutes} />
           {article.source && (
             <span className="ml-auto text-on-surface/40">
