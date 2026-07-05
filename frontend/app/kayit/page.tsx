@@ -5,7 +5,7 @@ import RegisterForm from "@/components/auth/RegisterForm";
 export const metadata: Metadata = {
   title: "Kayıt Ol",
   description: "Afrika Haberleri için ücretsiz hesap oluşturun.",
-  alternates: { canonical: "/kayit" },
+  robots: { index: false, follow: false },
 };
 
 export default function KayitPage() {

@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /panel
+Disallow: /arama
 
 Sitemap: https://www.afrikahaberleri.tr/sitemap.xml
+Sitemap: https://www.afrikahaberleri.tr/news-sitemap.xml

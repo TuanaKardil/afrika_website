@@ -5,7 +5,7 @@ import LoginForm from "@/components/auth/LoginForm";
 export const metadata: Metadata = {
   title: "Giriş Yap",
   description: "Afrika Haberleri hesabınıza giriş yapın.",
-  alternates: { canonical: "/giris" },
+  robots: { index: false, follow: false },
 };
 
 interface GirisPageProps {
