@@ -50,6 +50,10 @@ export function pageOpenGraph(url: string): Metadata["openGraph"] {
     siteName: "Afrika Haberleri",
     locale: "tr_TR",
     url,
+    // Restating openGraph drops the inherited file-convention og:image, so the
+    // site-wide share card must be pointed at explicitly (served statically at
+    // /opengraph-image.png). Twitter falls back to this via summary_large_image.
+    images: [{ url: `${SITE_URL}/opengraph-image.png`, width: 1200, height: 630, type: "image/png" }],
   };
 }
 
