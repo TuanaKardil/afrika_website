@@ -197,14 +197,20 @@ class ScorePipeline:
 
 
 class MinContentPipeline:
-    """Drop articles whose original content is too short (< 80 English words).
+    """Drop articles whose original content is too short (< 100 English words).
 
     Runs after ScorePipeline so only scored-5+ items reach this check, and
     before TranslationPipeline so we do not waste AI translation cost on
     stub or paywalled articles.
+
+    Threshold is 100 (raised from 80): Reuters/agency wire stubs and teasers
+    top out around 90-96 source words and produce thin, structure-less articles
+    that can't carry the mandatory AEO H2s (QualityCheckPipeline would drop them
+    post-translation anyway). Blocking them here is the cheaper, earlier gate.
+    Substantive news runs 200+ words, so this does not touch real articles.
     """
 
-    _THRESHOLD = 80
+    _THRESHOLD = 100
 
     def process_item(self, item, spider):
         source_url = item.get("source_url", "")
