@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import ReactDOM from "react-dom";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { sanitizeArticleContent } from "@/lib/sanitize";
@@ -64,6 +65,11 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   const safeContent = sanitizeArticleContent(post.content);
   const postUrl = `${SITE_URL}/blog/${params.slug}`;
 
+  // LCP: preload the hero image (pairs with fetchPriority="high" on the <img>).
+  if (post.featured_image_url) {
+    ReactDOM.preload(post.featured_image_url, { as: "image", fetchPriority: "high" });
+  }
+
   const blogPostingSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -105,7 +111,17 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
         {post.featured_image_url && (
           <figure className="mb-8">
-            <img src={post.featured_image_url} alt="" className="w-full rounded-xl object-cover max-h-96" />
+            <div className="relative aspect-video overflow-hidden rounded-xl">
+              <img
+                src={post.featured_image_url}
+                alt=""
+                width={1600}
+                height={900}
+                fetchPriority="high"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
           </figure>
         )}
 

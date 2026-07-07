@@ -33,6 +33,8 @@ export default function SimilarArticlesPanel({ articles }: SimilarArticlesPanelP
                   <img
                     src={article.featured_image_url}
                     alt={article.image_alt_tr ?? article.title_tr ?? ""}
+                    width={300}
+                    height={130}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200"

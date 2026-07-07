@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ReactDOM from "react-dom";
 import { notFound } from "next/navigation";
 import { getAllSlugs, getArticleBySlug, getSimilarArticles } from "@/lib/queries/articles";
 import { sanitizeArticleContent } from "@/lib/sanitize";
@@ -92,6 +93,15 @@ export default async function HaberPage({ params }: HaberPageProps) {
     : null;
 
   const articleUrl = `${SITE_URL}/haber/${params.slug}`;
+
+  // LCP: preload the featured (hero) image so it starts downloading before
+  // the browser parses the <img> in the body. Pairs with fetchPriority="high".
+  if (article.featured_image_url) {
+    ReactDOM.preload(article.featured_image_url, {
+      as: "image",
+      fetchPriority: "high",
+    });
+  }
 
   const { dateModified, isUpdated } = resolveModifiedDate(
     article.published_at,
@@ -240,6 +250,8 @@ export default async function HaberPage({ params }: HaberPageProps) {
                 <img
                   src={article.featured_image_url}
                   alt={article.image_alt_tr ?? ""}
+                  width={1600}
+                  height={900}
                   fetchPriority="high"
                   decoding="async"
                   className="absolute inset-0 w-full h-full object-cover"

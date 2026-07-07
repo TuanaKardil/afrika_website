@@ -19,6 +19,8 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           <img
             src={article.featured_image_url}
             alt={article.image_alt_tr ?? article.title_tr ?? ""}
+            width={1600}
+            height={1000}
             loading="lazy"
             decoding="async"
             className="absolute inset-0 w-full h-full object-cover"

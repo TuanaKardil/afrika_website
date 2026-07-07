@@ -49,7 +49,7 @@ export default async function BlogPage() {
             <article key={p.id} className="flex gap-6 border-b border-gray-100 pb-8">
               {p.featured_image_url && (
                 <Link href={`/blog/${p.slug}`} className="flex-shrink-0">
-                  <img src={p.featured_image_url} alt="" className="w-40 h-28 object-cover rounded-lg" />
+                  <img src={p.featured_image_url} alt="" width={160} height={112} loading="lazy" decoding="async" className="w-40 h-28 object-cover rounded-lg" />
                 </Link>
               )}
               <div className="flex-1 min-w-0">

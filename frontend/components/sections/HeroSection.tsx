@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom";
 import Link from "next/link";
 import type { Article } from "@/lib/queries/articles";
 import { formatDateShort } from "@/lib/utils";
@@ -17,6 +18,11 @@ export default function HeroSection({
   const href = `/haber/${article.slug}`;
   const category = resolveCategory(article.nav_tab_slug, article.sector_slugs ?? [], article.hashtags);
 
+  // LCP: preload the homepage lead image (pairs with fetchPriority="high").
+  if (article.featured_image_url) {
+    ReactDOM.preload(article.featured_image_url, { as: "image", fetchPriority: "high" });
+  }
+
   return (
     <section className="bg-white pt-4 md:pt-6">
       <div className="max-w-container mx-auto px-4 md:px-6">
@@ -33,6 +39,8 @@ export default function HeroSection({
               <img
                 src={article.featured_image_url}
                 alt={article.image_alt_tr ?? article.title_tr ?? ""}
+                width={1200}
+                height={1500}
                 fetchPriority="high"
                 decoding="async"
                 className="absolute inset-0 w-full h-full object-cover"
@@ -73,6 +81,8 @@ export default function HeroSection({
                     <img
                       src={sec.featured_image_url}
                       alt={sec.image_alt_tr ?? sec.title_tr ?? ""}
+                      width={1200}
+                      height={900}
                       loading="lazy"
                       decoding="async"
                       className="absolute inset-0 w-full h-full object-cover"
