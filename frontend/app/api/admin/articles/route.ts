@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
+import { pingIndexNow } from "@/lib/indexnow";
 
 function adminSupabase() {
   return createClient<Database>(
@@ -84,13 +85,24 @@ export async function PATCH(request: NextRequest) {
   // Content edits refresh the modification signal (JSON-LD dateModified,
   // sitemap lastmod). Visibility toggles alone do not count as an edit.
   const contentFields = ["title_tr", "excerpt_tr", "content_tr", "meta_description_tr", "featured_image_url"];
-  if (Object.keys(filtered).some((k) => contentFields.includes(k))) {
+  const contentChanged = Object.keys(filtered).some((k) => contentFields.includes(k));
+  if (contentChanged) {
     filtered.updated_at = new Date().toISOString();
   }
 
   const db = adminSupabase();
-  const { error } = await db.from("articles").update(filtered).eq("id", id);
+  const { data, error } = await db
+    .from("articles")
+    .update(filtered)
+    .eq("id", id)
+    .select("slug, is_suppressed")
+    .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Notify IndexNow when the reader-visible content of a live article changed.
+  if (contentChanged && data && !data.is_suppressed && data.slug) {
+    await pingIndexNow([`/haber/${data.slug}`]);
+  }
 
   return NextResponse.json({ ok: true });
 }

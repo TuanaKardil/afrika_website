@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
+import { pingIndexNow } from "@/lib/indexnow";
 
 function adminSupabase() {
   return createClient<Database>(
@@ -79,6 +80,11 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Announce newly published posts to IndexNow (drafts stay private).
+  if (status === "published" && data?.slug) {
+    await pingIndexNow([`/blog/${data.slug}`]);
+  }
   return NextResponse.json({ post: data });
 }
 
@@ -103,8 +109,18 @@ export async function PATCH(request: NextRequest) {
   updates.updated_at = new Date().toISOString();
 
   const db = adminSupabase();
-  const { error } = await db.from("blog_posts").update(updates).eq("id", id);
+  const { data, error } = await db
+    .from("blog_posts")
+    .update(updates)
+    .eq("id", id)
+    .select("slug, status")
+    .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Announce the post to IndexNow whenever it is (or stays) published.
+  if (data?.status === "published" && data.slug) {
+    await pingIndexNow([`/blog/${data.slug}`]);
+  }
   return NextResponse.json({ ok: true });
 }
 
