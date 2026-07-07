@@ -520,6 +520,123 @@ def generate_meta_description(title_tr: str, content_tr: str) -> str | None:
     return result
 
 
+def _load_add_h2_prompt() -> str:
+    """Load the H2-remediation system prompt from prompts/add_h2.md."""
+    import pathlib
+    prompt_path = pathlib.Path(__file__).parent.parent.parent / "prompts" / "add_h2.md"
+    try:
+        text = prompt_path.read_text(encoding="utf-8")
+    except OSError:
+        return (
+            "Insert 2-3 question-format Turkish <h2> headings into the article "
+            "body below at natural section boundaries. Do NOT change, shorten, or "
+            "reorder any existing text. Return only the HTML body."
+        )
+    marker = "## System Prompt"
+    if marker in text:
+        text = text.split(marker, 1)[1]
+    return text.strip()
+
+
+_ADD_H2_SYSTEM: str | None = None
+
+
+def _parse_h2_plan(raw: str) -> list[dict[str, Any]]:
+    """Extract the [{"before": int, "h2": str}, ...] plan from a model reply."""
+    import json
+    text = raw.strip()
+    text = re.sub(r"^```[a-zA-Z]*\n?", "", text)
+    text = re.sub(r"\n?```$", "", text).strip()
+    start, end = text.find("["), text.rfind("]")
+    if start == -1 or end == -1 or end < start:
+        return []
+    try:
+        data = json.loads(text[start : end + 1])
+    except (ValueError, TypeError):
+        return []
+    plan = []
+    for entry in data if isinstance(data, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        before, h2 = entry.get("before"), entry.get("h2")
+        if isinstance(before, int) and isinstance(h2, str) and h2.strip():
+            plan.append({"before": before, "h2": h2.strip()})
+    return plan
+
+
+def add_h2_headings(title_tr: str, content_tr: str) -> str | None:
+    """Insert question-format <h2> headings into a body that lacks them.
+
+    Used by QualityCheckPipeline to enforce the mandatory H2/AEO structure. The
+    model only proposes headings and insertion points (JSON); the body text is
+    never sent back through it, so content is preserved by construction. The
+    <h2> tags are spliced in programmatically. Returns HTML containing at least
+    one <h2>, or None if no valid heading could be placed (caller then drops the
+    article so nothing publishes without an H2).
+    """
+    global _ADD_H2_SYSTEM
+    if _ADD_H2_SYSTEM is None:
+        _ADD_H2_SYSTEM = _load_add_h2_prompt()
+
+    if not content_tr:
+        return None
+
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(content_tr, "html.parser")
+    # Anchor on <p> paragraphs at any depth (some bodies are wrapped in stray
+    # <html>/<div>), matching the "paragraphs" the model reasons about.
+    blocks = soup.find_all("p")
+    # Need at least intro + one middle + closing to have a legal slot.
+    if len(blocks) < 3:
+        return None
+
+    numbered = "\n".join(
+        f"{i + 1}. {b.get_text(' ', strip=True)[:200]}" for i, b in enumerate(blocks)
+    )
+    user_message = f"Title (Turkish): {title_tr}\n\nParagraphs:\n{numbered}"
+
+    # Valid slots: after the intro, before the closing paragraph. Clamp slightly
+    # off positions into range rather than dropping the heading. One per spot.
+    # Retry once on an empty/garbled plan (the model is occasionally flaky).
+    used_positions: set[int] = set()
+    inserted = 0
+    for attempt in range(2):
+        raw = chat(
+            [{"role": "user", "content": user_message}],
+            model=GEMINI_FLASH_LITE,
+            system=_ADD_H2_SYSTEM,
+            temperature=0.2 if attempt == 0 else 0.4,
+            max_tokens=800,
+        )
+        for entry in sorted(_parse_h2_plan(raw or ""), key=lambda e: e["before"]):
+            before = max(2, min(entry["before"], len(blocks) - 1))
+            if before in used_positions:
+                continue
+            heading = postprocess(_strip_em_dashes(entry["h2"])).strip(" ?") + "?"
+            h2 = soup.new_tag("h2")
+            h2.string = heading
+            blocks[before - 1].insert_before(h2)
+            used_positions.add(before)
+            inserted += 1
+            if inserted >= 3:
+                break
+        if inserted > 0:
+            break
+
+    if inserted == 0:
+        logger.warning("add_h2_headings: model proposed no valid heading positions")
+        return None
+
+    result_html = str(soup)
+    # Reserialization safety: no existing content tag may be lost.
+    for tag in ("<p", "<a", "<img", "<li", "<ul", "<ol", "<blockquote", "<figure"):
+        if content_tr.count(tag) > result_html.count(tag):
+            logger.warning("add_h2_headings: '%s' tag count dropped, discarding", tag)
+            return None
+
+    return result_html
+
+
 def translate_articles(articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Translate a list of article dicts. Returns the same list with
     title_tr, excerpt_tr, content_tr populated. Articles whose content_hash

@@ -304,11 +304,15 @@ _TRUNCATED_LIST_RE = re.compile(
 
 
 class QualityCheckPipeline:
-    """Post-translation quality checks that drop or warn on bad output.
+    """Post-translation quality checks that drop or repair bad output.
 
     1. Truncated list articles — content ends with "şunlardır:" meaning the
        list/table data was not scraped (JS-rendered or paywalled). Drop these.
-    2. Missing H2 heading — log a warning so the issue is trackable.
+    2. Missing H2 heading — MANDATORY for the AEO strategy (question-format H2s
+       are the foundation of AI Overview / featured-snippet eligibility). If the
+       translation ignored the H2 rule, remediate with a targeted AI call; if
+       that still yields no <h2>, drop the article so nothing publishes without
+       one. A dropped item is re-attempted on the next scrape run.
     """
 
     def process_item(self, item, spider):
@@ -324,8 +328,18 @@ class QualityCheckPipeline:
             _stats_inc(item.get("source", ""), "dropped_low_score")
             raise DropItem(f"Truncated list (no table data scraped): {source_url}")
 
-        if not re.search(r'<h[23]', content_tr, re.I):
-            logger.warning("Article published without H2/H3 heading: %s", item.get("source_url", ""))
+        if not re.search(r'<h2[ >]', content_tr, re.I):
+            source_url = item.get("source_url", "")
+            logger.warning("Missing <h2>; attempting AEO remediation: %s", source_url)
+            from scraper.translate import add_h2_headings
+            fixed = add_h2_headings(item.get("title_tr") or "", content_tr)
+            if fixed and re.search(r'<h2[ >]', fixed, re.I):
+                item["content_tr"] = fixed
+                logger.info("H2 remediation applied: %s", source_url)
+            else:
+                logger.warning("H2 remediation failed; dropping article: %s", source_url)
+                _stats_inc(item.get("source", ""), "dropped_low_score")
+                raise DropItem(f"No <h2> after remediation (AEO structure required): {source_url}")
 
         return item
 

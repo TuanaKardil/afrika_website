@@ -36,7 +36,7 @@ Runs twice daily. The 13:00 run picks up articles published after the morning ru
 +00:15         MinContentPipeline     (drops articles < 80 words in content_original)
 +00:18         TranslatePipeline      (only score 6+, 600 words, SEO+GEO+AEO, human-readable source names)
 +00:22         ContentCleanPipeline   (Gemini 2.5 Flash-Lite, removes off-topic promos + datelines from content_tr)
-+00:24         QualityCheckPipeline   (drops truncated list articles ending with "şunlardır:"; warns on missing H2)
++00:24         QualityCheckPipeline   (drops truncated list articles ending with "şunlardır:"; enforces H2: remediate via AI, else drop)
 +00:25         ClassifyPipeline       (nav_tab + sector + region JSON)
 +00:28         HashtagsPipeline       (8-15 hashtags from canonical list)
 +00:30         Written to Supabase + scrape_stats row upserted (run_slot: sabah | oglen)
@@ -158,6 +158,8 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 |------|---------|
 | `prompts/translate.md` | Translation prompt (journalistic Turkish, HTML preservation, strips wire service datelines) |
 | `prompts/clean.md` | Content cleaning prompt (removes off-topic promos + wire service datelines from translated body) |
+| `prompts/add_h2.md` | H2-remediation prompt. Input: title + numbered paragraph list. Output: JSON `[{before, h2}]` — 2-3 question-format headings + 1-based paragraph position. The model never sees/returns the body, so content is preserved. Used by `add_h2_headings()` (see H2 enforcement in §15). |
+| `scraper/backfill_add_h2.py` | Idempotent backfill adding `<h2>` to score-6+ articles lacking them. `python backfill_add_h2.py [--dry-run] [--limit N] [--workers N]`. Updates `content_tr` only (never `updated_at`). |
 | `prompts/turkey_filter.md` | Negative Turkey framing detection (SUPPRESS/PUBLISH) |
 | `prompts/classify.md` | nav_tab + sector + region JSON classification |
 | `prompts/hashtags.md` | 8-15 hashtag assignment rules |
@@ -254,7 +256,7 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 | **Untranslated English content** | `_is_english()` in `TranslatePipeline` raises `DropItem` when translated output is still predominantly English (stopword ratio > 8%). |
 | **Thin/paywalled articles** | `MinContentPipeline` (priority 175, between Score and Translation) drops articles with fewer than 80 words in `content_original`. Catches CNBC Africa paywall stubs. |
 | **CNBC Africa body extraction** | Spider now tries `div.article-body`, `div.post-content`, `div.entry-content`, `article p` selectors before falling back to `og:description`. |
-| **Missing H2 headings** | `translate.md` H2/H3 rule marked MANDATORY. `QualityCheckPipeline` (priority 235) logs a warning when published article has no `<h2>`. |
+| **Missing H2 headings (ENFORCED)** | `translate.md` H2 rule is MANDATORY, but ~50% of the corpus slipped through when it only logged a warning. Now `QualityCheckPipeline` (priority 235) hard-enforces: if `content_tr` has no `<h2>`, it calls `translate.add_h2_headings()` (prompt `prompts/add_h2.md`) — the model returns ONLY 2-3 question-format headings + insertion points as JSON and the `<h2>` tags are spliced in programmatically (body text never round-trips through the model, so it is preserved exactly; retries once, guards word/tag counts). If no `<h2>` can be placed the article is dropped (re-attempted next run). Backfill for legacy rows: `scraper/backfill_add_h2.py` (idempotent; only rows with no `<h2>`; does NOT bump `updated_at` per rule 17). Multi-paragraph articles remediate ~100%; genuine 1-2 paragraph stubs can't take a mid-body H2 and are left/dropped. |
 | **Truncated list articles** | `QualityCheckPipeline` drops articles whose translated body ends with "şunlardır:" — these are JS-rendered list/table pages that Scrapy cannot access. |
 | **Raw source key in source-link** | `translate.py` `_SOURCE_LABELS` map converts raw keys (`business_insider`, `cnbc_africa`, etc.) to display names before passing to translate prompt. Prevents "Kaynak: business_insider" in article bodies. |
 | **Table rendering in articles** | `sanitize-html` ALLOWED_TAGS in `frontend/lib/sanitize.ts` was missing `table`, `thead`, `tbody`, `tr`, `th`, `td`. Added. Navy/white table styles added to `globals.css`. |
