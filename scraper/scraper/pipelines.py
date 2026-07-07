@@ -26,6 +26,7 @@ def _stats_inc(source: str, field: str, value: int = 1) -> None:
             "total_scraped": 0,
             "dropped_duplicate": 0,
             "dropped_low_score": 0,
+            "dropped_min_content": 0,
             "dropped_turkey_filter": 0,
             "published": 0,
             "scores": [],
@@ -221,7 +222,7 @@ class MinContentPipeline:
             logger.warning(
                 "Dropping thin content (%d words): %s", word_count, source_url
             )
-            _stats_inc(item.get("source", ""), "dropped_low_score")
+            _stats_inc(item.get("source", ""), "dropped_min_content")
             raise DropItem(
                 f"Thin content ({word_count} words < {self._THRESHOLD}): {source_url}"
             )
@@ -664,6 +665,7 @@ class StoragePipeline:
                 "total_scraped": counts["total_scraped"],
                 "dropped_duplicate": counts["dropped_duplicate"],
                 "dropped_low_score": counts["dropped_low_score"],
+                "dropped_min_content": counts["dropped_min_content"],
                 "dropped_turkey_filter": counts["dropped_turkey_filter"],
                 "published": counts["published"],
                 "avg_score": avg_score,

@@ -218,7 +218,7 @@ Notes: telecom/fintech → teknoloji-yazilim; pharma/medical → saglik-saglik-t
 
 After each pipeline run, `StoragePipeline.close_spider` writes per-source stats to the `scrape_stats` Supabase table. A separate n8n workflow queries this table and emails an HTML report.
 
-**`scrape_stats` table columns:** `run_date`, `source`, `run_slot` (`sabah` | `oglen`), `total_scraped`, `dropped_duplicate`, `dropped_low_score`, `dropped_turkey_filter`, `published`, `avg_score`
+**`scrape_stats` table columns:** `run_date`, `source`, `run_slot` (`sabah` | `oglen`), `total_scraped`, `dropped_duplicate`, `dropped_low_score`, `dropped_min_content` (MinContentPipeline thin-content drops, migration 030), `dropped_turkey_filter`, `published`, `avg_score`
 
 **Unique constraint:** `(run_date, source, run_slot)` — one row per source per run per day.
 
@@ -237,7 +237,7 @@ After each pipeline run, `StoragePipeline.close_spider` writes per-source stats 
 | **Search: sector + hashtag suggestions** | `search-suggest` API now returns `SuggestItem[]` with `type: "sector" \| "hashtag" \| "article"`. Sectors from DB, hashtags via `search_hashtags` RPC (migration 025/026). Categories appear first in dropdown with amber icon. |
 | **Search hashtags RPC fixed** | Migration 026 fixes `search_hashtags` to use `unnest` correctly — returns only hashtags that match the query, not all tags from matching articles. |
 | **Dashboard: top scored this week** | Admin dashboard shows top 10 highest-scored articles from last 7 days (rolling window). Score-colored badge (green ≥9, amber ≥7). |
-| **Dashboard: scrape stats expanded** | Scrape stats table now shows `dropped_duplicate`, `dropped_low_score` (red), `dropped_turkey_filter` columns in addition to existing fields. |
+| **Dashboard: scrape stats expanded** | Scrape stats table now shows `dropped_duplicate`, `dropped_low_score` (red), `dropped_min_content` ("Az Kelime", amber — thin-content drops), `dropped_turkey_filter` columns in addition to existing fields. |
 | **Meta descriptions pipeline** | `MetaDescriptionPipeline` (priority 260) generates 140-160 char Turkish meta descriptions via Gemini 2.5 Flash-Lite. Stored in `meta_description_tr` column (migration 023). Backfill script updated 520/526 existing articles. |
 | **Security hardening** | Migration 027: dropped `temp_anon_insert_seeding` policy (allowed anonymous article inserts); enabled RLS on `video_log`; fixed `search_path` on all SQL functions; switched `search_articles_v2`, `count_search_articles_v2`, `search_hashtags` from SECURITY DEFINER to SECURITY INVOKER. |
 | **KVKK / Çerez pages** | `/kvkk` and `/cerez-politikasi` static pages added. |

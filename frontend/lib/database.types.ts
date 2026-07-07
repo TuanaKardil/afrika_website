@@ -177,6 +177,7 @@ export type Database = {
           total_scraped: number
           dropped_duplicate: number
           dropped_low_score: number
+          dropped_min_content: number
           dropped_turkey_filter: number
           published: number
           avg_score: number | null
@@ -190,6 +191,7 @@ export type Database = {
           total_scraped?: number
           dropped_duplicate?: number
           dropped_low_score?: number
+          dropped_min_content?: number
           dropped_turkey_filter?: number
           published?: number
           avg_score?: number | null
@@ -203,6 +205,7 @@ export type Database = {
           total_scraped?: number
           dropped_duplicate?: number
           dropped_low_score?: number
+          dropped_min_content?: number
           dropped_turkey_filter?: number
           published?: number
           avg_score?: number | null

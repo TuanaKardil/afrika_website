@@ -30,6 +30,7 @@ interface ScrapeStatRow {
   total_scraped: number;
   dropped_duplicate: number;
   dropped_low_score: number;
+  dropped_min_content: number;
   dropped_turkey_filter: number;
   published: number;
   avg_score: number | null;
@@ -173,6 +174,7 @@ export default async function AdminDashboard() {
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Çekilen</th>
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Duplikat</th>
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Düşük Skor</th>
+                <th className="text-right px-6 py-3 text-gray-500 font-medium">Az Kelime</th>
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Türkiye Filtresi</th>
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Yayınlanan</th>
                 <th className="text-right px-6 py-3 text-gray-500 font-medium">Ort. Skor</th>
@@ -191,6 +193,7 @@ export default async function AdminDashboard() {
                   <td className="px-6 py-3 text-right text-gray-300">{s.total_scraped}</td>
                   <td className="px-6 py-3 text-right text-gray-500">{s.dropped_duplicate ?? 0}</td>
                   <td className="px-6 py-3 text-right text-red-400">{s.dropped_low_score ?? 0}</td>
+                  <td className="px-6 py-3 text-right text-amber-400">{s.dropped_min_content ?? 0}</td>
                   <td className="px-6 py-3 text-right text-gray-500">{s.dropped_turkey_filter ?? 0}</td>
                   <td className="px-6 py-3 text-right text-green-400 font-medium">{s.published}</td>
                   <td className="px-6 py-3 text-right text-gray-300">{s.avg_score?.toFixed(1) ?? "-"}</td>
