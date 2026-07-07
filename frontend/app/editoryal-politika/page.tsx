@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { canonicalMeta } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Editoryal Politika",
   description:
     "Afrika Haberleri editoryal standartları, içerik seçim kriterleri ve düzeltme politikası hakkında bilgi edinin.",
-  alternates: { canonical: "/editoryal-politika" },
+  ...canonicalMeta("/editoryal-politika"),
 };
 
 export default function EditoryelPolitikaPage() {

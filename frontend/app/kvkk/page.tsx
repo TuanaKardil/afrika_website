@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { canonicalMeta } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "KVKK Aydınlatma Metni",
   description:
     "Afrika Haberleri kişisel verilerin korunması kanunu kapsamında aydınlatma metni.",
-  alternates: { canonical: "/kvkk" },
+  ...canonicalMeta("/kvkk"),
 };
 
 export default function KvkkPage() {

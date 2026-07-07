@@ -5,7 +5,7 @@ import {
   getArticlesByCountry,
   COUNTRY_SLUG_TO_HASHTAG,
 } from "@/lib/queries/articles";
-import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
@@ -19,24 +19,20 @@ export async function generateMetadata({
   const slug = searchParams.ulke;
   const hashtag = slug ? COUNTRY_SLUG_TO_HASHTAG[slug] : null;
   const page = parsePageParam(searchParams.sayfa);
-  const alternates = {
-    canonical: buildCanonical("/ulkeler", {
-      ulke: hashtag ? slug : null,
-      sayfa: String(page),
-    }),
-  };
+  const seo = canonicalMeta("/ulkeler", {
+    ulke: hashtag ? slug : null,
+    sayfa: String(page),
+  });
   if (hashtag) {
     return {
       title: titleWithPage(`Son Dakika ${hashtag} Haberleri`, page),
       description: `${hashtag} ile ilgili güncel Afrika haberleri. Ekonomi, ticaret ve yatırım gelişmeleri.`,
-      alternates,
-    };
+      ...seo,    };
   }
   return {
     title: titleWithPage("Afrika Ülke Haberleri", page),
     description: "Afrika ülkelerinden son dakika haberleri. Ülke bazında ekonomi, ticaret ve siyasi gelişmeleri takip edin.",
-    alternates,
-  };
+    ...seo,  };
 }
 
 export default async function UlkelerPage({ searchParams }: UlkelerPageProps) {

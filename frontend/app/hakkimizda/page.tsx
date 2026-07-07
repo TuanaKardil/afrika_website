@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { canonicalMeta } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Hakkımızda",
   description:
     "Afrika Haberleri, Türk iş dünyası için Afrika kıtasından derlenen güncel ekonomi, ticaret ve yatırım haberlerini Türkçe olarak sunan bir yayın platformudur.",
-  alternates: { canonical: "/hakkimizda" },
+  ...canonicalMeta("/hakkimizda"),
 };
 
 export default function HakkimizdaPage() {

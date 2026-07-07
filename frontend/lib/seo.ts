@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 type CanonicalParams = Record<string, string | null | undefined>;
 
 const SITE_URL = "https://www.afrikahaberleri.tr";
@@ -30,6 +32,33 @@ export function buildCanonical(path: string, params: CanonicalParams = {}): stri
 
 export function titleWithPage(title: string, page: number): string {
   return page > 1 ? `${title} | Sayfa ${page}` : title;
+}
+
+/**
+ * Canonical + matching og:url in one shot for standard "website" pages.
+ *
+ * Child openGraph replaces the root layout's wholesale in Next, so a page that
+ * only wants a correct og:url must still restate type/siteName/locale here.
+ * Without this, listing/static pages inherit the root `url: "/"` and every one
+ * of them reports og:url as the homepage. Images are intentionally omitted so
+ * the file-convention `app/opengraph-image.png` fallback still applies. Do NOT
+ * use this on pages that need a richer OG object (articles/blog set their own).
+ */
+export function pageOpenGraph(url: string): Metadata["openGraph"] {
+  return {
+    type: "website",
+    siteName: "Afrika Haberleri",
+    locale: "tr_TR",
+    url,
+  };
+}
+
+export function canonicalMeta(
+  path: string,
+  params: CanonicalParams = {}
+): Pick<Metadata, "alternates" | "openGraph"> {
+  const canonical = buildCanonical(path, params);
+  return { alternates: { canonical }, openGraph: pageOpenGraph(canonical) };
 }
 
 const MODIFIED_EPSILON_MS = 10 * 60 * 1000;

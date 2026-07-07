@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import { canonicalMeta } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const revalidate = 1800;
@@ -7,7 +8,7 @@ export const revalidate = 1800;
 export const metadata: Metadata = {
   title: "Blog",
   description: "Afrika iş dünyası, ekonomi ve güncel gelişmeler hakkında analizler ve yazılar.",
-  alternates: { canonical: "/blog" },
+  ...canonicalMeta("/blog"),
 };
 
 interface BlogPost {

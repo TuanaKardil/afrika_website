@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { canonicalMeta } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Çerez Politikası",
   description: "Afrika Haberleri çerez kullanım politikası hakkında bilgi edinin.",
-  alternates: { canonical: "/cerez-politikasi" },
+  ...canonicalMeta("/cerez-politikasi"),
 };
 
 export default function CerezPolitikasiPage() {

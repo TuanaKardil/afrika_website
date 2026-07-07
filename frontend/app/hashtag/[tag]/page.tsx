@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticlesByHashtag } from "@/lib/queries/articles";
-import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleCard from "@/components/ui/ArticleCard";
 import Pagination from "@/components/sections/Pagination";
 
@@ -18,9 +18,7 @@ export async function generateMetadata({ params, searchParams }: HashtagPageProp
   return {
     title: titleWithPage(`#${tag} Haberleri`, page),
     description: `${tag} etiketiyle ilgili Afrika haberleri`,
-    alternates: {
-      canonical: buildCanonical(`/hashtag/${encodeURIComponent(tag)}`, { sayfa: String(page) }),
-    },
+    ...canonicalMeta(`/hashtag/${encodeURIComponent(tag)}`, { sayfa: String(page) }),
   };
 }
 

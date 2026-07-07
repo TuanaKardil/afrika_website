@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
-import { buildCanonical, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
@@ -13,7 +13,7 @@ export async function generateMetadata({ searchParams }: EtkinliklerFuarlarPageP
   return {
     title: titleWithPage("Etkinlikler & Fuarlar", page),
     description: "Afrika iş fuarları ve etkinlik haberleri.",
-    alternates: { canonical: buildCanonical("/etkinlikler-fuarlar", { sayfa: String(page) }) },
+    ...canonicalMeta("/etkinlikler-fuarlar", { sayfa: String(page) }),
   };
 }
 

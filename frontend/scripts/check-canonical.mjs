@@ -27,7 +27,10 @@ for (const file of findPages(appDir)) {
   if (SKIP_PREFIXES.some((p) => rel === `${p}/page.tsx` || rel.startsWith(`${p}/`))) continue;
 
   const src = readFileSync(file, "utf8");
-  const hasCanonical = /\bcanonical\b/.test(src) || /\bbuildCanonical\b/.test(src);
+  const hasCanonical =
+    /\bcanonical\b/.test(src) ||
+    /\bbuildCanonical\b/.test(src) ||
+    /\bcanonicalMeta\b/.test(src);
   const hasNoindex = /index:\s*false/.test(src);
   if (!hasCanonical && !hasNoindex) failures.push(rel);
 
