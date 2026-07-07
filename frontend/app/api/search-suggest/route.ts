@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createBuildClient } from "@/lib/supabase/server";
+import { MIN_PUBLISHED_SCORE } from "@/lib/constants";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       .from("articles")
       .select("title_tr, slug")
       .eq("is_suppressed", false)
-      .gte("score", 5)
+      .gte("score", MIN_PUBLISHED_SCORE)
       .or(filterExpr)
       .order("score", { ascending: false })
       .order("published_at", { ascending: false })

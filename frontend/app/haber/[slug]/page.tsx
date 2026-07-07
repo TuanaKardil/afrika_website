@@ -13,6 +13,7 @@ import SimilarArticlesPanel from "@/components/ui/SimilarArticlesPanel";
 import { formatDate } from "@/lib/utils";
 import { resolveCategory } from "@/lib/labels";
 import { resolveModifiedDate } from "@/lib/seo";
+import { MIN_PUBLISHED_SCORE } from "@/lib/constants";
 
 const SOURCE_LABELS: Record<string, string> = {
   business_insider: "Business Insider Africa",
@@ -76,7 +77,7 @@ const SITE_URL = "https://www.afrikahaberleri.tr";
 
 export default async function HaberPage({ params }: HaberPageProps) {
   const article = await getArticleBySlug(params.slug);
-  if (!article || !article.title_tr || article.is_suppressed || (article.score !== null && article.score < 4)) notFound();
+  if (!article || !article.title_tr || article.is_suppressed || article.score === null || article.score < MIN_PUBLISHED_SCORE) notFound();
 
   const [safeContent, similarArticles] = await Promise.all([
     Promise.resolve(sanitizeArticleContent(article.content_tr ?? "")),

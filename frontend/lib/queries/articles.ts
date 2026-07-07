@@ -1,6 +1,7 @@
 import { createBuildClient } from "@/lib/supabase/server";
 const createClient = createBuildClient;
 import type { Database } from "@/lib/database.types";
+import { MIN_PUBLISHED_SCORE } from "@/lib/constants";
 
 export type Article = Database["public"]["Tables"]["articles"]["Row"];
 
@@ -74,7 +75,7 @@ export async function getLatestArticles(
     .from("articles")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
@@ -96,7 +97,7 @@ export async function getTopScoredRecent(limit = 3): Promise<Article[]> {
     .from("articles")
     .select("*")
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .gte("published_at", since48h)
     .order("score", { ascending: false })
@@ -107,7 +108,7 @@ export async function getTopScoredRecent(limit = 3): Promise<Article[]> {
     .from("articles")
     .select("*")
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .limit(limit);
@@ -120,7 +121,7 @@ export async function getFeaturedArticle(): Promise<Article | null> {
     .from("articles")
     .select("*")
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .eq("is_featured", true)
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
@@ -132,7 +133,7 @@ export async function getFeaturedArticle(): Promise<Article | null> {
       .from("articles")
       .select("*")
       .eq("is_suppressed", false)
-      .gte("score", 5)
+      .gte("score", MIN_PUBLISHED_SCORE)
       .not("title_tr", "is", null)
       .order("published_at", { ascending: false })
       .limit(1)
@@ -164,7 +165,7 @@ export async function getArticlesByNavTab(
     .from("articles")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .eq("nav_tab_slug", navTabSlug)
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
@@ -184,7 +185,7 @@ export async function getArticlesBySector(
     .from("articles")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
@@ -213,7 +214,7 @@ export async function getArticlesByRegion(
     .from("articles")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
@@ -237,7 +238,7 @@ export async function getArticlesByCountry(
     .from("articles")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .contains("hashtags", [hashtagName])
     .order("published_at", { ascending: false })
@@ -251,7 +252,7 @@ export async function getTopArticles(limit = 5): Promise<Article[]> {
     .from("articles")
     .select("*")
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .order("view_count", { ascending: false, nullsFirst: false })
     .limit(limit);
@@ -270,7 +271,7 @@ export async function getFilteredArticles(
     .from("articles")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .order("published_at", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
@@ -298,7 +299,7 @@ export async function getArticlesByHashtag(
     .from("articles")
     .select("*", { count: "exact" })
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .contains("hashtags", [tag])
     .order("published_at", { ascending: false })
@@ -330,7 +331,7 @@ export async function getSimilarArticles(
     .from("articles")
     .select("*")
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
     .neq("id", articleId)
     .gte("published_at", sixtyDaysAgo.toISOString())
@@ -377,7 +378,7 @@ export async function getAllSlugs(): Promise<string[]> {
     .from("articles")
     .select("id, slug")
     .eq("is_suppressed", false)
-    .gte("score", 5)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .order("published_at", { ascending: false })
     .limit(1000);
   return (data ?? []).map((r) => (r as Article).slug);

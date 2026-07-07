@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createBuildClient } from "@/lib/supabase/server";
+import { MIN_PUBLISHED_SCORE } from "@/lib/constants";
 
 export const revalidate = 3600;
 
@@ -21,7 +22,7 @@ export async function GET() {
     .select("slug, title_tr, published_at")
     .eq("is_suppressed", false)
     .not("title_tr", "is", null)
-    .gte("score", 6)
+    .gte("score", MIN_PUBLISHED_SCORE)
     .gte("published_at", cutoff)
     .order("published_at", { ascending: false })
     .limit(1000);
