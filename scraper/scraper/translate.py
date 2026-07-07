@@ -564,6 +564,43 @@ def _parse_h2_plan(raw: str) -> list[dict[str, Any]]:
     return plan
 
 
+def _paragraphize(soup) -> None:
+    """Split a single wall-of-text <p> into several <p> in place.
+
+    Some early translations collapsed a substantial article into one giant
+    paragraph (no <p> breaks), which reads as a wall of text and leaves
+    add_h2_headings no anchors. This regroups the paragraph's sentences into
+    ~4-6 paragraphs. Content-safe: it only acts when there is exactly one long
+    content paragraph with NO inline markup, and never edits any word.
+    """
+    content_ps = [p for p in soup.find_all("p") if "source-link" not in (p.get("class") or [])]
+    if len(content_ps) != 1:
+        return
+    big = content_ps[0]
+    if big.find(True) is not None:  # has child tags (a/strong/em) — don't risk it
+        return
+    text = big.get_text().strip()
+    if len(text.split()) < 180:
+        return
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?…])\s+", text) if s.strip()]
+    if len(sentences) < 4:
+        return
+    per = max(3, -(-len(sentences) // 5))  # aim for ~5 paragraphs
+    paras, cur = [], []
+    for s in sentences:
+        cur.append(s)
+        if len(cur) >= per:
+            paras.append(" ".join(cur))
+            cur = []
+    if cur:
+        paras.append(" ".join(cur))
+    for p_text in paras:
+        p = soup.new_tag("p")
+        p.string = p_text
+        big.insert_before(p)
+    big.extract()
+
+
 def add_h2_headings(title_tr: str, content_tr: str) -> str | None:
     """Insert question-format <h2> headings into a body that lacks them.
 
@@ -583,9 +620,10 @@ def add_h2_headings(title_tr: str, content_tr: str) -> str | None:
 
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(content_tr, "html.parser")
-    # Anchor on <p> paragraphs at any depth (some bodies are wrapped in stray
-    # <html>/<div>), matching the "paragraphs" the model reasons about.
-    blocks = soup.find_all("p")
+    # Rescue wall-of-text bodies (one giant <p>) into real paragraphs first.
+    _paragraphize(soup)
+    # Anchor on content <p> paragraphs (exclude the trailing source-link).
+    blocks = [p for p in soup.find_all("p") if "source-link" not in (p.get("class") or [])]
     # Need at least intro + one middle + closing to have a legal slot.
     if len(blocks) < 3:
         return None
