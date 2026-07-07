@@ -52,9 +52,14 @@ def _remove_bbc_watermark(img: Image.Image) -> Image.Image:
 
 
 _MAX_IMAGE_WIDTH = 1200
+# Responsive WebP ladder. Variants are generated only at widths <= the source
+# width (never upscaled), so a small source simply yields fewer rungs.
+_VARIANT_TARGETS = (400, 800, 1200)
+_WEBP_QUALITY = 80
 
 
-def _to_jpeg_bytes(raw_bytes: bytes, source: str = "") -> bytes:
+def _process_image(raw_bytes: bytes, source: str = "") -> Image.Image:
+    """Decode, de-watermark (bbc) and cap to _MAX_IMAGE_WIDTH. RGB image."""
     buf = io.BytesIO(raw_bytes)
     img = Image.open(buf).convert("RGB")
     if source == "bbc":
@@ -62,8 +67,32 @@ def _to_jpeg_bytes(raw_bytes: bytes, source: str = "") -> bytes:
     if img.width > _MAX_IMAGE_WIDTH:
         new_height = int(img.height * _MAX_IMAGE_WIDTH / img.width)
         img = img.resize((_MAX_IMAGE_WIDTH, new_height), Image.LANCZOS)
+    return img
+
+
+def _jpeg_bytes(img: Image.Image) -> bytes:
     out = io.BytesIO()
     img.save(out, format="JPEG", quality=80, optimize=True)
+    return out.getvalue()
+
+
+def _to_jpeg_bytes(raw_bytes: bytes, source: str = "") -> bytes:
+    return _jpeg_bytes(_process_image(raw_bytes, source))
+
+
+def _variant_widths(src_width: int) -> list[int]:
+    """Ladder rungs <= source width, always including the (capped) source width."""
+    widths = {w for w in _VARIANT_TARGETS if w < src_width}
+    widths.add(min(src_width, _MAX_IMAGE_WIDTH))
+    return sorted(widths)
+
+
+def _webp_bytes(img: Image.Image, width: int) -> bytes:
+    if width < img.width:
+        height = max(1, round(img.height * width / img.width))
+        img = img.resize((width, height), Image.LANCZOS)
+    out = io.BytesIO()
+    img.save(out, format="WEBP", quality=_WEBP_QUALITY, method=6)
     return out.getvalue()
 
 
@@ -135,6 +164,74 @@ def upload_image(
     except Exception as exc:
         logger.error("Failed to upload image to Storage (path=%s): %s", path, exc)
         return None
+
+
+def _public_url(path: str) -> str:
+    return f"{os.environ['SUPABASE_URL']}/storage/v1/object/public/{_BUCKET}/{path}"
+
+
+def upload_featured_image(
+    image_url: str,
+    article_id: str,
+    source: str,
+    published_at: datetime,
+) -> tuple[str | None, str | None]:
+    """Like upload_image, but also generates responsive WebP variants.
+
+    Returns (jpeg_public_url, webp_srcset). The JPEG stays the src fallback;
+    the srcset string ("<url> 400w, <url> 800w, ...") is stored in
+    articles.image_srcset. Either element is None on the relevant failure;
+    a WebP failure never blocks the JPEG upload.
+    """
+    if not image_url:
+        return None, None
+
+    result = _download_image(image_url)
+    if result is None:
+        return None, None
+
+    raw_bytes, filename = result
+    stem = re.sub(r"\.[^.]+$", "", filename) or "image"
+
+    try:
+        img = _process_image(raw_bytes, source)
+        jpeg_bytes = _jpeg_bytes(img)
+    except Exception as exc:
+        logger.warning("Failed to process image for %s: %s", image_url, exc)
+        return None, None
+
+    sb = _get_supabase()
+
+    jpeg_path = _storage_path(source, published_at, article_id, f"{stem}.jpg")
+    try:
+        sb.storage.from_(_BUCKET).upload(
+            jpeg_path,
+            jpeg_bytes,
+            {"content-type": "image/jpeg", "upsert": "true", "cache-control": "public, max-age=31536000, immutable"},
+        )
+    except Exception as exc:
+        logger.error("Failed to upload JPEG to Storage (path=%s): %s", jpeg_path, exc)
+        return None, None
+
+    jpeg_url = _public_url(jpeg_path)
+
+    # Responsive WebP variants (best-effort; never blocks the JPEG result).
+    srcset_entries: list[str] = []
+    try:
+        for width in _variant_widths(img.width):
+            webp_path = _storage_path(source, published_at, article_id, f"{stem}-{width}.webp")
+            sb.storage.from_(_BUCKET).upload(
+                webp_path,
+                _webp_bytes(img, width),
+                {"content-type": "image/webp", "upsert": "true", "cache-control": "public, max-age=31536000, immutable"},
+            )
+            srcset_entries.append(f"{_public_url(webp_path)} {width}w")
+    except Exception as exc:
+        logger.warning("WebP variant generation failed for %s: %s", image_url, exc)
+        srcset_entries = []
+
+    srcset = ", ".join(srcset_entries) if srcset_entries else None
+    return jpeg_url, srcset
 
 
 def _image_fingerprint(img_bytes: bytes) -> str:

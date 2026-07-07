@@ -20,7 +20,12 @@ export default function HeroSection({
 
   // LCP: preload the homepage lead image (pairs with fetchPriority="high").
   if (article.featured_image_url) {
-    ReactDOM.preload(article.featured_image_url, { as: "image", fetchPriority: "high" });
+    ReactDOM.preload(article.featured_image_url, {
+      as: "image",
+      fetchPriority: "high",
+      imageSrcSet: article.image_srcset ?? undefined,
+      imageSizes: article.image_srcset ? "(min-width: 768px) 60vw, 100vw" : undefined,
+    });
   }
 
   return (
@@ -38,6 +43,8 @@ export default function HeroSection({
             {article.featured_image_url ? (
               <img
                 src={article.featured_image_url}
+                srcSet={article.image_srcset ?? undefined}
+                sizes="(min-width: 768px) 60vw, 100vw"
                 alt={article.image_alt_tr ?? article.title_tr ?? ""}
                 width={1200}
                 height={1500}
@@ -80,6 +87,8 @@ export default function HeroSection({
                   {sec.featured_image_url ? (
                     <img
                       src={sec.featured_image_url}
+                      srcSet={sec.image_srcset ?? undefined}
+                      sizes="(min-width: 768px) 20vw, 50vw"
                       alt={sec.image_alt_tr ?? sec.title_tr ?? ""}
                       width={1200}
                       height={900}

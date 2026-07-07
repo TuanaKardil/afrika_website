@@ -100,6 +100,8 @@ export default async function HaberPage({ params }: HaberPageProps) {
     ReactDOM.preload(article.featured_image_url, {
       as: "image",
       fetchPriority: "high",
+      imageSrcSet: article.image_srcset ?? undefined,
+      imageSizes: article.image_srcset ? "(min-width: 1024px) 760px, 100vw" : undefined,
     });
   }
 
@@ -249,6 +251,8 @@ export default async function HaberPage({ params }: HaberPageProps) {
               <div className="relative aspect-video rounded-sm overflow-hidden">
                 <img
                   src={article.featured_image_url}
+                  srcSet={article.image_srcset ?? undefined}
+                  sizes="(min-width: 1024px) 760px, 100vw"
                   alt={article.image_alt_tr ?? ""}
                   width={1600}
                   height={900}

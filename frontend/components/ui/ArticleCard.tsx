@@ -18,6 +18,8 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         {article.featured_image_url ? (
           <img
             src={article.featured_image_url}
+            srcSet={article.image_srcset ?? undefined}
+            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
             alt={article.image_alt_tr ?? article.title_tr ?? ""}
             width={1600}
             height={1000}

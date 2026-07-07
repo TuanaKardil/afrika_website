@@ -423,7 +423,7 @@ class StoragePipeline:
     def process_item(self, item, spider):
         from scraper.classify import classify_article
         from scraper.hashtags import assign_hashtags
-        from scraper.storage import upload_image, rewrite_image_srcs
+        from scraper.storage import upload_image, upload_featured_image, rewrite_image_srcs
 
         source = item.get("source", "")
         title = item.get("title_original", "")
@@ -452,8 +452,8 @@ class StoragePipeline:
 
         article_id = str(uuid.uuid4())
 
-        # Upload featured image
-        featured_image_url = upload_image(
+        # Upload featured image (+ responsive WebP variants → image_srcset)
+        featured_image_url, image_srcset = upload_featured_image(
             image_url=item.get("featured_image_source_url") or "",
             article_id=article_id,
             source=source,
@@ -470,7 +470,7 @@ class StoragePipeline:
                     exclude_urls=self._used_image_urls,
                 )
                 if fallback_url:
-                    featured_image_url = upload_image(
+                    featured_image_url, image_srcset = upload_featured_image(
                         image_url=fallback_url,
                         article_id=article_id,
                         source="pexels",
@@ -574,6 +574,7 @@ class StoragePipeline:
             "content_tr": item.get("content_tr"),
             "content_hash": content_hash,
             "featured_image_url": featured_image_url,
+            "image_srcset": image_srcset,
             "featured_image_source_url": item.get("featured_image_source_url"),
             "image_credit": item.get("image_credit"),
             "image_alt_tr": item.get("image_alt_tr") or item.get("title_tr"),

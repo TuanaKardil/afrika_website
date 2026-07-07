@@ -32,6 +32,8 @@ export default function SimilarArticlesPanel({ articles }: SimilarArticlesPanelP
                 {article.featured_image_url ? (
                   <img
                     src={article.featured_image_url}
+                    srcSet={article.image_srcset ?? undefined}
+                    sizes="(min-width: 1024px) 300px, 100vw"
                     alt={article.image_alt_tr ?? article.title_tr ?? ""}
                     width={300}
                     height={130}
