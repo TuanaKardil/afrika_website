@@ -116,12 +116,17 @@ export default async function HaberPage({ params }: HaberPageProps) {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     "headline": article.title_tr,
-    "description": article.excerpt_tr ?? article.excerpt_original ?? "",
+    // Same description as the <meta>/OG tags (meta_description_tr first) so the
+    // structured-data and head signals stay consistent.
+    "description": article.meta_description_tr ?? article.excerpt_tr ?? article.excerpt_original ?? "",
     "datePublished": article.published_at,
     "dateModified": dateModified,
     "inLanguage": "tr",
     "url": articleUrl,
     "mainEntityOfPage": { "@type": "WebPage", "@id": articleUrl },
+    ...(article.reading_time_minutes
+      ? { "timeRequired": `PT${article.reading_time_minutes}M` }
+      : {}),
     ...(article.featured_image_url ? {
       "image": {
         "@type": "ImageObject",

@@ -14,6 +14,7 @@ import { getArticlesBySector } from "@/lib/queries/articles";
 import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 
 interface SektorSlugPageProps {
   params: { slug: string };
@@ -52,6 +53,12 @@ export default async function SektorSlugPage({ params, searchParams }: SektorSlu
 
   return (
     <main className="container mx-auto px-4 py-8">
+      <Breadcrumb
+        items={[
+          { name: "Sektörler", href: "/sektorler" },
+          { name: sector.name_tr, href: `/sektorler/${params.slug}` },
+        ]}
+      />
       <header className="mb-6">
         <h1 className="font-headline text-3xl text-on-surface">
           Afrika&apos;da Son Dakika {sector.name_tr} Haberleri

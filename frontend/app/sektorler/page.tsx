@@ -4,6 +4,7 @@ import { getSectors } from "@/lib/queries/sectors";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
 import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import Pagination from "@/components/sections/Pagination";
 
 interface SektorlerPageProps {
@@ -26,6 +27,7 @@ export default async function SektorlerPage({ searchParams }: SektorlerPageProps
 
   return (
     <main className="container mx-auto px-4 py-8">
+      <Breadcrumb items={[{ name: "Sektörler", href: "/sektorler" }]} />
       <header className="mb-6">
         <h1 className="font-headline text-3xl text-on-surface">Sektörler</h1>
       </header>

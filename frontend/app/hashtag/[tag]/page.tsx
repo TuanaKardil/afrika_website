@@ -4,6 +4,7 @@ import { getArticlesByHashtag } from "@/lib/queries/articles";
 import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleCard from "@/components/ui/ArticleCard";
 import Pagination from "@/components/sections/Pagination";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 
 export const revalidate = 1800;
 
@@ -34,6 +35,7 @@ export default async function HashtagPage({ params, searchParams }: HashtagPageP
 
   return (
     <main className="max-w-container mx-auto px-4 md:px-6 py-8">
+      <Breadcrumb items={[{ name: `#${tag}`, href: `/hashtag/${encodeURIComponent(tag)}` }]} />
       <div className="border-t-2 border-primary mb-3" />
       <h1 className="font-headline text-2xl md:text-3xl font-black text-navy mb-1">
         #{tag}

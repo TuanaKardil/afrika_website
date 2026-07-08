@@ -5,6 +5,7 @@ import { getRegionBySlug, getRegions } from "@/lib/queries/regions";
 import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 
 interface BolgePageProps {
   params: { slug: string };
@@ -38,6 +39,7 @@ export default async function BolgePage({ params, searchParams }: BolgePageProps
 
   return (
     <main className="container mx-auto px-4 py-8">
+      <Breadcrumb items={[{ name: region.name_tr, href: `/bolge/${params.slug}` }]} />
       <header className="mb-6">
         <h1 className="font-headline text-3xl text-on-surface">
           Son Dakika {region.name_tr} Haberleri

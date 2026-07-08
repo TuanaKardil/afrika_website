@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { canonicalMeta } from "@/lib/seo";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import type { Metadata } from "next";
 
 export const revalidate = 1800;
@@ -39,6 +40,7 @@ export default async function BlogPage() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-12">
+      <Breadcrumb items={[{ name: "Blog", href: "/blog" }]} />
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Blog</h1>
       <p className="text-gray-500 mb-10 text-sm">Afrika iş dünyası ve ekonomisine dair analizler</p>
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
 import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import Pagination from "@/components/sections/Pagination";
 
 interface FirsatlarPageProps {
@@ -23,6 +24,7 @@ export default async function FirsatlarPage({ searchParams }: FirsatlarPageProps
 
   return (
     <main className="container mx-auto px-4 py-8">
+      <Breadcrumb items={[{ name: "Fırsatlar", href: "/firsatlar" }]} />
       <header className="mb-6">
         <h1 className="font-headline text-3xl text-on-surface">Fırsatlar</h1>
         {count > 0 && (

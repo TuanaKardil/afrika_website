@@ -7,6 +7,7 @@ import {
 } from "@/lib/queries/articles";
 import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import Pagination from "@/components/sections/Pagination";
 
 interface UlkelerPageProps {
@@ -49,6 +50,7 @@ export default async function UlkelerPage({ searchParams }: UlkelerPageProps) {
 
   return (
     <main className="max-w-container mx-auto px-6 py-8">
+      <Breadcrumb items={[{ name: "Ülkeler", href: "/ulkeler" }]} />
       <header className="mb-6">
         {hashtag && (
           <div className="mb-3">

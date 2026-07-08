@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { sanitizeArticleContent } from "@/lib/sanitize";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 
 export const revalidate = 1800;
 
@@ -100,6 +101,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
+      />
+      <Breadcrumb
+        items={[
+          { name: "Blog", href: "/blog" },
+          { name: post.title, href: `/blog/${params.slug}` },
+        ]}
       />
       <article>
         <header className="mb-8">

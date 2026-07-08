@@ -127,7 +127,11 @@ def main():
             sb.storage.from_(_BUCKET).update(
                 path,
                 resized_bytes,
-                {"content-type": "image/jpeg", "upsert": "true"},
+                {
+                    "content-type": "image/jpeg",
+                    "upsert": "true",
+                    "cache-control": "public, max-age=31536000, immutable",
+                },
             )
             logger.info("[%d/%d] Resized: %s | %dKB → %dKB (-%d%%)", i, len(articles), path[:60], orig_kb, new_kb, saving)
             resized += 1
