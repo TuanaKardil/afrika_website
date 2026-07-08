@@ -23,6 +23,16 @@ const SOURCE_LABELS: Record<string, string> = {
   the_conversation: "The Conversation",
 };
 
+// The source citation links to the outlet's homepage (brand attribution),
+// not the exact scraped article.
+const SOURCE_HOMEPAGES: Record<string, string> = {
+  business_insider: "https://africa.businessinsider.com",
+  cnbc_africa:      "https://www.cnbcafrica.com",
+  africa_report:    "https://www.theafricareport.com",
+  aa_africa:        "https://www.aa.com.tr",
+  the_conversation: "https://theconversation.com",
+};
+
 export const revalidate = 3600;
 
 interface HaberPageProps {
@@ -241,9 +251,9 @@ export default async function HaberPage({ params }: HaberPageProps) {
           {article.source && (
             <span className="ml-auto text-on-surface/40">
               Kaynak:{" "}
-              {article.source_url ? (
+              {SOURCE_HOMEPAGES[article.source] ? (
                 <a
-                  href={article.source_url}
+                  href={SOURCE_HOMEPAGES[article.source]}
                   target="_blank"
                   rel="noopener"
                   className="underline underline-offset-2 hover:text-primary transition-colors"

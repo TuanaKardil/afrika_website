@@ -319,10 +319,14 @@ def _parse_response(text: str, original: dict, source_url: str = "", source_name
     excerpt = postprocess(_strip_em_dashes(excerpt_raw or (original.get("excerpt_original") or "")))
     body = postprocess(_strip_em_dashes(body_raw or (original.get("content_original") or "")))
 
-    # Enforce source link at end with new <small><a> format
+    # Enforce source link at end with new <small><a> format. Point it at the
+    # outlet's homepage (origin), not the exact scraped article.
     if source_url and "Kaynak:" not in body:
         name = source_name or source_url
-        body = body.rstrip() + f'\n<p class="source-link"><small>Kaynak: <a href="{source_url}" target="_blank" rel="noopener">{name}</a></small></p>'
+        from urllib.parse import urlparse
+        parsed = urlparse(source_url)
+        homepage = f"{parsed.scheme}://{parsed.netloc}" if parsed.netloc else source_url
+        body = body.rstrip() + f'\n<p class="source-link"><small>Kaynak: <a href="{homepage}" target="_blank" rel="noopener">{name}</a></small></p>'
 
     body = _ensure_html_paragraphs(body)
     body = _summarize_if_needed(body)
