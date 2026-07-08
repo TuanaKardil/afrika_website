@@ -56,7 +56,8 @@ const SITE_URL = "https://www.afrikahaberleri.tr";
 
 // NewsMediaOrganization + WebSite schema live on the homepage only (Google's
 // recommended placement). No SearchAction: the sitelinks search box was
-// retired in November 2024. Add sameAs here when social profiles exist.
+// retired in November 2024. `sameAs` links the brand to its official social
+// profiles — add more URLs (X, Instagram, Facebook) here as accounts are created.
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "NewsMediaOrganization",
@@ -70,6 +71,7 @@ const organizationSchema = {
     "height": 512,
   },
   "email": "iletisim@afrikahaberleri.tr",
+  "sameAs": ["https://www.linkedin.com/company/afrika-haberleri/"],
   "description":
     "Afrika ekonomisi, ticaret, ihracat ve yatırım gündemini Türk iş dünyası için Türkçe sunan haber platformu.",
 };
