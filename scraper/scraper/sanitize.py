@@ -4,10 +4,14 @@ from bs4 import BeautifulSoup
 
 ALLOWED_TAGS = [
     "h2", "h3", "p", "blockquote", "ul", "ol", "li",
-    "strong", "em", "figure", "figcaption", "img",
+    "strong", "em", "a", "small", "figure", "figcaption", "img",
 ]
 
 ALLOWED_ATTRIBUTES = {
+    # Keep source-citation and internal links (a strong SEO/GEO signal). bleach
+    # still drops unsafe href schemes via its default protocol allowlist.
+    "a": ["href", "target", "rel"],
+    "p": ["class"],
     "img": ["src", "alt", "width", "height"],
     "figure": ["class"],
     "figcaption": ["class"],

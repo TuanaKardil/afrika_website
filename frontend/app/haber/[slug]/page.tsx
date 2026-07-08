@@ -240,7 +240,19 @@ export default async function HaberPage({ params }: HaberPageProps) {
           <ShareButtons url={articleUrl} title={article.title_tr ?? ""} />
           {article.source && (
             <span className="ml-auto text-on-surface/40">
-              Kaynak: {SOURCE_LABELS[article.source] ?? article.source}
+              Kaynak:{" "}
+              {article.source_url ? (
+                <a
+                  href={article.source_url}
+                  target="_blank"
+                  rel="noopener"
+                  className="underline underline-offset-2 hover:text-primary transition-colors"
+                >
+                  {SOURCE_LABELS[article.source] ?? article.source}
+                </a>
+              ) : (
+                SOURCE_LABELS[article.source] ?? article.source
+              )}
             </span>
           )}
         </div>
