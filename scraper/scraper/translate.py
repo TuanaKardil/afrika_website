@@ -275,6 +275,23 @@ def _summarize_if_needed(body: str) -> str:
     return result
 
 
+_TITLE_MAX_CHARS = 120
+
+
+def _cap_title(title: str) -> str:
+    """Guarantee title_tr <= _TITLE_MAX_CHARS as a code-side safety net.
+
+    The prompt asks for <=120 chars and the key entity front-loaded (SERP shows
+    only ~60 chars), but the model occasionally overshoots; trim the tail at a
+    word boundary so the <title>/OG never carries an over-long headline. Only
+    the least-important trailing words are dropped.
+    """
+    if len(title) <= _TITLE_MAX_CHARS:
+        return title
+    cut = title[:_TITLE_MAX_CHARS].rsplit(" ", 1)[0].rstrip(" ,;:.-")
+    return cut or title[:_TITLE_MAX_CHARS]
+
+
 def _parse_response(text: str, original: dict, source_url: str = "", source_name: str = "") -> tuple[str, str, str] | None:
     title_raw = excerpt_raw = body_raw = ""
 
@@ -298,7 +315,7 @@ def _parse_response(text: str, original: dict, source_url: str = "", source_name
         body_m = _BODY_RE.search(text)
         body_raw = body_m.group(1).strip() if body_m else ""
 
-    title = postprocess(_strip_em_dashes(title_raw))
+    title = _cap_title(postprocess(_strip_em_dashes(title_raw)))
     excerpt = postprocess(_strip_em_dashes(excerpt_raw or (original.get("excerpt_original") or "")))
     body = postprocess(_strip_em_dashes(body_raw or (original.get("content_original") or "")))
 
@@ -479,12 +496,19 @@ def _load_meta_description_prompt() -> str:
 _META_DESC_SYSTEM: str | None = None
 
 
+# SERP shows ~155-160 chars, so short descriptions read as weak. Accept an
+# on-target result immediately; keep a slightly-off one as a fallback and retry
+# once to hit the ideal band; reject anything genuinely too short/long.
+_MD_IDEAL = (135, 160)
+_MD_SAFETY = (125, 170)
+
+
 def generate_meta_description(title_tr: str, content_tr: str) -> str | None:
     """Generate a Turkish SEO meta description for a translated article.
 
-    Uses GEMINI_FLASH_LITE (same model as article translation).
-    Returns a plain-text string of 140-155 chars, or None on failure.
-    This is a separate API call — never mixed with article translation.
+    Uses GEMINI_FLASH_LITE (same model as article translation). Targets 135-160
+    chars (retries once to land there); accepts 125-170 rather than dropping;
+    returns None only if both attempts fall outside that. Separate API call.
     """
     global _META_DESC_SYSTEM
     if _META_DESC_SYSTEM is None:
@@ -495,29 +519,32 @@ def generate_meta_description(title_tr: str, content_tr: str) -> str | None:
 
     plain = re.sub(r"<[^>]+>", " ", content_tr)
     plain = re.sub(r"\s+", " ", plain).strip()[:800]
-
     user_message = f"Title (Turkish): {title_tr}\n\nArticle text (Turkish): {plain}"
 
-    raw = chat(
-        [{"role": "user", "content": user_message}],
-        model=GEMINI_FLASH_LITE,
-        system=_META_DESC_SYSTEM,
-        temperature=0.1,
-        max_tokens=200,
-    )
+    fallback: str | None = None
+    for attempt in range(2):
+        raw = chat(
+            [{"role": "user", "content": user_message}],
+            model=GEMINI_FLASH_LITE,
+            system=_META_DESC_SYSTEM,
+            temperature=0.1 if attempt == 0 else 0.3,
+            max_tokens=200,
+        )
+        if not raw:
+            continue
+        result = raw.strip()
+        result = _EM_DASH_RE.sub(",", result)
+        result = result.strip('"').strip("'").strip()
+        n = len(result)
+        if _MD_IDEAL[0] <= n <= _MD_IDEAL[1]:
+            return result
+        if _MD_SAFETY[0] <= n <= _MD_SAFETY[1]:
+            fallback = result  # usable, but try once more for the ideal band
 
-    if not raw:
-        return None
-
-    result = raw.strip()
-    result = _EM_DASH_RE.sub(",", result)
-    result = result.strip('"').strip("'").strip()
-
-    if len(result) < 80 or len(result) > 200:
-        logger.warning("meta_description_tr out of range (%d chars): %.100s", len(result), result)
-        return None
-
-    return result
+    if fallback:
+        return fallback
+    logger.warning("meta_description_tr out of range after retries for: %.80s", title_tr)
+    return None
 
 
 def _load_add_h2_prompt() -> str:

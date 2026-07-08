@@ -12,7 +12,7 @@ You will receive:
 
 - Output must be in **Turkish**.
 - Generate **only one** meta description — no alternatives, no explanations.
-- Length: **140 to 155 characters** (including spaces). Count carefully.
+- Length: **145 to 158 characters** (including spaces). Count carefully. Aim near the top of this range: descriptions under ~135 characters read as thin in Google results. Never go below 130 or above 160.
 - Naturally include the article's **primary keyword** (country name, sector, key figure, or main topic).
 - Clearly convey the most important news fact in the first clause.
 - Accurately reflect the article — no exaggeration, no invented details.
