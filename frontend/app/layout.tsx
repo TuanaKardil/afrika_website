@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import AuthListener from "@/components/auth/AuthListener";
+import AiReferralTracker from "@/components/analytics/AiReferralTracker";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
 const inter = Inter({
@@ -39,6 +40,13 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+  // Bing Webmaster Tools verification (unlocks the free "AI Performance"
+  // report for Copilot/Bing AI). Set BING_SITE_VERIFICATION in Vercel to the
+  // msvalidate.01 value Bing gives you; without it, no tag is emitted and you
+  // can instead verify by importing from Google Search Console.
+  ...(process.env.BING_SITE_VERIFICATION
+    ? { verification: { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } }
+    : {}),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -60,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-background text-on-surface font-sans min-h-screen flex flex-col antialiased">
         <AuthListener />
+        <AiReferralTracker />
         <Header />
         <div className="flex-1">{children}</div>
         <Footer />
