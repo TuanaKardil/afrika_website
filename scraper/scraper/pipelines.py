@@ -444,6 +444,7 @@ class StoragePipeline:
     def process_item(self, item, spider):
         from scraper.classify import classify_article
         from scraper.hashtags import assign_hashtags
+        from scraper.authors import assign_author
         from scraper.storage import upload_image, upload_featured_image, rewrite_image_srcs
 
         source = item.get("source", "")
@@ -462,6 +463,11 @@ class StoragePipeline:
         if not hashtags:
             logger.warning("assign_hashtags returned empty for %s", source_url)
         item["hashtags"] = hashtags
+
+        # Named site author (deterministic: region/nav_tab/country-hashtag lookup;
+        # continent-wide bucket spread across all 7 writers via source_url hash)
+        author_slug = assign_author(region_slug, nav_tab_slug, hashtags, source_url)
+        item["author_slug"] = author_slug
 
         # Parse published_at
         try:
@@ -602,6 +608,7 @@ class StoragePipeline:
             "nav_tab_slug": nav_tab_slug,
             "sector_slugs": sector_slugs,
             "region_slug": region_slug,
+            "author_slug": author_slug,
             "hashtags": hashtags,
             "meta_description_tr": item.get("meta_description_tr"),
             "score": item.get("score"),

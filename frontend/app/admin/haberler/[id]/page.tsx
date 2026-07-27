@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { createClient } from "@/lib/supabase/client";
 
 const TiptapEditor = dynamic(() => import("@/components/admin/TiptapEditor"), { ssr: false });
 
@@ -14,9 +15,16 @@ interface Article {
   content_tr: string | null;
   meta_description_tr: string | null;
   featured_image_url: string | null;
+  author_slug: string | null;
   score: number | null;
   source: string;
   published_at: string;
+}
+
+interface AuthorOption {
+  slug: string;
+  name: string;
+  role_tr: string;
 }
 
 export default function ArticleEditPage() {
@@ -33,6 +41,8 @@ export default function ArticleEditPage() {
   const [content, setContent] = useState("");
   const [metaDesc, setMetaDesc] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [authorSlug, setAuthorSlug] = useState("");
+  const [authors, setAuthors] = useState<AuthorOption[]>([]);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/admin/articles?id=${id}`);
@@ -44,10 +54,19 @@ export default function ArticleEditPage() {
     setContent(a.content_tr ?? "");
     setMetaDesc(a.meta_description_tr ?? "");
     setImageUrl(a.featured_image_url ?? "");
+    setAuthorSlug(a.author_slug ?? "");
     setLoading(false);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    createClient()
+      .from("authors")
+      .select("slug,name,role_tr")
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => setAuthors(data ?? []));
+  }, []);
 
   async function handleSave() {
     setSaving(true);
@@ -61,6 +80,7 @@ export default function ArticleEditPage() {
         content_tr: content,
         meta_description_tr: metaDesc,
         featured_image_url: imageUrl,
+        author_slug: authorSlug || null,
       }),
     });
     setSaving(false);
@@ -108,6 +128,21 @@ export default function ArticleEditPage() {
             onChange={e => setTitle(e.target.value)}
             className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 text-base focus:outline-none focus:border-amber"
           />
+        </div>
+
+        {/* Yazar */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Yazar</label>
+          <select
+            value={authorSlug}
+            onChange={e => setAuthorSlug(e.target.value)}
+            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 text-sm focus:outline-none focus:border-amber"
+          >
+            <option value="">Yazar seçilmedi</option>
+            {authors.map(a => (
+              <option key={a.slug} value={a.slug}>{a.name} ({a.role_tr})</option>
+            ))}
+          </select>
         </div>
 
         {/* Görsel */}

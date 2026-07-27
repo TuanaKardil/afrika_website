@@ -17,6 +17,7 @@ class ArticleItem(scrapy.Item):
     nav_tab_slug = scrapy.Field()
     sector_slugs = scrapy.Field()
     region_slug = scrapy.Field()
+    author_slug = scrapy.Field()         # named site author (assign_author, pipeline-assigned)
     hashtags = scrapy.Field()
     is_suppressed = scrapy.Field()
     is_update = scrapy.Field()

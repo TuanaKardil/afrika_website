@@ -15,6 +15,7 @@ export type Database = {
       articles: {
         Row: {
           author_original: string | null
+          author_slug: string | null
           content_hash: string
           content_original: string | null
           content_tr: string | null
@@ -48,6 +49,7 @@ export type Database = {
         }
         Insert: {
           author_original?: string | null
+          author_slug?: string | null
           content_hash: string
           content_original?: string | null
           content_tr?: string | null
@@ -81,6 +83,7 @@ export type Database = {
         }
         Update: {
           author_original?: string | null
+          author_slug?: string | null
           content_hash?: string
           content_original?: string | null
           content_tr?: string | null
@@ -114,6 +117,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "articles_author_slug_fkey"
+            columns: ["author_slug"]
+            isOneToOne: false
+            referencedRelation: "authors"
+            referencedColumns: ["slug"]
+          },
+          {
             foreignKeyName: "articles_nav_tab_slug_fkey"
             columns: ["nav_tab_slug"]
             isOneToOne: false
@@ -128,6 +138,36 @@ export type Database = {
             referencedColumns: ["slug"]
           },
         ]
+      }
+      authors: {
+        Row: {
+          slug: string
+          name: string
+          role_tr: string
+          region_label_tr: string | null
+          bio_tr: string
+          avatar_url: string | null
+          sort_order: number
+        }
+        Insert: {
+          slug: string
+          name: string
+          role_tr: string
+          region_label_tr?: string | null
+          bio_tr: string
+          avatar_url?: string | null
+          sort_order?: number
+        }
+        Update: {
+          slug?: string
+          name?: string
+          role_tr?: string
+          region_label_tr?: string | null
+          bio_tr?: string
+          avatar_url?: string | null
+          sort_order?: number
+        }
+        Relationships: []
       }
       blog_posts: {
         Row: {

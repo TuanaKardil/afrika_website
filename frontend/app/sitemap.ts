@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { createBuildClient } from "@/lib/supabase/server";
 import { getRegions } from "@/lib/queries/regions";
 import { getSectors } from "@/lib/queries/sectors";
+import { getAuthors } from "@/lib/queries/authors";
 import { MIN_PUBLISHED_SCORE } from "@/lib/constants";
 
 const BASE_URL = "https://www.afrikahaberleri.tr";
@@ -20,6 +21,7 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: `${BASE_URL}/etkinlikler-fuarlar`, priority: 0.8, changeFrequency: "daily" },
   { url: `${BASE_URL}/ulkeler`, priority: 0.8, changeFrequency: "daily" },
   { url: `${BASE_URL}/blog`, priority: 0.6, changeFrequency: "weekly" },
+  { url: `${BASE_URL}/yazarlar`, priority: 0.6, changeFrequency: "weekly" },
 ];
 
 export const revalidate = 3600;
@@ -27,7 +29,7 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createBuildClient();
 
-  const [{ data: articles }, { data: blogPosts }, regions, sectors] = await Promise.all([
+  const [{ data: articles }, { data: blogPosts }, regions, sectors, authors] = await Promise.all([
     supabase
       .from("articles")
       .select("slug, updated_at, hashtags")
@@ -40,6 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .eq("status", "published"),
     getRegions(),
     getSectors(),
+    getAuthors(),
   ]);
 
   const articleEntries: MetadataRoute.Sitemap = (articles ?? []).map((a) => ({
@@ -59,6 +62,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${BASE_URL}/sektorler/${s.slug}`,
     changeFrequency: "daily",
     priority: 0.6,
+  }));
+
+  const authorEntries: MetadataRoute.Sitemap = authors.map((a) => ({
+    url: `${BASE_URL}/yazarlar/${a.slug}`,
+    changeFrequency: "weekly",
+    priority: 0.5,
   }));
 
   const blogEntries: MetadataRoute.Sitemap = (blogPosts ?? []).map((p) => ({
@@ -88,6 +97,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...articleEntries,
     ...regionEntries,
     ...sectorEntries,
+    ...authorEntries,
     ...hashtagEntries,
     ...blogEntries,
   ];

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   if (id) {
     const { data, error } = await db.from("articles")
-      .select("id,slug,title_tr,excerpt_tr,content_tr,meta_description_tr,featured_image_url,score,source,published_at")
+      .select("id,slug,title_tr,excerpt_tr,content_tr,meta_description_tr,featured_image_url,author_slug,score,source,published_at")
       .eq("id", id).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 404 });
     return NextResponse.json({ article: data });
@@ -75,6 +75,7 @@ export async function PATCH(request: NextRequest) {
     "content_tr",
     "meta_description_tr",
     "featured_image_url",
+    "author_slug",
     "is_suppressed",
     "is_featured",
   ];

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import ReactDOM from "react-dom";
 import { notFound } from "next/navigation";
 import { getAllSlugs, getArticleBySlug, getSimilarArticles } from "@/lib/queries/articles";
+import { getAuthorBySlug } from "@/lib/queries/authors";
 import { sanitizeArticleContent } from "@/lib/sanitize";
 import CategoryBadge from "@/components/ui/CategoryBadge";
 import RegionBadge from "@/components/ui/RegionBadge";
@@ -89,7 +90,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
   const article = await getArticleBySlug(params.slug);
   if (!article || !article.title_tr || article.is_suppressed || article.score === null || article.score < MIN_PUBLISHED_SCORE) notFound();
 
-  const [safeContent, similarArticles] = await Promise.all([
+  const [safeContent, similarArticles, author] = await Promise.all([
     Promise.resolve(sanitizeArticleContent(article.content_tr ?? "")),
     getSimilarArticles(
       article.id,
@@ -97,6 +98,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
       article.sector_slugs ?? [],
       article.hashtags ?? []
     ),
+    article.author_slug ? getAuthorBySlug(article.author_slug) : Promise.resolve(null),
   ]);
 
   const crumbLabel = article.nav_tab_slug
@@ -144,10 +146,17 @@ export default async function HaberPage({ params }: HaberPageProps) {
         "caption": article.image_alt_tr ?? "",
       },
     } : {}),
-    "author": {
-      "@type": "Organization",
-      "name": SOURCE_LABELS[article.source ?? ""] ?? "Afrika Haberleri",
-    },
+    "author": author
+      ? {
+          "@type": "Person",
+          "name": author.name,
+          "jobTitle": author.role_tr,
+          "url": `${SITE_URL}/yazarlar/${author.slug}`,
+        }
+      : {
+          "@type": "Organization",
+          "name": SOURCE_LABELS[article.source ?? ""] ?? "Afrika Haberleri",
+        },
     "publisher": {
       "@type": "Organization",
       "name": "Afrika Haberleri",
@@ -237,7 +246,16 @@ export default async function HaberPage({ params }: HaberPageProps) {
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-3 mb-6 pb-6 border-b border-outline-variant font-body text-sm text-on-surface/60">
           <SaveButton articleId={article.id} />
-          {article.author_original && <span>{article.author_original}</span>}
+          {author ? (
+            <a
+              href={`/yazarlar/${author.slug}`}
+              className="font-medium text-on-surface/80 hover:text-primary transition-colors"
+            >
+              {author.name}
+            </a>
+          ) : (
+            article.author_original && <span>{article.author_original}</span>
+          )}
           <time dateTime={article.published_at}>
             {formatDate(article.published_at)}
           </time>

@@ -79,7 +79,16 @@ export default function MobileMenu() {
                 </Link>
               </li>
             ))}
-            <li className="pt-4 border-t border-white/10 mt-2 pb-2">
+            <li className="pt-4 border-t border-white/10 mt-2">
+              <Link
+                href="/yazarlar"
+                onClick={() => setOpen(false)}
+                className="block py-2.5 text-sm font-semibold text-white/85 hover:text-white transition-colors"
+              >
+                {"Yazarlar"}
+              </Link>
+            </li>
+            <li className="pt-2 pb-2">
               {isLoggedIn ? (
                 <div className="flex items-center gap-4">
                   <Link

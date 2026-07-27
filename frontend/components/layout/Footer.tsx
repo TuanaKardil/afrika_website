@@ -19,6 +19,7 @@ const REGION_LINKS = [
 
 const CORPORATE_LINKS = [
   { href: "/hakkimizda", label: "Hakkımızda" },
+  { href: "/yazarlar", label: "Yazarlar" },
   { href: "/iletisim", label: "İletişim" },
   { href: "/editoryal-politika", label: "Editoryal Politika" },
 ];

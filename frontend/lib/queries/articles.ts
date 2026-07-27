@@ -308,6 +308,26 @@ export async function getArticlesByHashtag(
   return { articles: data ?? [], count: count ?? 0 };
 }
 
+export async function getArticlesByAuthor(
+  authorSlug: string,
+  page = 1
+): Promise<{ articles: Article[]; count: number }> {
+  const supabase = createClient();
+  const offset = (page - 1) * PAGE_SIZE;
+
+  const { data, count } = await supabase
+    .from("articles")
+    .select("*", { count: "exact" })
+    .eq("is_suppressed", false)
+    .gte("score", MIN_PUBLISHED_SCORE)
+    .not("title_tr", "is", null)
+    .eq("author_slug", authorSlug)
+    .order("published_at", { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  return { articles: data ?? [], count: count ?? 0 };
+}
+
 export async function getSimilarArticles(
   articleId: string,
   navTabSlug: string | null,
