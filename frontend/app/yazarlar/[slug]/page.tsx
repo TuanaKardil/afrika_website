@@ -73,18 +73,12 @@ export default async function YazarPage({ params, searchParams }: YazarPageProps
 
       <header className="mb-8 max-w-3xl">
         <h1 className="font-headline text-3xl font-black text-navy">{author.name}</h1>
-        <p className="font-body text-primary mt-1">{author.role_tr}</p>
-        {author.region_label_tr && (
-          <p className="font-body text-sm text-on-surface/50 mt-0.5">
-            Sorumluluk alanı: {author.region_label_tr}
-          </p>
-        )}
-        <p className="font-body text-on-surface/70 mt-4 leading-relaxed">
+        <p className="font-body text-on-surface/70 mt-3 leading-relaxed">
           {author.bio_tr}
         </p>
       </header>
 
-      <ArticleGrid articles={articles} eyebrow={`${author.name.toUpperCase()} HABERLERİ`} />
+      <ArticleGrid articles={articles} eyebrow="En Son Haberleri" />
       <Pagination page={page} total={count} basePath={basePath} />
     </main>
   );

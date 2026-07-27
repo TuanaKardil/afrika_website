@@ -26,9 +26,9 @@ INSERT INTO authors (slug, name, role_tr, region_label_tr, bio_tr, sort_order) V
   (
     'amina-bello',
     'Amina Yusuf Bello',
-    'Anglosakson Batı Afrika Muhabiri',
-    'Anglosakson Batı Afrika',
-    'Nijerya''nın Kano kentinden Amina Yusuf Bello, Karabük Üniversitesi Uluslararası Ticaret ve Finansman Bölümü mezunudur. Yerel medya ve ihracat operasyonlarında deneyim kazanan Bello, Afrika Haberleri''nde Anglosakson Batı Afrika''nın ticaret, lojistik, finans, teknoloji ve altyapı gelişmelerini takip etmektedir.',
+    'Anglofon Batı Afrika Muhabiri',
+    'Anglofon Batı Afrika',
+    'Nijerya''nın Kano kentinden Amina Yusuf Bello, Karabük Üniversitesi Uluslararası Ticaret ve Finansman Bölümü mezunudur. Yerel medya ve ihracat operasyonlarında deneyim kazanan Bello, Afrika Haberleri''nde Anglofon Batı Afrika''nın ticaret, lojistik, finans, teknoloji ve altyapı gelişmelerini takip etmektedir.',
     2
   ),
   (
