@@ -139,6 +139,32 @@ export type Database = {
           },
         ]
       }
+      article_slug_history: {
+        Row: {
+          old_slug: string
+          article_id: string
+          changed_at: string
+        }
+        Insert: {
+          old_slug: string
+          article_id: string
+          changed_at?: string
+        }
+        Update: {
+          old_slug?: string
+          article_id?: string
+          changed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_slug_history_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       authors: {
         Row: {
           slug: string

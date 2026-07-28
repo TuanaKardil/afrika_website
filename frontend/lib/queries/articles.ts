@@ -154,34 +154,77 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
   return data;
 }
 
-// A scraper bug (fixed in pipelines.py: "slug" is now excluded from the
-// is_update write) re-computed the slug on every content re-scrape, flipping
-// published URLs between "<base>" and "<base>-<6 hex>". Every flip left the
-// previous URL dead. Given a slug that no longer exists, find the article it
-// became so the page can 308 to it instead of 404-ing.
+// Article URLs must never die. A scraper bug (fixed in pipelines.py: "slug" is
+// now excluded from the is_update write) re-computed the slug on every content
+// re-scrape, flipping published URLs between "<base>" and "<base>-<6 hex>";
+// every flip left the previous URL dead. See CLAUDE.md rule 22.
+//
+// Given a slug that no longer resolves, find the article it belongs to so the
+// page can 308 instead of 404. Three strategies, most authoritative first.
 const SLUG_HASH_SUFFIX = /-[0-9a-f]{6}$/;
 
+/** Match _make_slug()'s output charset: strip accents, keep [a-z0-9-]. */
+function asciiSlug(slug: string): string {
+  return slug
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "");
+}
+
 export async function resolveLegacyArticleSlug(slug: string): Promise<string | null> {
-  const base = slug.replace(SLUG_HASH_SUFFIX, "");
-  // Slugs are [a-z0-9-] only (see _make_slug), so base carries no LIKE wildcards.
-  if (base.length < 8) return null;
-
   const supabase = createClient();
-  const { data } = await supabase
-    .from("articles")
-    .select("slug")
-    // "______" is six single-char wildcards, so this matches exactly
-    // "<base>-<6 chars>" and never a longer, unrelated slug that merely
-    // starts with base (e.g. "gana-kakao" vs "gana-kakao-fiyatlari-artti").
-    .or(`slug.eq.${base},slug.like.${base}-______`)
-    .eq("is_suppressed", false)
-    .gte("score", MIN_PUBLISHED_SCORE)
-    .not("title_tr", "is", null)
-    .order("published_at", { ascending: false })
-    .limit(1);
 
-  const found = data?.[0]?.slug ?? null;
-  return found && found !== slug ? found : null;
+  // 1. Authoritative: the DB records every slug a row has ever had
+  //    (article_slug_history + trigger, migration 032). This survives any
+  //    slug move, including a deliberate one made in the Supabase dashboard.
+  //    Tolerate the table not existing yet so the fallbacks still work.
+  const { data: history } = await supabase
+    .from("article_slug_history")
+    .select("article_id")
+    .eq("old_slug", slug)
+    .maybeSingle();
+
+  if (history?.article_id) {
+    const { data: target } = await supabase
+      .from("articles")
+      .select("slug")
+      .eq("id", history.article_id)
+      .eq("is_suppressed", false)
+      .gte("score", MIN_PUBLISHED_SCORE)
+      .not("title_tr", "is", null)
+      .maybeSingle();
+    if (target?.slug && target.slug !== slug) return target.slug;
+  }
+
+  // 2 + 3. Heuristic for slugs that moved before the history table existed.
+  //    The title (and therefore the slug base) is frozen on the update path,
+  //    so every historical slug of an article is "<base>" or "<base>-<6 hex>".
+  //    Also try the ASCII form: a legacy backfill stored a few slugs with an
+  //    accented char ("kâri"), which no request can ever match.
+  const candidates = [slug, asciiSlug(slug)]
+    .map((s) => s.replace(SLUG_HASH_SUFFIX, ""))
+    .filter((s, i, a) => s.length >= 8 && a.indexOf(s) === i);
+
+  for (const base of candidates) {
+    const { data } = await supabase
+      .from("articles")
+      .select("slug")
+      // "______" is six single-char wildcards, so this matches exactly
+      // "<base>-<6 chars>" and never a longer, unrelated slug that merely
+      // starts with base (e.g. "gana-kakao" vs "gana-kakao-fiyatlari-artti").
+      .or(`slug.eq.${base},slug.like.${base}-______`)
+      .eq("is_suppressed", false)
+      .gte("score", MIN_PUBLISHED_SCORE)
+      .not("title_tr", "is", null)
+      .order("published_at", { ascending: false })
+      .limit(1);
+
+    const found = data?.[0]?.slug ?? null;
+    if (found && found !== slug) return found;
+  }
+
+  return null;
 }
 
 export async function getArticlesByNavTab(

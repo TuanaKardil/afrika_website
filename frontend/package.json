@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-canonical.mjs",
+    "prebuild": "node scripts/check-canonical.mjs && node scripts/check-deleted-slugs.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "check:canonical": "node scripts/check-canonical.mjs"
+    "check:canonical": "node scripts/check-canonical.mjs",
+    "check:deleted-slugs": "node scripts/check-deleted-slugs.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.10",
