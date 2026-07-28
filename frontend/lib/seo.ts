@@ -35,6 +35,23 @@ export function titleWithPage(title: string, page: number): string {
 }
 
 /**
+ * Keeps paginated listing pages out of the index while staying crawlable.
+ *
+ * Page 2+ of a listing is a rotating slice of articles that are each already
+ * submitted individually, so Google crawls them and then reports "Taranan,
+ * ancak dizine eklenmedi" — ~986 such URLs existed against 838 articles, which
+ * is where most of the site's non-indexed count came from. `follow` keeps the
+ * crawl path intact, and discovery never depends on it anyway: every published
+ * article is listed in sitemap.xml.
+ *
+ * Spread AFTER canonicalMeta() so the noindex wins; page 1 is untouched.
+ * The homepage already applies this pattern inline (app/page.tsx).
+ */
+export function paginatedRobots(page: number): Pick<Metadata, "robots"> {
+  return page > 1 ? { robots: { index: false, follow: true } } : {};
+}
+
+/**
  * Canonical + matching og:url in one shot for standard "website" pages.
  *
  * Child openGraph replaces the root layout's wholesale in Next, so a page that

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFilteredArticles } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 
@@ -45,11 +45,14 @@ export async function generateMetadata({ searchParams }: HaberlerMetaProps): Pro
   const regionLabel = REGIONS.find((r) => r.slug === (bolge ?? "afrika"))?.label ?? null;
   const categoryLabel = kategori ? CATEGORY_SEO_LABELS[kategori] : null;
 
-  const seo = canonicalMeta("/haberler", {
-    bolge: bolge && bolge !== "afrika" ? bolge : null,
-    kategori,
-    sayfa: String(page),
-  });
+  const seo = {
+    ...canonicalMeta("/haberler", {
+      bolge: bolge && bolge !== "afrika" ? bolge : null,
+      kategori,
+      sayfa: String(page),
+    }),
+    ...paginatedRobots(page),
+  };
 
   if (kategori && bolge && bolge !== "afrika") {
     return {

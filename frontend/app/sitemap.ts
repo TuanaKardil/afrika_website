@@ -3,13 +3,13 @@ import { createBuildClient } from "@/lib/supabase/server";
 import { getRegions } from "@/lib/queries/regions";
 import { getSectors } from "@/lib/queries/sectors";
 import { getAuthors } from "@/lib/queries/authors";
-import { MIN_PUBLISHED_SCORE } from "@/lib/constants";
+import { MIN_PUBLISHED_SCORE, HASHTAG_MIN_ARTICLES } from "@/lib/constants";
 
 const BASE_URL = "https://www.afrikahaberleri.tr";
 
-// Hashtag pages below this article count are thin aggregations — excluded from
-// the sitemap to avoid promoting low-value pages (they stay crawlable via links).
-const HASHTAG_SITEMAP_MIN_ARTICLES = 3;
+// Hashtag pages below this article count are thin aggregations. They are
+// excluded here AND marked noindex on the page itself (app/hashtag/[tag]),
+// both driven by the same constant so the signals cannot drift.
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: BASE_URL, priority: 1.0, changeFrequency: "hourly" },
@@ -85,7 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
   const hashtagEntries: MetadataRoute.Sitemap = Array.from(tagCounts.entries())
-    .filter(([, n]) => n >= HASHTAG_SITEMAP_MIN_ARTICLES)
+    .filter(([, n]) => n >= HASHTAG_MIN_ARTICLES)
     .map(([tag]) => ({
       url: `${BASE_URL}/hashtag/${encodeURIComponent(tag)}`,
       changeFrequency: "weekly",

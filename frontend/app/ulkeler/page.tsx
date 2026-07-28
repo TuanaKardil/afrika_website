@@ -5,7 +5,7 @@ import {
   getArticlesByCountry,
   COUNTRY_SLUG_TO_HASHTAG,
 } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import Pagination from "@/components/sections/Pagination";
@@ -20,10 +20,13 @@ export async function generateMetadata({
   const slug = searchParams.ulke;
   const hashtag = slug ? COUNTRY_SLUG_TO_HASHTAG[slug] : null;
   const page = parsePageParam(searchParams.sayfa);
-  const seo = canonicalMeta("/ulkeler", {
-    ulke: hashtag ? slug : null,
-    sayfa: String(page),
-  });
+  const seo = {
+    ...canonicalMeta("/ulkeler", {
+      ulke: hashtag ? slug : null,
+      sayfa: String(page),
+    }),
+    ...paginatedRobots(page),
+  };
   if (hashtag) {
     return {
       title: titleWithPage(`Son Dakika ${hashtag} Haberleri`, page),

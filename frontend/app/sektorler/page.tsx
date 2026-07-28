@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSectors } from "@/lib/queries/sectors";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import Pagination from "@/components/sections/Pagination";
@@ -17,6 +17,7 @@ export async function generateMetadata({ searchParams }: SektorlerPageProps): Pr
     title: titleWithPage("Sektörler", page),
     description: "Afrika'dan sektörel haberler.",
     ...canonicalMeta("/sektorler", { sayfa: String(page) }),
+    ...paginatedRobots(page),
   };
 }
 

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticlesByHashtag } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleCard from "@/components/ui/ArticleCard";
 import Pagination from "@/components/sections/Pagination";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { HASHTAG_MIN_ARTICLES } from "@/lib/constants";
 
 export const revalidate = 1800;
 
@@ -16,10 +17,20 @@ interface HashtagPageProps {
 export async function generateMetadata({ params, searchParams }: HashtagPageProps): Promise<Metadata> {
   const tag = decodeURIComponent(params.tag);
   const page = parsePageParam(searchParams.sayfa);
+
+  // A tag carrying fewer than HASHTAG_MIN_ARTICLES articles is a thin
+  // aggregation and is already excluded from sitemap.xml. Say so on the page
+  // too (noindex, follow) instead of letting Google crawl it and file it under
+  // "Taranan, ancak dizine eklenmedi". The articles themselves stay indexed.
+  const { count } = await getArticlesByHashtag(tag, 1);
+  const thin = count < HASHTAG_MIN_ARTICLES;
+
   return {
     title: titleWithPage(`#${tag} Haberleri`, page),
     description: `${tag} etiketiyle ilgili Afrika haberleri`,
     ...canonicalMeta(`/hashtag/${encodeURIComponent(tag)}`, { sayfa: String(page) }),
+    ...paginatedRobots(page),
+    ...(thin ? { robots: { index: false, follow: true } } : {}),
   };
 }
 

@@ -11,7 +11,7 @@ const SECTOR_REDIRECTS: Record<string, string> = {
   "fuarcilik-etkinlik": "sektorler",
 };
 import { getArticlesBySector } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 import Breadcrumb from "@/components/ui/Breadcrumb";
@@ -34,6 +34,7 @@ export async function generateMetadata({ params, searchParams }: SektorSlugPageP
     title: titleWithPage(`Afrika'da Son Dakika ${sector.name_tr} Haberleri`, page),
     description: `Afrika ${sector.name_tr.toLowerCase()} sektöründen güncel haberler. Piyasa, yatırım ve sektörel gelişmeler.`,
     ...canonicalMeta(`/sektorler/${params.slug}`, { sayfa: String(page) }),
+    ...paginatedRobots(page),
   };
 }
 

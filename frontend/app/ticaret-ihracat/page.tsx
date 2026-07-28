@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import Pagination from "@/components/sections/Pagination";
@@ -15,6 +15,7 @@ export async function generateMetadata({ searchParams }: TicaretIhracatPageProps
     title: titleWithPage("Ticaret & İhracat", page),
     description: "Afrika ile ticaret ve ihracat haberleri.",
     ...canonicalMeta("/ticaret-ihracat", { sayfa: String(page) }),
+    ...paginatedRobots(page),
   };
 }
 

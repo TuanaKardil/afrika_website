@@ -104,11 +104,18 @@ def _make_slug(title: str, existing_slugs: set[str]) -> str:
     base = base.lower()
     base = re.sub(r"[^\w\s-]", "", base)
     base = re.sub(r"[\s_]+", "-", base).strip("-")
-    base = base[:80]
-    slug = base
-    if slug in existing_slugs:
-        slug = f"{base}-{uuid.uuid4().hex[:6]}"
-    return slug
+    # Truncating at 80 can leave a trailing dash ("...-goz-ardi-"); strip again.
+    base = base[:80].strip("-")
+    if base not in existing_slugs:
+        return base
+    # Genuine title collision (rare). Prefer a readable ordinal over a random
+    # hex blob: "-2", "-3", ... Random hex is kept only as a last resort so the
+    # function can never fail to return a unique slug.
+    for n in range(2, 51):
+        candidate = f"{base}-{n}"
+        if candidate not in existing_slugs:
+            return candidate
+    return f"{base}-{uuid.uuid4().hex[:6]}"
 
 
 class DeduplicationPipeline:
@@ -433,6 +440,13 @@ class StoragePipeline:
             self._supabase = _get_supabase()
             rows = self._supabase.table("articles").select("slug,featured_image_url").execute()
             self._known_slugs = {r["slug"] for r in (rows.data or [])}
+            # Retired slugs are still live URLs: they 308 to the article that
+            # used to own them. A new article must never claim one, or it would
+            # silently hijack another article's incoming links. See rule 22.
+            retired = (
+                self._supabase.table("article_slug_history").select("old_slug").execute()
+            )
+            self._known_slugs |= {r["old_slug"] for r in (retired.data or [])}
             self._used_image_urls = {
                 r["featured_image_url"]
                 for r in (rows.data or [])

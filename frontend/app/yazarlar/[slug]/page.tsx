@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAuthors, getAuthorBySlug } from "@/lib/queries/authors";
 import { getArticlesByAuthor } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 import Breadcrumb from "@/components/ui/Breadcrumb";
@@ -29,6 +29,7 @@ export async function generateMetadata({ params, searchParams }: YazarPageProps)
     title: titleWithPage(`${author.name}, ${author.role_tr}`, page),
     description: author.bio_tr,
     ...canonicalMeta(`/yazarlar/${params.slug}`, { sayfa: String(page) }),
+    ...paginatedRobots(page),
   };
 }
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getArticlesByNavTab } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import Pagination from "@/components/sections/Pagination";
@@ -15,6 +15,7 @@ export async function generateMetadata({ searchParams }: TurkIsDunyasiPageProps)
     title: titleWithPage("Türk İş Dünyası Afrika'da", page),
     description: "Afrika'daki Türk şirketleri ve iş insanları haberleri.",
     ...canonicalMeta("/turk-is-dunyasi", { sayfa: String(page) }),
+    ...paginatedRobots(page),
   };
 }
 

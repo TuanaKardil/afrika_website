@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticlesByRegion } from "@/lib/queries/articles";
 import { getRegionBySlug, getRegions } from "@/lib/queries/regions";
-import { canonicalMeta, parsePageParam, titleWithPage } from "@/lib/seo";
+import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 import Breadcrumb from "@/components/ui/Breadcrumb";
@@ -25,6 +25,7 @@ export async function generateMetadata({ params, searchParams }: BolgePageProps)
     title: titleWithPage(`Son Dakika ${region.name_tr} Haberleri`, page),
     description: `${region.name_tr} bölgesinden güncel haberler. Ekonomi, ticaret ve yatırım gelişmelerini Türkçe takip edin.`,
     ...canonicalMeta(`/bolge/${params.slug}`, { sayfa: String(page) }),
+    ...paginatedRobots(page),
   };
 }
 
