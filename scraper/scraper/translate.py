@@ -245,13 +245,23 @@ def _summarize_if_needed(body: str) -> str:
         return body
 
     logger.info("translate: body %d words > 600, requesting AI summarization", _plain_word_count(body))
+    # A 550-word Turkish summary does not reliably fit in 2048 output tokens.
+    # When it did not, the truncated summary was still under the 620-word
+    # acceptance check below, so a body cut mid-sentence sailed through — the
+    # second source of half-articles after the main translate call.
+    meta: dict[str, Any] = {}
     raw = chat(
         [{"role": "user", "content": f"Aşağıdaki haber metnini en fazla 550 kelimeye özetle:\n\n{body}"}],
         model=GEMINI_FLASH_LITE,
         system=_SUMMARIZE_SYSTEM,
         temperature=0.2,
-        max_tokens=2048,
+        max_tokens=4096,
+        meta=meta,
     )
+
+    if meta.get("finish_reason") == "length":
+        logger.warning("translate: summarization truncated by token cap, discarding it")
+        raw = None
 
     if raw and _plain_word_count(raw.strip()) <= 620:
         return postprocess(_strip_em_dashes(raw.strip()))
@@ -267,7 +277,13 @@ def _summarize_if_needed(body: str) -> str:
     words = plain.split()
     region = " ".join(words[:620])
     cut = max(region.rfind("."), region.rfind("!"), region.rfind("?"))
-    truncated = region[:cut + 1].strip() if cut > 0 else " ".join(words[:600])
+    if cut <= 0:
+        # No sentence boundary inside the first 620 words. Slicing at word 600
+        # would publish a body cut mid-sentence, which is worse than exceeding
+        # the soft 600-word guideline, so keep the complete text instead.
+        logger.warning("translate: no sentence boundary to cut at, keeping full body")
+        return body
+    truncated = region[:cut + 1].strip()
 
     result = f"<p>{truncated}</p>"
     if source_link:
@@ -357,13 +373,45 @@ def _translate_one(article: dict[str, Any]) -> dict[str, Any]:
         source_name=source_name,
     )
 
+    # A 600-word Turkish body plus title/excerpt and JSON escaping can exceed
+    # 4096 output tokens on a long original. When it does, OpenRouter returns a
+    # PARTIAL answer (finish_reason="length") cut mid-word, and _safe_parse_json
+    # cannot recover content_tr from it. Retry once with a bigger budget rather
+    # than publishing half an article.
+    meta: dict[str, Any] = {}
     raw = chat(
         [{"role": "user", "content": user_message}],
         model=GEMINI_FLASH_LITE,
         system=_SYSTEM_PROMPT,
         temperature=0.2,
-        max_tokens=4096,
+        max_tokens=8192,
+        meta=meta,
     )
+    if raw is not None and meta.get("finish_reason") == "length":
+        logger.warning(
+            "translate: response truncated at 8192 tokens, retrying at 16384 for %s",
+            source_url[:80],
+        )
+        meta = {}
+        retry = chat(
+            [{"role": "user", "content": user_message}],
+            model=GEMINI_FLASH_LITE,
+            system=_SYSTEM_PROMPT,
+            temperature=0.2,
+            max_tokens=16384,
+            meta=meta,
+        )
+        if retry is not None:
+            raw = retry
+        if meta.get("finish_reason") == "length":
+            logger.error(
+                "translate: still truncated at 16384 tokens, dropping translation for %s",
+                source_url[:80],
+            )
+            article["title_tr"] = None
+            article["excerpt_tr"] = None
+            article["content_tr"] = None
+            return article
 
     if raw is None:
         logger.warning("Translation failed for %s", article.get("source_url"))

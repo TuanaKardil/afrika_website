@@ -316,6 +316,14 @@ _TRUNCATED_LIST_RE = re.compile(
     re.IGNORECASE | re.UNICODE,
 )
 
+# A finished article ends on sentence-final punctuation. Closing quotes and
+# brackets count because a body may legitimately end on a quotation.
+_SENTENCE_END_CHARS = ('.', '!', '?', '"', '”', '’', "'", ')', '»', '…')
+
+# The trailing "Kaynak: <outlet>" attribution line carries no final period, so
+# it must come off before the sentence-ending test.
+_SOURCE_LINK_TAIL_RE = re.compile(r'\s*Kaynak:\s*\S[^\n]*$', re.UNICODE)
+
 
 class QualityCheckPipeline:
     """Post-translation quality checks that drop or repair bad output.
@@ -341,6 +349,22 @@ class QualityCheckPipeline:
             logger.warning("Dropping truncated list article (missing table data): %s", source_url)
             _stats_inc(item.get("source", ""), "dropped_low_score")
             raise DropItem(f"Truncated list (no table data scraped): {source_url}")
+
+        # Cut-off body. A finished Turkish article always ends on sentence-final
+        # punctuation; anything else means the generation stopped mid-sentence
+        # (an AI response that hit its token cap, or a source teaser ending in
+        # "[...]"). 36 such half-articles reached the site before this check
+        # existed, some cut mid-word. Drop and re-attempt on the next run rather
+        # than publish half a story.
+        body_end = _SOURCE_LINK_TAIL_RE.sub("", plain).rstrip()
+        if body_end and not body_end.endswith(_SENTENCE_END_CHARS):
+            source_url = item.get("source_url", "")
+            logger.warning(
+                "Dropping truncated translation (body ends mid-sentence: %r): %s",
+                body_end[-60:], source_url,
+            )
+            _stats_inc(item.get("source", ""), "dropped_low_score")
+            raise DropItem(f"Truncated translation (cut mid-sentence): {source_url}")
 
         if not re.search(r'<h2[ >]', content_tr, re.I):
             source_url = item.get("source_url", "")

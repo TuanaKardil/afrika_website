@@ -23,8 +23,16 @@ def chat(
     system: str | None = None,
     temperature: float = 0.0,
     max_tokens: int = 2048,
+    meta: dict[str, Any] | None = None,
 ) -> str | None:
-    """Send a chat request to OpenRouter. Returns the assistant message text or None on failure."""
+    """Send a chat request to OpenRouter. Returns the assistant message text or None on failure.
+
+    Pass a dict as `meta` to receive the provider's finish_reason. It is
+    "length" when the model ran out of output tokens, which means the returned
+    text is a PARTIAL answer cut mid-word. Callers that parse structured output
+    must check it: silently accepting a truncated response produced 36 articles
+    whose body stopped mid-sentence (see translate.translate_article).
+    """
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         logger.warning("OPENROUTER_API_KEY not set, skipping AI call")
@@ -50,7 +58,17 @@ def chat(
             resp = requests.post(_BASE_URL, json=payload, headers=headers, timeout=60)
             resp.raise_for_status()
             data = resp.json()
-            msg = data["choices"][0]["message"]
+            choice = data["choices"][0]
+            msg = choice["message"]
+            finish = choice.get("finish_reason") or choice.get("native_finish_reason")
+            if meta is not None:
+                meta["finish_reason"] = finish
+            if finish == "length":
+                logger.warning(
+                    "OpenRouter response hit the %d-token cap (model=%s): the text is "
+                    "truncated mid-answer, not a complete reply",
+                    max_tokens, model,
+                )
             return msg.get("content") or msg.get("reasoning") or None
         except requests.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 429:
