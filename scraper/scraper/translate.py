@@ -247,7 +247,7 @@ def _summarize_if_needed(body: str) -> str:
     logger.info("translate: body %d words > 600, requesting AI summarization", _plain_word_count(body))
     # A 550-word Turkish summary does not reliably fit in 2048 output tokens.
     # When it did not, the truncated summary was still under the 620-word
-    # acceptance check below, so a body cut mid-sentence sailed through — the
+    # acceptance check below, so a body cut mid-sentence sailed through, the
     # second source of half-articles after the main translate call.
     meta: dict[str, Any] = {}
     raw = chat(

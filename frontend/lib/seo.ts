@@ -39,7 +39,7 @@ export function titleWithPage(title: string, page: number): string {
  *
  * Page 2+ of a listing is a rotating slice of articles that are each already
  * submitted individually, so Google crawls them and then reports "Taranan,
- * ancak dizine eklenmedi" — ~986 such URLs existed against 838 articles, which
+ * ancak dizine eklenmedi": ~986 such URLs existed against 838 articles, which
  * is where most of the site's non-indexed count came from. `follow` keeps the
  * crawl path intact, and discovery never depends on it anyway: every published
  * article is listed in sitemap.xml.

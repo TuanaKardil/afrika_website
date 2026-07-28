@@ -123,29 +123,64 @@ class CNBCAfricaSpider(scrapy.Spider):
         )
 
 
-_BODY_SELECTORS = [
-    "div.article-body p",
-    "div.post-content p",
-    "div.entry-content p",
-    "article p",
+_BODY_CONTAINERS = [
+    "div.article-body",
+    "div.post-content",
+    "div.entry-content",
+    "article",
 ]
+
+# Substance does not live in <p> alone. CNBC Africa routinely puts the core of
+# a story in a bulleted list after a lead-in like "In a statement, Li said:".
+# A p-only scrape stored that lead-in as the final sentence, so the article read
+# as though it had been cut off mid-thought.
+_BLOCK_SELECTOR = "p, blockquote, li"
 
 _MIN_BODY_PARAGRAPHS = 3
 _MIN_BODY_CHARS = 200
 
 
 def _extract_body(response: Response) -> str | None:
-    """Try CSS selectors in order and return joined <p> tags if enough content found.
+    """Try each container in order and return its block-level content as HTML.
 
-    Returns None if no selector produces >= 3 paragraphs with >= 200 total characters,
-    so the caller can fall back to og:description.
+    Returns None if no container yields >= 3 blocks with >= 200 total characters,
+    so the caller can fall back to the og:description stub.
     """
-    for selector in _BODY_SELECTORS:
-        paragraphs = [p.strip() for p in response.css(f"{selector}::text").getall() if p.strip()]
-        if len(paragraphs) >= _MIN_BODY_PARAGRAPHS:
-            total_text = " ".join(paragraphs)
-            if len(total_text) >= _MIN_BODY_CHARS:
-                return "".join(f"<p>{p}</p>" for p in paragraphs)
+    for container in _BODY_CONTAINERS:
+        root = response.css(container)
+        if not root:
+            continue
+
+        blocks: list[tuple[str, str]] = []
+        for node in root.css(_BLOCK_SELECTOR):
+            # string(.) keeps text nested in <a>/<strong>/<em>; "::text" would
+            # return only the direct text nodes and silently drop link text.
+            text = " ".join((node.xpath("string(.)").get() or "").split())
+            if text:
+                blocks.append((node.root.tag, text))
+
+        if len(blocks) < _MIN_BODY_PARAGRAPHS:
+            continue
+        if len(" ".join(t for _, t in blocks)) < _MIN_BODY_CHARS:
+            continue
+
+        # Re-emit in document order, grouping consecutive <li> back into a <ul>.
+        html: list[str] = []
+        in_list = False
+        for tag, text in blocks:
+            if tag == "li":
+                if not in_list:
+                    html.append("<ul>")
+                    in_list = True
+                html.append(f"<li>{text}</li>")
+                continue
+            if in_list:
+                html.append("</ul>")
+                in_list = False
+            html.append(f"<p>{text}</p>")
+        if in_list:
+            html.append("</ul>")
+        return "".join(html)
     return None
 
 

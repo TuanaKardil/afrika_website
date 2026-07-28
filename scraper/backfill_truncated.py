@@ -65,8 +65,8 @@ def _process_one(row: dict, dry_run: bool) -> tuple[str, str]:
 
     if not is_truncated(current):
         return article_id, "skip:not-truncated"
-    # If the ENGLISH original is itself cut off — a "[...]" teaser, or a body
-    # that ends on "In a statement, Li said:" because the rest was JS-rendered —
+    # If the ENGLISH original is itself cut off, a "[...]" teaser or a body
+    # that ends on "In a statement, Li said:" because the rest was JS-rendered,
     # re-translating can only reproduce the same stump. Skip instead of burning
     # an API call on every run.
     if _TEASER_RE.search(original) or is_truncated(original):
@@ -101,7 +101,7 @@ def _process_one(row: dict, dry_run: bool) -> tuple[str, str]:
     if new_excerpt:
         update["excerpt_tr"] = new_excerpt
     try:
-        # content/excerpt only — updated_at intentionally untouched (rule 17).
+        # content/excerpt only. updated_at intentionally untouched (rule 17).
         _get_supabase().table("articles").update(update).eq("id", article_id).execute()
     except Exception as exc:
         return article_id, f"error:db:{exc}"
