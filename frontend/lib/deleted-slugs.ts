@@ -62,7 +62,6 @@ export const DELETED_HABER_SLUGS = new Set([
   "guney-afrikada-tfgnin-yillik-kâri-tuketici-harcamalarindaki-dususle-azaldi",
   "guney-afrikada-tfgnin-yillik-kâri-tuketici-harcamalarindaki-daralma-nedeniyle-du",
   "nijerya-lideri-tinubu-reformlar-zorluklara-ragmen-ekonomiyi-istikrara-kavusturuy",
-  "cinin-kahve-hamlesi-afrikanin-tarimsal-ihracatini-yeniden-sekillendirebilir-fe6ce4",
   "iran-savasi-guney-afrikayi-petrol-krizine-surukluyor-veri-bosluklari-ve-dusuk-st",
   "cinin-gozetim-teknolojisi-afrika-sehirlerinde-yayginlasiyor",
   "afrikada-dizel-fiyatlari-yukseliyor-mayis-2026-en-pahali-10-ulke-ea3efe",

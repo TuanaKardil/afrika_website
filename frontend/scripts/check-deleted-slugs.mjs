@@ -57,9 +57,22 @@ for (const s of live) {
   if (!byBase.has(b)) byBase.set(b, s);
 }
 
+// A retired slug listed here is worse than useless: middleware answers 410
+// before app/haber/[slug] ever gets to issue its 308, so the redirect that
+// would have consolidated the old URL's ranking never fires.
+const { data: history } = await supabase
+  .from("article_slug_history")
+  .select("old_slug")
+  .limit(10000);
+const retired = new Set((history ?? []).map((h) => h.old_slug));
+
 const conflicts = [];
 for (const slug of listed) {
-  const hit = live.has(slug) ? slug : byBase.get(slug.replace(HASH, ""));
+  const hit = live.has(slug)
+    ? slug
+    : retired.has(slug)
+      ? "(redirects via article_slug_history)"
+      : byBase.get(slug.replace(HASH, ""));
   if (hit) conflicts.push([slug, hit]);
 }
 
