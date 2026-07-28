@@ -163,9 +163,20 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
 // page can 308 instead of 404. Three strategies, most authoritative first.
 const SLUG_HASH_SUFFIX = /-[0-9a-f]{6}$/;
 
-/** Match _make_slug()'s output charset: strip accents, keep [a-z0-9-]. */
+/**
+ * Match _make_slug()'s output charset: strip accents, keep [a-z0-9-].
+ *
+ * The route segment can still be percent-encoded here, so decode first:
+ * without it "k%C3%A2ri" would collapse to "kc3a2ri" instead of "kari".
+ */
 function asciiSlug(slug: string): string {
-  return slug
+  let decoded = slug;
+  try {
+    decoded = decodeURIComponent(slug);
+  } catch {
+    // Malformed escape sequence: fall through with the raw value.
+  }
+  return decoded
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
