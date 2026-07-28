@@ -154,6 +154,36 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
   return data;
 }
 
+// A scraper bug (fixed in pipelines.py: "slug" is now excluded from the
+// is_update write) re-computed the slug on every content re-scrape, flipping
+// published URLs between "<base>" and "<base>-<6 hex>". Every flip left the
+// previous URL dead. Given a slug that no longer exists, find the article it
+// became so the page can 308 to it instead of 404-ing.
+const SLUG_HASH_SUFFIX = /-[0-9a-f]{6}$/;
+
+export async function resolveLegacyArticleSlug(slug: string): Promise<string | null> {
+  const base = slug.replace(SLUG_HASH_SUFFIX, "");
+  // Slugs are [a-z0-9-] only (see _make_slug), so base carries no LIKE wildcards.
+  if (base.length < 8) return null;
+
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("articles")
+    .select("slug")
+    // "______" is six single-char wildcards, so this matches exactly
+    // "<base>-<6 chars>" and never a longer, unrelated slug that merely
+    // starts with base (e.g. "gana-kakao" vs "gana-kakao-fiyatlari-artti").
+    .or(`slug.eq.${base},slug.like.${base}-______`)
+    .eq("is_suppressed", false)
+    .gte("score", MIN_PUBLISHED_SCORE)
+    .not("title_tr", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(1);
+
+  const found = data?.[0]?.slug ?? null;
+  return found && found !== slug ? found : null;
+}
+
 export async function getArticlesByNavTab(
   navTabSlug: string,
   page = 1

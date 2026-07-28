@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import ReactDOM from "react-dom";
-import { notFound } from "next/navigation";
-import { getAllSlugs, getArticleBySlug, getSimilarArticles } from "@/lib/queries/articles";
+import { notFound, permanentRedirect } from "next/navigation";
+import {
+  getAllSlugs,
+  getArticleBySlug,
+  getSimilarArticles,
+  resolveLegacyArticleSlug,
+} from "@/lib/queries/articles";
 import { getAuthorBySlug } from "@/lib/queries/authors";
 import { sanitizeArticleContent } from "@/lib/sanitize";
 import CategoryBadge from "@/components/ui/CategoryBadge";
@@ -88,6 +93,15 @@ const SITE_URL = "https://www.afrikahaberleri.tr";
 
 export default async function HaberPage({ params }: HaberPageProps) {
   const article = await getArticleBySlug(params.slug);
+
+  // Legacy URL rescue: articles scraped before the slug-churn fix had their
+  // slug rewritten on every content update, so old indexed/shared links point
+  // at a slug the row no longer has. 308 to the current one instead of 404.
+  if (!article) {
+    const currentSlug = await resolveLegacyArticleSlug(params.slug);
+    if (currentSlug) permanentRedirect(`/haber/${currentSlug}`);
+  }
+
   if (!article || !article.title_tr || article.is_suppressed || article.score === null || article.score < MIN_PUBLISHED_SCORE) notFound();
 
   const [safeContent, similarArticles, author] = await Promise.all([

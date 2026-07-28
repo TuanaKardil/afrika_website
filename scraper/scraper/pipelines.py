@@ -628,7 +628,14 @@ class StoragePipeline:
             if item.get("is_update"):
                 update_fields = {k: v for k, v in row.items()
                                  if k not in ("id", "view_count", "is_featured",
+                                              "slug",
                                               "title_tr", "excerpt_tr", "content_tr")}
+                # "slug" is excluded because a slug is PERMANENT once assigned:
+                # it is the public URL. _make_slug() only appends a random hex
+                # suffix on collision, and on this path the article always
+                # collides with its own stored slug, so re-computing it flipped
+                # the URL on every content update (base -> base-a1b2c3 -> base
+                # -> ...), 404-ing every previously indexed/shared link.
                 # Do NOT bump updated_at here: this path never changes the
                 # Turkish content readers see (title_tr/excerpt_tr/content_tr
                 # are excluded above). updated_at means "visible content
