@@ -118,6 +118,34 @@ def _make_slug(title: str, existing_slugs: set[str]) -> str:
     return f"{base}-{uuid.uuid4().hex[:6]}"
 
 
+# Word pairs that invert a headline's meaning. A photo caption containing one
+# side while the title asserts the other is describing a different story.
+# Dates are deliberately NOT compared: a caption legitimately carries the
+# photo's own date ("Akra, 5 Aralik 2016") which rarely matches the article.
+_CAPTION_POLARITY = [
+    ("dusuk", "yuksek"), ("guclu", "zayif"), ("artti", "dustu"),
+    ("artis", "dusus"), ("yukseldi", "dustu"), ("kar", "zarar"),
+]
+
+
+def _contradicts_title(caption: str, title: str) -> bool:
+    if not caption or not title:
+        return False
+
+    def norm(t: str) -> str:
+        t = unicodedata.normalize("NFKD", t.translate(_TR_CHARS))
+        t = t.encode("ascii", "ignore").decode("ascii").lower()
+        return re.sub(r"[^a-z0-9\s]", " ", t)
+
+    nc, nt = norm(caption), norm(title)
+    for a, b in _CAPTION_POLARITY:
+        ca, cb = re.search(rf"\b{a}\b", nc), re.search(rf"\b{b}\b", nc)
+        ta, tb = re.search(rf"\b{a}\b", nt), re.search(rf"\b{b}\b", nt)
+        if (ca and tb and not ta) or (cb and ta and not tb):
+            return True
+    return False
+
+
 class DeduplicationPipeline:
     def __init__(self):
         self._supabase = None
@@ -285,7 +313,19 @@ class TranslationPipeline:
         from scraper.translate import translate_image_alt
         alt_en = (item.get("image_alt_en") or "").strip()
         if alt_en:
-            item["image_alt_tr"] = translate_image_alt(alt_en)
+            alt_tr = translate_image_alt(alt_en)
+            # Sources reuse a photo from a related story, and its alt text then
+            # describes that other story: a "highest diesel prices" article
+            # shipped a caption reading "lowest diesel prices". The caption is
+            # rendered right under the headline, so a contradiction is glaring.
+            # Fall back to title_tr, the same value used when no alt exists.
+            if alt_tr and _contradicts_title(alt_tr, title_tr):
+                logger.warning(
+                    "image_alt_tr contradicts the title, using title instead: %r vs %r",
+                    alt_tr[:60], (title_tr or "")[:60],
+                )
+                alt_tr = None
+            item["image_alt_tr"] = alt_tr
             logger.debug("image_alt_tr: %s → %s", alt_en[:60], item["image_alt_tr"])
         else:
             item["image_alt_tr"] = None
