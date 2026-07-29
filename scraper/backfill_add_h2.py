@@ -29,7 +29,7 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from scraper.storage import _get_supabase  # noqa: E402
-from scraper.translate import add_h2_headings  # noqa: E402
+from scraper.translate import MIN_H2, ensure_h2, h2_count  # noqa: E402
 
 load_dotenv()
 
@@ -44,15 +44,16 @@ def _process_one(row: dict, dry_run: bool) -> tuple[str, str]:
     article_id = row["id"]
     title = row.get("title_tr") or ""
     content = row.get("content_tr") or ""
-    if _H2_RE.search(content):
+    have = h2_count(content)
+    if have >= MIN_H2:
         return article_id, "skip:already-has-h2"
 
     try:
-        fixed = add_h2_headings(title, content)
+        fixed = ensure_h2(title, content)
     except Exception as exc:
         return article_id, f"error:remediate:{exc}"
 
-    if not fixed or not _H2_RE.search(fixed):
+    if not fixed or h2_count(fixed) <= have:
         return article_id, "fail:no-h2-produced"
 
     if dry_run:
@@ -88,7 +89,7 @@ def main() -> int:
     )
     if args.limit:
         q = q.limit(args.limit)
-    rows = [r for r in (q.execute().data or []) if not _H2_RE.search(r.get("content_tr") or "")]
+    rows = [r for r in (q.execute().data or []) if h2_count(r.get("content_tr") or "") < MIN_H2]
     logger.info("%d articles missing <h2>%s", len(rows), " (dry run)" if args.dry_run else "")
 
     ok = fail = err = 0

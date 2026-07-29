@@ -366,14 +366,27 @@ class QualityCheckPipeline:
             _stats_inc(item.get("source", ""), "dropped_low_score")
             raise DropItem(f"Truncated translation (cut mid-sentence): {source_url}")
 
-        if not re.search(r'<h2[ >]', content_tr, re.I):
+        # The rule is 2-3 question-format H2s, but this only ever checked for
+        # "at least one", so 151 single-heading articles were published and read
+        # as a different format from the rest of the site. ensure_h2() tops a
+        # short body up; 0 headings after remediation is still a hard drop.
+        from scraper.translate import MIN_H2, ensure_h2, h2_count
+        if h2_count(content_tr) < MIN_H2:
             source_url = item.get("source_url", "")
-            logger.warning("Missing <h2>; attempting AEO remediation: %s", source_url)
-            from scraper.translate import add_h2_headings
-            fixed = add_h2_headings(item.get("title_tr") or "", content_tr)
-            if fixed and re.search(r'<h2[ >]', fixed, re.I):
+            logger.warning(
+                "Only %d <h2> (want %d); attempting AEO remediation: %s",
+                h2_count(content_tr), MIN_H2, source_url,
+            )
+            fixed = ensure_h2(item.get("title_tr") or "", content_tr)
+            if h2_count(fixed) > 0:
                 item["content_tr"] = fixed
-                logger.info("H2 remediation applied: %s", source_url)
+                if h2_count(fixed) < MIN_H2:
+                    logger.warning(
+                        "Publishing with %d <h2> after remediation: %s",
+                        h2_count(fixed), source_url,
+                    )
+                else:
+                    logger.info("H2 remediation applied: %s", source_url)
             else:
                 logger.warning("H2 remediation failed; dropping article: %s", source_url)
                 _stats_inc(item.get("source", ""), "dropped_low_score")

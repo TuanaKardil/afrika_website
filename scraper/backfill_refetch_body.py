@@ -37,7 +37,7 @@ from parsel import Selector
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from scraper.storage import _get_supabase  # noqa: E402
 from scraper.spiders.cnbc_africa import _extract_body  # noqa: E402
-from scraper.translate import translate_article  # noqa: E402
+from scraper.translate import translate_article, finalize_content_tr  # noqa: E402
 
 load_dotenv()
 
@@ -132,8 +132,13 @@ def _process_one(row: dict, dry_run: bool, retranslate: bool) -> tuple[str, str]
         if not out:
             return article_id, "fail:translation-failed"
         new_title, new_excerpt, new_body = out
-        if is_truncated(new_body or ""):
-            return article_id, "fail:translation-truncated"
+        # Same quality gate the live pipeline applies (clean + H2 + truncation).
+        # Writing content_tr straight to the DB once published 81 articles with
+        # no <h2> at all, because it skipped ContentCleanPipeline and
+        # QualityCheckPipeline entirely.
+        new_body, reason = finalize_content_tr(new_title or "", new_body or "")
+        if reason:
+            return article_id, f"fail:quality-{reason}"
         update["content_tr"] = new_body
         if new_excerpt:
             update["excerpt_tr"] = new_excerpt

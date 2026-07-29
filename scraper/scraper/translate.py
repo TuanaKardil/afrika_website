@@ -793,3 +793,80 @@ def translate_articles(articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 results.append(article)
 
     return results + skipped
+
+
+# ---------------------------------------------------------------------------
+# Shared post-translation quality gate
+# ---------------------------------------------------------------------------
+#
+# Every path that produces a Turkish body must run this, not just the Scrapy
+# pipeline. Backfill scripts used to write content_tr straight to Supabase and
+# so skipped ContentCleanPipeline and QualityCheckPipeline entirely: one such
+# run published 81 CNBC articles with no <h2> at all. Keeping the rules in one
+# function is what makes that impossible to repeat, so call finalize_content_tr()
+# from any new script that regenerates an article body.
+
+MIN_H2 = 2          # prompts/translate.md mandates 2-3 question-format H2s
+_H2_TAG_RE = re.compile(r"<h2[ >]", re.I)
+_SENTENCE_END = ('.', '!', '?', '"', '”', '’', "'", ')', '»', '…')
+_SOURCE_TAIL_RE = re.compile(r"\s*Kaynak:\s*\S[^\n]*$", re.UNICODE)
+
+
+def h2_count(content_tr: str) -> int:
+    return len(_H2_TAG_RE.findall(content_tr or ""))
+
+
+def is_truncated_body(content_tr: str) -> bool:
+    """True when the body stops mid-sentence (token cap, or a source teaser)."""
+    plain = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", content_tr or "")).strip()
+    body = _SOURCE_TAIL_RE.sub("", plain).rstrip()
+    return bool(body) and not body.endswith(_SENTENCE_END)
+
+
+def ensure_h2(title_tr: str, content_tr: str, minimum: int = MIN_H2) -> str:
+    """Top a body up to `minimum` H2 headings, returning the best result.
+
+    Enforcing only "at least one" let 151 single-heading articles through, which
+    read as a different format from the rest of the site. Remediation is
+    attempted once; if the model cannot place more, the body is returned as-is
+    (an article with one heading still beats dropping a complete story).
+    """
+    have = h2_count(content_tr)
+    if have >= minimum:
+        return content_tr
+    fixed = add_h2_headings(title_tr or "", content_tr)
+    if fixed and h2_count(fixed) > have:
+        return fixed
+    return content_tr
+
+
+def finalize_content_tr(
+    title_tr: str,
+    content_tr: str,
+    *,
+    clean: bool = True,
+) -> tuple[str | None, str | None]:
+    """Apply the full post-translation quality gate to a Turkish body.
+
+    Returns (content, None) when publishable, or (None, reason) when the body
+    must be rejected. Mirrors ContentCleanPipeline + QualityCheckPipeline so a
+    backfill produces exactly what a live scrape would.
+    """
+    if not content_tr:
+        return None, "empty"
+
+    if clean:
+        try:
+            from scraper.clean_content import clean_article_body
+            content_tr = clean_article_body(content_tr)
+        except Exception as exc:
+            logger.warning("finalize: clean step failed (%s), keeping raw body", exc)
+
+    if is_truncated_body(content_tr):
+        return None, "truncated"
+
+    content_tr = ensure_h2(title_tr, content_tr)
+    if h2_count(content_tr) == 0:
+        return None, "no-h2"
+
+    return content_tr, None

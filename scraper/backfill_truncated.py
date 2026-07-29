@@ -36,7 +36,7 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from scraper.storage import _get_supabase  # noqa: E402
-from scraper.translate import translate_article  # noqa: E402
+from scraper.translate import translate_article, finalize_content_tr  # noqa: E402
 
 load_dotenv()
 
@@ -85,12 +85,15 @@ def _process_one(row: dict, dry_run: bool) -> tuple[str, str]:
     except Exception as exc:
         return article_id, f"error:translate:{exc}"
 
-    _, new_excerpt, new_body = out if out else (None, None, "")
+    new_title, new_excerpt, new_body = out if out else (None, None, "")
     new_body = new_body or ""
     if not new_body:
         return article_id, "fail:no-translation"
-    if is_truncated(new_body):
-        return article_id, "fail:still-truncated"
+    # Same quality gate the live pipeline applies, so a repaired article is
+    # indistinguishable from a freshly scraped one.
+    new_body, reason = finalize_content_tr(new_title or "", new_body)
+    if reason:
+        return article_id, f"fail:quality-{reason}"
     if len(_plain(new_body).split()) < len(_plain(current).split()):
         return article_id, "fail:shorter-than-current"
 
