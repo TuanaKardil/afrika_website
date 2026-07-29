@@ -35,18 +35,19 @@ export default async function YazarlarPage() {
         </p>
       </header>
 
-      {/* One column until lg. The card now carries a bio plus three headlines,
-          and at md a 2-up grid squeezed those headlines into a two-words-per-line
-          column, which is what made the old layout feel cramped. The gap-px over
-          a tinted background draws the dividing rules, so no card needs its own
-          border. */}
-      <div className="grid gap-px bg-outline-variant lg:grid-cols-2">
+      {/* Flex rather than grid so the odd card out centres itself. The roster is
+          seven writers, so a 2-up grid strands the last one alone on the left
+          with a column of dead space beside it; justify-center puts it in the
+          middle of its row instead.
+          One column until lg: the card carries a bio plus three headlines, and
+          at md a 2-up layout wrapped those headlines to two words per line. */}
+      <div className="flex flex-wrap justify-center gap-5 md:gap-6">
         {authors.map((author) => {
           const recent = headlines[author.slug] ?? [];
           return (
             <article
               key={author.slug}
-              className="bg-surface p-6 md:p-8 transition-colors hover:bg-surface-2"
+              className="w-full lg:w-[calc(50%-0.75rem)] border border-outline-variant p-6 md:p-8 transition-colors hover:border-primary"
             >
               <div className="flex items-baseline justify-between gap-4 mb-1.5">
                 <h2 className="font-headline text-lg md:text-xl font-black text-navy leading-tight">
