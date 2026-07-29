@@ -190,10 +190,22 @@ export async function resolveLegacyArticleSlug(slug: string): Promise<string | n
   //    (article_slug_history + trigger, migration 032). This survives any
   //    slug move, including a deliberate one made in the Supabase dashboard.
   //    Tolerate the table not existing yet so the fallbacks still work.
+  //    The route segment arrives percent-encoded, so a retired slug carrying a
+  //    non-ASCII char ("...omnianin-kâri...") is stored decoded but looked up
+  //    as "k%C3%A2ri" and would never match. Try both spellings.
+  const historyKeys = [slug];
+  try {
+    const decoded = decodeURIComponent(slug);
+    if (decoded !== slug) historyKeys.push(decoded);
+  } catch {
+    // Malformed escape sequence: the raw value is all we have.
+  }
+
   const { data: history } = await supabase
     .from("article_slug_history")
     .select("article_id")
-    .eq("old_slug", slug)
+    .in("old_slug", historyKeys)
+    .limit(1)
     .maybeSingle();
 
   if (history?.article_id) {
