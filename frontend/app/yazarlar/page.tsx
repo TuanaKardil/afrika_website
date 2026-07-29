@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAuthors } from "@/lib/queries/authors";
+import { getAuthors, getHeadlinesByAuthor } from "@/lib/queries/authors";
 import { canonicalMeta } from "@/lib/seo";
+import { formatDateShort } from "@/lib/utils";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 
 export const revalidate = 1800;
@@ -14,35 +15,97 @@ export const metadata: Metadata = {
 };
 
 export default async function YazarlarPage() {
-  const authors = await getAuthors();
+  const [authors, headlines] = await Promise.all([
+    getAuthors(),
+    getHeadlinesByAuthor(3),
+  ]);
 
   return (
-    <main className="max-w-container mx-auto px-4 md:px-6 py-8">
+    <main className="max-w-container mx-auto px-4 md:px-6 py-8 md:py-12">
       <Breadcrumb items={[{ name: "Yazarlar", href: "/yazarlar" }]} />
       <div className="border-t-2 border-primary mb-3" />
-      <h1 className="font-headline text-2xl md:text-3xl font-black text-navy mb-1">
-        Yazarlar
-      </h1>
-      <p className="font-body text-sm text-on-surface/50 mb-8">
-        Bölge masalarımızdan muhabir ve editörler
-      </p>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {authors.map((author) => (
-          <Link
-            key={author.slug}
-            href={`/yazarlar/${author.slug}`}
-            className="block rounded-xl border border-outline-variant p-5 hover:border-primary hover:shadow-sm transition-colors"
-          >
-            <h2 className="font-headline text-lg font-bold text-navy">
-              {author.name}
-            </h2>
-            <p className="font-body text-sm text-primary mb-2">{author.role_tr}</p>
-            <p className="font-body text-sm text-on-surface/60 line-clamp-3">
-              {author.bio_tr}
-            </p>
-          </Link>
-        ))}
+      <header className="mb-10 md:mb-14 max-w-2xl">
+        <h1 className="font-headline text-2xl md:text-3xl font-black text-navy mb-2">
+          Yazarlar
+        </h1>
+        <p className="font-body text-sm md:text-base text-on-surface/60 leading-relaxed">
+          Bölge masalarımızdan muhabir ve editörler, kıtanın ekonomi, ticaret ve
+          yatırım gündemini takip ediyor.
+        </p>
+      </header>
+
+      {/* One column until lg. The card now carries a bio plus three headlines,
+          and at md a 2-up grid squeezed those headlines into a two-words-per-line
+          column, which is what made the old layout feel cramped. The gap-px over
+          a tinted background draws the dividing rules, so no card needs its own
+          border. */}
+      <div className="grid gap-px bg-outline-variant lg:grid-cols-2">
+        {authors.map((author) => {
+          const recent = headlines[author.slug] ?? [];
+          return (
+            <article
+              key={author.slug}
+              className="bg-surface p-6 md:p-8 transition-colors hover:bg-surface-2"
+            >
+              <div className="flex items-baseline justify-between gap-4 mb-1.5">
+                <h2 className="font-headline text-lg md:text-xl font-black text-navy leading-tight">
+                  <Link
+                    href={`/yazarlar/${author.slug}`}
+                    className="hover:underline underline-offset-4 decoration-primary decoration-2"
+                  >
+                    {author.name}
+                  </Link>
+                </h2>
+                {author.region_label_tr && (
+                  <span className="shrink-0 font-body text-[10px] md:text-[11px] font-semibold tracking-[0.08em] uppercase text-primary">
+                    {author.region_label_tr}
+                  </span>
+                )}
+              </div>
+
+              <p className="font-body text-sm text-on-surface/60 leading-relaxed line-clamp-2 mb-7">
+                {author.bio_tr}
+              </p>
+
+              {recent.length > 0 && (
+                <>
+                  <p className="font-body text-[10px] font-semibold tracking-[0.1em] uppercase text-on-surface/40 mb-3.5">
+                    En Son Haberleri
+                  </p>
+                  <ul className="space-y-4">
+                    {recent.map((article) => (
+                      <li key={article.slug} className="flex gap-3">
+                        <span
+                          aria-hidden="true"
+                          className="mt-[7px] w-[5px] h-[5px] rounded-full bg-amber shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <Link
+                            href={`/haber/${article.slug}`}
+                            className="font-headline text-[13px] md:text-sm font-bold text-navy leading-snug hover:underline underline-offset-2 line-clamp-2"
+                          >
+                            {article.title_tr}
+                          </Link>
+                          <span className="block font-body text-[11px] text-on-surface/40 mt-1">
+                            {formatDateShort(article.published_at)}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              <Link
+                href={`/yazarlar/${author.slug}`}
+                className="inline-block mt-7 font-body text-xs font-semibold text-primary hover:text-primary-dark"
+              >
+                Tüm haberleri &rarr;
+              </Link>
+            </article>
+          );
+        })}
       </div>
     </main>
   );

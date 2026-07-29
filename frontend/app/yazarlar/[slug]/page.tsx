@@ -72,10 +72,20 @@ export default async function YazarPage({ params, searchParams }: YazarPageProps
         ]}
       />
 
-      <header className="mb-8 max-w-3xl">
-        <h1 className="font-headline text-3xl font-black text-navy">{author.name}</h1>
-        <p className="font-body text-on-surface/70 mt-3 leading-relaxed">
+      <header className="mb-10 md:mb-12 max-w-3xl">
+        {author.region_label_tr && (
+          <p className="font-body text-[11px] font-semibold tracking-[0.1em] uppercase text-primary mb-2">
+            {author.region_label_tr}
+          </p>
+        )}
+        <h1 className="font-headline text-3xl md:text-4xl font-black text-navy leading-tight">
+          {author.name}
+        </h1>
+        <p className="font-body text-on-surface/70 mt-4 leading-[1.75] max-w-2xl">
           {author.bio_tr}
+        </p>
+        <p className="font-body text-xs text-on-surface/40 mt-4">
+          {count} haber
         </p>
       </header>
 
