@@ -343,17 +343,42 @@ export async function getArticlesByCountry(
   return { articles: data ?? [], count: count ?? 0 };
 }
 
+/**
+ * Window for "En Çok Okunanlar".
+ *
+ * view_count is a lifetime counter, so ranking the whole corpus by it froze the
+ * list: the leader was a 1 May article on 39 views while a fresh article starts
+ * at 0, and at roughly 3,300 views spread over 878 articles nothing new could
+ * ever catch it. The block showed the same five headlines for months.
+ *
+ * Two weeks is the point where the ranking still means something (top of the
+ * window is ~21 views against ~7 for fifth place) while articles age out fast
+ * enough for the list to turn over. Three days is too thin: everything sits on
+ * 4-5 views and the order is effectively arbitrary.
+ */
+const TOP_ARTICLES_WINDOW_DAYS = 14;
+
 export async function getTopArticles(limit = 5): Promise<Article[]> {
   const supabase = createClient();
-  const { data } = await supabase
-    .from("articles")
-    .select("*")
-    .eq("is_suppressed", false)
-    .gte("score", MIN_PUBLISHED_SCORE)
-    .not("title_tr", "is", null)
-    .order("view_count", { ascending: false, nullsFirst: false })
-    .limit(limit);
-  return data ?? [];
+  const since = new Date(Date.now() - TOP_ARTICLES_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+
+  const base = () =>
+    supabase
+      .from("articles")
+      .select("*")
+      .eq("is_suppressed", false)
+      .gte("score", MIN_PUBLISHED_SCORE)
+      .not("title_tr", "is", null)
+      .order("view_count", { ascending: false, nullsFirst: false })
+      // Counts are small enough that ties are common; let the fresher article win.
+      .order("published_at", { ascending: false });
+
+  const { data } = await base().gte("published_at", since.toISOString()).limit(limit);
+  if ((data ?? []).length >= limit) return data!;
+
+  // Quiet fortnight: fall back to all time so the block never renders short.
+  const { data: fallback } = await base().limit(limit);
+  return fallback ?? [];
 }
 
 export async function getFilteredArticles(
