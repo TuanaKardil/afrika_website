@@ -6,6 +6,38 @@ import { DELETED_HABER_SLUGS } from "@/lib/deleted-slugs";
 
 export type Article = Database["public"]["Tables"]["articles"]["Row"];
 
+/**
+ * Columns a listing actually renders. Measured against production: a 12-row
+ * page fetched with select("*") took 1770ms and moved 113 KB, because every row
+ * dragged content_tr AND content_original along; the same page restricted to
+ * these columns takes 332ms and moves 17 KB. No card component reads the body,
+ * so it was pure waste on every listing request and on the Supabase egress bill.
+ *
+ * Keep this in sync with what the card components consume (ArticleCard,
+ * HeroSection, SimilarArticlesPanel, NextArticleCard). Anything that needs the
+ * body must go through getArticleBySlug, which stays select("*").
+ */
+// One literal with `as const`: supabase-js parses the select string at the type
+// level, so a concatenated string degrades the result to GenericStringError.
+export const ARTICLE_LIST_COLUMNS =
+  "id,slug,title_tr,excerpt_tr,published_at,featured_image_url,image_srcset,image_alt_tr,nav_tab_slug,sector_slugs,hashtags,reading_time_minutes" as const;
+
+export type ArticleListItem = Pick<
+  Article,
+  | "id"
+  | "slug"
+  | "title_tr"
+  | "excerpt_tr"
+  | "published_at"
+  | "featured_image_url"
+  | "image_srcset"
+  | "image_alt_tr"
+  | "nav_tab_slug"
+  | "sector_slugs"
+  | "hashtags"
+  | "reading_time_minutes"
+>;
+
 export const PAGE_SIZE = 12;
 
 export const COUNTRY_SLUG_TO_HASHTAG: Record<string, string> = {
@@ -68,13 +100,13 @@ export const COUNTRY_SLUG_TO_HASHTAG: Record<string, string> = {
 export async function getLatestArticles(
   page = 1,
   excludeIds: string[] = []
-): Promise<{ articles: Article[]; count: number }> {
+): Promise<{ articles: ArticleListItem[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
   let query = supabase
     .from("articles")
-    .select("*", { count: "exact" })
+    .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -90,13 +122,13 @@ export async function getLatestArticles(
   return { articles: data ?? [], count: count ?? 0 };
 }
 
-export async function getTopScoredRecent(limit = 3): Promise<Article[]> {
+export async function getTopScoredRecent(limit = 3): Promise<ArticleListItem[]> {
   const supabase = createClient();
   // Try last 48h first, fall back to all-time if not enough results
   const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
   const { data } = await supabase
     .from("articles")
-    .select("*")
+    .select(ARTICLE_LIST_COLUMNS)
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -107,7 +139,7 @@ export async function getTopScoredRecent(limit = 3): Promise<Article[]> {
   // Fallback: most recent high-scored articles regardless of date
   const { data: fallback } = await supabase
     .from("articles")
-    .select("*")
+    .select(ARTICLE_LIST_COLUMNS)
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -116,11 +148,11 @@ export async function getTopScoredRecent(limit = 3): Promise<Article[]> {
   return fallback ?? [];
 }
 
-export async function getFeaturedArticle(): Promise<Article | null> {
+export async function getFeaturedArticle(): Promise<ArticleListItem | null> {
   const supabase = createClient();
   const { data } = await supabase
     .from("articles")
-    .select("*")
+    .select(ARTICLE_LIST_COLUMNS)
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .eq("is_featured", true)
@@ -132,7 +164,7 @@ export async function getFeaturedArticle(): Promise<Article | null> {
   if (!data) {
     const { data: fallback } = await supabase
       .from("articles")
-      .select("*")
+      .select(ARTICLE_LIST_COLUMNS)
       .eq("is_suppressed", false)
       .gte("score", MIN_PUBLISHED_SCORE)
       .not("title_tr", "is", null)
@@ -254,13 +286,13 @@ export async function resolveLegacyArticleSlug(slug: string): Promise<string | n
 export async function getArticlesByNavTab(
   navTabSlug: string,
   page = 1
-): Promise<{ articles: Article[]; count: number }> {
+): Promise<{ articles: ArticleListItem[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
   const { data, count } = await supabase
     .from("articles")
-    .select("*", { count: "exact" })
+    .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .eq("nav_tab_slug", navTabSlug)
@@ -274,13 +306,13 @@ export async function getArticlesByNavTab(
 export async function getArticlesBySector(
   sectorSlug: string,
   page = 1
-): Promise<{ articles: Article[]; count: number }> {
+): Promise<{ articles: ArticleListItem[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
   let query = supabase
     .from("articles")
-    .select("*", { count: "exact" })
+    .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -303,13 +335,13 @@ export async function getArticlesBySector(
 export async function getArticlesByRegion(
   regionSlug: string,
   page = 1
-): Promise<{ articles: Article[]; count: number }> {
+): Promise<{ articles: ArticleListItem[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
   let query = supabase
     .from("articles")
-    .select("*", { count: "exact" })
+    .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -328,12 +360,12 @@ export async function getArticlesByRegion(
 export async function getArticlesByCountry(
   hashtagName: string,
   page = 1
-): Promise<{ articles: Article[]; count: number }> {
+): Promise<{ articles: ArticleListItem[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
   const { data, count } = await supabase
     .from("articles")
-    .select("*", { count: "exact" })
+    .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -358,14 +390,14 @@ export async function getArticlesByCountry(
  */
 const TOP_ARTICLES_WINDOW_DAYS = 14;
 
-export async function getTopArticles(limit = 5): Promise<Article[]> {
+export async function getTopArticles(limit = 5): Promise<ArticleListItem[]> {
   const supabase = createClient();
   const since = new Date(Date.now() - TOP_ARTICLES_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
   const base = () =>
     supabase
       .from("articles")
-      .select("*")
+      .select(ARTICLE_LIST_COLUMNS)
       .eq("is_suppressed", false)
       .gte("score", MIN_PUBLISHED_SCORE)
       .not("title_tr", "is", null)
@@ -385,13 +417,13 @@ export async function getFilteredArticles(
   page = 1,
   regionSlug: string | null = null,
   navTabSlug: string | null = null
-): Promise<{ articles: Article[]; count: number }> {
+): Promise<{ articles: ArticleListItem[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
   let query = supabase
     .from("articles")
-    .select("*", { count: "exact" })
+    .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -413,13 +445,13 @@ export async function getFilteredArticles(
 export async function getArticlesByHashtag(
   tag: string,
   page = 1
-): Promise<{ articles: Article[]; count: number }> {
+): Promise<{ articles: ArticleListItem[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
   const { data, count } = await supabase
     .from("articles")
-    .select("*", { count: "exact" })
+    .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -433,13 +465,13 @@ export async function getArticlesByHashtag(
 export async function getArticlesByAuthor(
   authorSlug: string,
   page = 1
-): Promise<{ articles: Article[]; count: number }> {
+): Promise<{ articles: ArticleListItem[]; count: number }> {
   const supabase = createClient();
   const offset = (page - 1) * PAGE_SIZE;
 
   const { data, count } = await supabase
     .from("articles")
-    .select("*", { count: "exact" })
+    .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)
@@ -456,7 +488,7 @@ export async function getSimilarArticles(
   sectorSlugs: string[],
   hashtags: string[],
   limit = 5
-): Promise<Article[]> {
+): Promise<ArticleListItem[]> {
   const supabase = createClient();
 
   const sixtyDaysAgo = new Date();
@@ -471,7 +503,7 @@ export async function getSimilarArticles(
 
   let query = supabase
     .from("articles")
-    .select("*")
+    .select(ARTICLE_LIST_COLUMNS)
     .eq("is_suppressed", false)
     .gte("score", MIN_PUBLISHED_SCORE)
     .not("title_tr", "is", null)

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import type { Article } from "@/lib/queries/articles";
+import type { ArticleListItem } from "@/lib/queries/articles";
 import ArticleCard from "@/components/ui/ArticleCard";
 import ArticleCardSkeleton from "@/components/ui/ArticleCardSkeleton";
 
 interface ArticleGridProps {
-  articles: Article[];
+  articles: ArticleListItem[];
   loading?: boolean;
   eyebrow?: string;
   action?: string;

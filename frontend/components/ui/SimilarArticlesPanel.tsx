@@ -1,8 +1,8 @@
-import type { Article } from "@/lib/queries/articles";
+import type { ArticleListItem } from "@/lib/queries/articles";
 import { resolveCategory } from "@/lib/labels";
 
 interface SimilarArticlesPanelProps {
-  articles: Article[];
+  articles: ArticleListItem[];
 }
 
 export default function SimilarArticlesPanel({ articles }: SimilarArticlesPanelProps) {

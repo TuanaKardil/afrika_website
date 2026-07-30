@@ -1,11 +1,11 @@
-import type { Article } from "@/lib/queries/articles";
+import type { ArticleListItem } from "@/lib/queries/articles";
 import type { SearchFilters } from "@/lib/queries/search";
 import ArticleGrid from "@/components/sections/ArticleGrid";
 import Pagination from "@/components/sections/Pagination";
 import { SEARCH_PAGE_SIZE } from "@/lib/queries/search";
 
 interface SearchResultsProps {
-  articles: Article[];
+  articles: ArticleListItem[];
   count: number;
   query: string;
   page: number;

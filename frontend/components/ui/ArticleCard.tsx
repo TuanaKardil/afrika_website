@@ -1,10 +1,10 @@
 import Link from "next/link";
-import type { Article } from "@/lib/queries/articles";
+import type { ArticleListItem } from "@/lib/queries/articles";
 import { formatDateShort } from "@/lib/utils";
 import { resolveCategory } from "@/lib/labels";
 
 interface ArticleCardProps {
-  article: Article;
+  article: ArticleListItem;
 }
 
 export default function ArticleCard({ article }: ArticleCardProps) {

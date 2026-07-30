@@ -1,13 +1,13 @@
 import ReactDOM from "react-dom";
 import Link from "next/link";
-import type { Article } from "@/lib/queries/articles";
+import type { ArticleListItem } from "@/lib/queries/articles";
 import { formatDateShort } from "@/lib/utils";
 import { resolveCategory } from "@/lib/labels";
 
 interface HeroSectionProps {
-  article: Article;
-  secondaryArticles?: Article[];
-  topArticles?: Article[];
+  article: ArticleListItem;
+  secondaryArticles?: ArticleListItem[];
+  topArticles?: ArticleListItem[];
 }
 
 export default function HeroSection({

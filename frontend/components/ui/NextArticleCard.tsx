@@ -1,10 +1,10 @@
-import type { Article } from "@/lib/queries/articles";
+import type { ArticleListItem } from "@/lib/queries/articles";
 import { formatDateShort } from "@/lib/utils";
 import { resolveCategory } from "@/lib/labels";
 import ReadingTime from "@/components/ui/ReadingTime";
 
 interface NextArticleCardProps {
-  article: Article;
+  article: ArticleListItem;
 }
 
 /**
