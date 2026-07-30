@@ -2,9 +2,15 @@ import re
 import bleach
 from bs4 import BeautifulSoup
 
+# Must stay in sync with frontend/lib/sanitize.ts ALLOWED_TAGS. The frontend was
+# taught about tables but this list was not, and bleach runs with strip=True:
+# it drops the tag and KEEPS the text, so every cell of a price table was
+# concatenated into one unreadable run ("Malawi$3.6302ndRwanda$1.99533rd")
+# before the article was ever stored.
 ALLOWED_TAGS = [
     "h2", "h3", "p", "blockquote", "ul", "ol", "li",
     "strong", "em", "a", "small", "figure", "figcaption", "img",
+    "table", "thead", "tbody", "tr", "th", "td",
 ]
 
 ALLOWED_ATTRIBUTES = {
