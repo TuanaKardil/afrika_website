@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import {
   getAllSlugs,
   getArticleBySlug,
+  getNextArticle,
   getSimilarArticles,
   resolveLegacyArticleSlug,
 } from "@/lib/queries/articles";
@@ -16,6 +17,7 @@ import ViewCountIncrementer from "./ViewCountIncrementer";
 import SaveButton from "@/components/ui/SaveButton";
 import ShareButtons from "@/components/ui/ShareButtons";
 import SimilarArticlesPanel from "@/components/ui/SimilarArticlesPanel";
+import NextArticleCard from "@/components/ui/NextArticleCard";
 import { formatDate } from "@/lib/utils";
 import { resolveCategory } from "@/lib/labels";
 import { resolveModifiedDate } from "@/lib/seo";
@@ -104,7 +106,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
 
   if (!article || !article.title_tr || article.is_suppressed || article.score === null || article.score < MIN_PUBLISHED_SCORE) notFound();
 
-  const [safeContent, similarArticles, author] = await Promise.all([
+  const [safeContent, similarArticles, author, nextArticle] = await Promise.all([
     Promise.resolve(sanitizeArticleContent(article.content_tr ?? "")),
     getSimilarArticles(
       article.id,
@@ -113,6 +115,7 @@ export default async function HaberPage({ params }: HaberPageProps) {
       article.hashtags ?? []
     ),
     article.author_slug ? getAuthorBySlug(article.author_slug) : Promise.resolve(null),
+    getNextArticle(article),
   ]);
 
   const crumbLabel = article.nav_tab_slug
@@ -357,6 +360,10 @@ export default async function HaberPage({ params }: HaberPageProps) {
               Afrika alaka puanı: {article.score}/10
             </p>
           )}
+
+          {/* Sonraki haber: tek ve net bir "devam et" teklifi. Benzer
+              haberlerin ÜSTÜNDE durur, tekilden çoğula daralan hiyerarşi. */}
+          {nextArticle && <NextArticleCard article={nextArticle} />}
 
           {/* Mobilde benzer haberler makale altında */}
           {similarArticles.length > 0 && (

@@ -2,6 +2,7 @@ import { createBuildClient } from "@/lib/supabase/server";
 const createClient = createBuildClient;
 import type { Database } from "@/lib/database.types";
 import { MIN_PUBLISHED_SCORE } from "@/lib/constants";
+import { DELETED_HABER_SLUGS } from "@/lib/deleted-slugs";
 
 export type Article = Database["public"]["Tables"]["articles"]["Row"];
 
@@ -486,6 +487,43 @@ export async function getSimilarArticles(
     );
 
   return scored.slice(0, limit).map((x) => x.article);
+}
+
+/**
+ * The next (older) published article, for the "Sonraki Haber" card.
+ *
+ * Keyset on the (published_at, id) pair rather than OFFSET or a bare
+ * `.lt("published_at", ...)`: published_at is NOT unique here, one scrape batch
+ * routinely writes several rows carrying the same source timestamp, and a strict
+ * less-than would silently skip every one of those ties. So a small window is
+ * fetched in the same total order the listings use, the current article is
+ * located in it, and the next survivor is taken.
+ *
+ * Returns null on the oldest article, and the card then renders nothing.
+ */
+const NEXT_ARTICLE_WINDOW = 8; // covers timestamp ties plus a few skipped slugs
+
+export async function getNextArticle(article: Article): Promise<Article | null> {
+  const supabase = createClient();
+
+  const { data } = await supabase
+    .from("articles")
+    .select("*")
+    .eq("is_suppressed", false)
+    .gte("score", MIN_PUBLISHED_SCORE)
+    .not("title_tr", "is", null)
+    .lte("published_at", article.published_at)
+    .order("published_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(NEXT_ARTICLE_WINDOW);
+
+  const rows = data ?? [];
+  const here = rows.findIndex((r) => r.id === article.id);
+  const after = here >= 0 ? rows.slice(here + 1) : rows.filter((r) => r.id !== article.id);
+
+  // Never link to a slug middleware answers with 410: that branch only matches
+  // paths starting with "/haber/", so it cannot protect a query result.
+  return after.find((r) => !DELETED_HABER_SLUGS.has(r.slug)) ?? null;
 }
 
 export async function getAllSlugs(): Promise<string[]> {
