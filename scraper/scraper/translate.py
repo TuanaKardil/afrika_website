@@ -11,6 +11,9 @@ from scraper.openrouter import chat, GEMINI_FLASH_LITE
 # Model output follows a named language far more reliably than an ISO code.
 _LANG_NAMES = {"en": "English", "fr": "French", "pt": "Portuguese"}
 
+# Attempts allowed when the model returns a body cut mid-sentence.
+_TRUNCATION_RETRIES = 3
+
 
 # --- Turkish-output detection ----------------------------------------------
 # Only letters that NO other source language uses. "ç", "ö" and "ü" are
@@ -509,10 +512,28 @@ def translate_article(
         "source": source_name,
         "source_lang": source_lang,
     }
-    result = _translate_one(article)
-    if result.get("title_tr") is None:
+
+    # Truncation is not deterministic: the model sometimes stops mid-sentence
+    # well short of the token limit, so the existing finish_reason=="length"
+    # retry never fires. QualityCheckPipeline then DROPS the article outright.
+    # Measured on one 1165-word article, 1 of 3 attempts came back cut, i.e. a
+    # third of such articles were being lost to a coin flip. Retry instead.
+    last: dict[str, Any] = {}
+    for attempt in range(_TRUNCATION_RETRIES):
+        last = _translate_one(article)
+        content = last.get("content_tr")
+        if last.get("title_tr") is None:
+            return None
+        if not content or not is_truncated_body(content):
+            break
+        logger.warning(
+            "Translation came back truncated (attempt %d/%d), retrying: %s",
+            attempt + 1, _TRUNCATION_RETRIES, source_url,
+        )
+
+    if last.get("title_tr") is None:
         return None
-    return result["title_tr"], result["excerpt_tr"], result["content_tr"]
+    return last["title_tr"], last["excerpt_tr"], last["content_tr"]
 
 
 # ---------------------------------------------------------------------------

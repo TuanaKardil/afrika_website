@@ -64,6 +64,14 @@ _NOISE_PATTERN = re.compile(
 # Above this many inline images, the body container is almost certainly wrong.
 _MAX_INLINE_IMAGES = 6
 
+# Headings that are widget furniture rather than article sections.
+_NOISE_HEADING_RE = re.compile(
+    r"\s*(also read|read also|read more|related( (articles?|posts?|news|stories))?|"
+    r"you may also like|more from|recommended( for you)?|trending|"
+    r"share this|advertisement|sponsored|tags?|newsletter|subscribe)\s*[:.]?\s*",
+    re.I,
+)
+
 # URL fragments that indicate non-editorial images
 _NOISE_URL_PATTERN = re.compile(
     r"(logo|icon|avatar|spinner|placeholder|pixel|tracking|"
@@ -186,6 +194,46 @@ def _fetch_datawrapper_tables(html: str) -> str:
     return "\n".join(tables)
 
 
+def _normalise_headings(html: str) -> str:
+    """Remap source headings onto the h2/h3 pair the sanitizer allows.
+
+    sanitize.ALLOWED_TAGS permits only h2 and h3, and bleach runs with
+    strip=True, so any other heading loses its tag and KEEPS its text. A source
+    that writes section headings as <h4> (Nairametrics does) therefore produced
+    bare ALL-CAPS lines floating between paragraphs. Worse, the body then
+    contained no headings at all, so add_h2_headings() invented its own H2s,
+    which restated the very lines that had just been flattened: the article
+    ended up saying each heading twice.
+
+    The shallowest heading level actually present becomes h2 and everything
+    below it becomes h3, so a document whose only headings are <h4> gets real
+    H2s (satisfying MIN_H2 and suppressing AI remediation) while a document with
+    a genuine h2/h4 hierarchy keeps two distinct levels.
+    """
+    if not html or not re.search(r"<h[1-6]\b", html, re.I):
+        return html
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Widget labels ("Also Read") ride along as headings. They are not article
+    # content, and left in place they also break the level detection below: a
+    # stray <h2>Also Read</h2> made 2 the top level, so the real <h4> section
+    # headings were demoted to h3 and the body ended up with no H2 at all.
+    for tag in soup.find_all(re.compile(r"^h[1-6]$")):
+        text = tag.get_text(strip=True)
+        if not text or _NOISE_HEADING_RE.fullmatch(text):
+            tag.decompose()
+
+    headings = soup.find_all(re.compile(r"^h[1-6]$"))
+    if not headings:
+        return str(soup)
+
+    top = min(int(t.name[1]) for t in headings)
+    for tag in headings:
+        tag.name = "h2" if int(tag.name[1]) == top else "h3"
+    return str(soup)
+
+
 def extract_content(response: Response, source: str = "") -> str:
     html = _fix_lazy_images(response.text)
 
@@ -195,6 +243,10 @@ def extract_content(response: Response, source: str = "") -> str:
         include_links=True,
         output_format="html",
         no_fallback=False,
+        # Without this, trafilatura discards <strong>/<em>, so a source heading
+        # written as <h4><strong>TEXT</strong></h4> arrives as plain TEXT and
+        # every emphasis in the body is lost.
+        include_formatting=True,
     )
 
     src = sources.get(source)
@@ -213,6 +265,8 @@ def extract_content(response: Response, source: str = "") -> str:
                 break
         if not result:
             result = f"<p>{response.css('body').xpath('string()').get('').strip()}</p>"
+
+    result = _normalise_headings(result)
 
     # Append any Datawrapper chart tables found in the page HTML.
     # These are JS-rendered embeds (ranking lists, tables) not captured by trafilatura.
