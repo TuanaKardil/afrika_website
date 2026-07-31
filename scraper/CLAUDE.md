@@ -8,12 +8,13 @@
 Runs twice daily. The 13:00 run picks up articles published after the morning run; duplicates from the first run are caught by DeduplicationPipeline.
 
 ```
-07:00 / 13:00  GitHub Actions scrape.yml triggered by native cron
-+00:01         DeduplicationPipeline  (source_url + content_hash + AI semantic, last 48h)
-+00:05         TurkeyFilterPipeline   (GPT-5 Nano, SUPPRESS items are dropped)
-+00:08         ScorePipeline          (Gemini 2.5 Flash-Lite, score < 6 are dropped)
-+00:15         MinContentPipeline     (drops articles < 100 words in content_original)
-+00:18         TranslatePipeline      (only score 6+, 600 words, SEO+GEO+AEO, human-readable source names)
+07:00 / 13:00  GitHub Actions scrape.yml, one parallel matrix job PER SOURCE
++00:01         DeduplicationPipeline  (100: source_url + content_hash, no AI)
++00:02         MinContentPipeline     (120: drops < 100 words, no AI, BEFORE any AI cost)
++00:05         TurkeyFilterPipeline   (150: GPT-5 Nano, SUPPRESS items are dropped)
++00:08         ScorePipeline          (160: Gemini 2.5 Flash-Lite, score < 6 are dropped)
++00:12         SemanticDuplicatePipeline (165: GPT-5 Nano, AI near-duplicate over last 48h)
++00:18         TranslatePipeline      (200: only score 6+, 600 words, SEO+GEO+AEO; source may be EN/FR/PT)
 +00:22         ContentCleanPipeline   (Gemini 2.5 Flash-Lite, removes off-topic promos + datelines from content_tr)
 +00:24         QualityCheckPipeline   (drops truncated list articles ending with "şunlardır:"; enforces H2: remediate via AI, else drop)
 +00:25         ClassifyPipeline       (nav_tab + sector + region JSON)

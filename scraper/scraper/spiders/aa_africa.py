@@ -6,9 +6,11 @@ import scrapy
 from scrapy.http import Response
 
 from scraper.extractors import extract_content, extract_inline_images
+from scraper import sources
 from scraper.items import ArticleItem
 
-_CUTOFF_DAYS = 1
+_SOURCE_SLUG = "aa_africa"
+_CUTOFF_DAYS = sources.get(_SOURCE_SLUG).cutoff_days
 _BASE = "https://www.aa.com.tr"
 _START_URL = f"{_BASE}/en/africa"
 
@@ -84,21 +86,22 @@ class AnadoluAgencyAfricaSpider(scrapy.Spider):
             or ""
         ).strip()
 
-        image_alt_en = (
+        image_alt_source = (
             response.css(".article-image img::attr(alt)").get()
             or response.css("figure img::attr(alt)").get()
             or response.css("meta[property='og:image:alt']::attr(content)").get()
             or ""
         ).strip()
 
-        content_html = extract_content(response, source="aa_africa")
+        content_html = extract_content(response, source=_SOURCE_SLUG)
         inline_images = extract_inline_images(response)
 
         plain = re.sub(r"<[^>]+>", "", content_html)
         excerpt = plain[:200].strip()
 
         yield ArticleItem(
-            source="aa_africa",
+            source=_SOURCE_SLUG,
+            source_lang=sources.get(_SOURCE_SLUG).lang,
             source_url=response.url,
             title_original=title,
             excerpt_original=excerpt,
@@ -107,7 +110,7 @@ class AnadoluAgencyAfricaSpider(scrapy.Spider):
             published_at=published_at.isoformat(),
             featured_image_source_url=featured_image_url,
             image_credit=image_credit,
-            image_alt_en=image_alt_en,
+            image_alt_source=image_alt_source,
             inline_image_urls=inline_images,
             is_update=False,
         )

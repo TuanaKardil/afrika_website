@@ -6,7 +6,7 @@ from scraper.openrouter import chat, GPT5_NANO
 logger = logging.getLogger(__name__)
 
 _SYSTEM = """\
-You are a binary sentiment filter for a Turkey-Africa news publication. Your sole task is to detect whether an English news article contains negative framing, criticism, hostility, or defamation directed at Turkey, Turkish companies, the Turkish government, or Turkish citizens.
+You are a binary sentiment filter for a Turkey-Africa news publication. Your sole task is to detect whether a news article contains negative framing, criticism, hostility, or defamation directed at Turkey, Turkish companies, the Turkish government, or Turkish citizens. The article may be written in English, French, or Portuguese; apply the same rules regardless of language.
 
 ## Decision Rules
 

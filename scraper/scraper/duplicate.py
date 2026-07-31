@@ -14,6 +14,8 @@ determine whether the new article is semantically identical or near-identical to
 "Near-identical" means: same core event, same key facts, essentially the same story even if worded differently.
 Different angles on the same broad topic do NOT count as duplicates.
 
+Articles may be in different languages. The same event reported in English and in French (or Portuguese) IS a duplicate: judge the underlying event, not the wording or the language.
+
 Reply with ONLY "DUPLICATE" or "UNIQUE". No explanation."""
 
 
@@ -22,12 +24,19 @@ def is_duplicate(title: str, excerpt: str, supabase) -> bool:
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=48)).isoformat()
 
     try:
+        # .order() is load-bearing, not cosmetic: without it Postgres returns an
+        # ARBITRARY subset once the window exceeds the limit. At 5 sources the
+        # 48h window held ~40 rows so limit(50) happened to cover it; at 15
+        # sources it is ~120, so an unordered limit(50) would have silently
+        # degraded dedup to a coin flip exactly when cross-source duplication
+        # (AFP/Reuters syndication) became likely.
         result = (
             supabase.table("articles")
             .select("title_original, excerpt_original")
             .gte("scraped_at", cutoff)
             .eq("is_suppressed", False)
-            .limit(50)
+            .order("scraped_at", desc=True)
+            .limit(200)
             .execute()
         )
     except Exception as exc:
@@ -38,8 +47,10 @@ def is_duplicate(title: str, excerpt: str, supabase) -> bool:
     if not existing:
         return False
 
+    # 60 chars of excerpt, not 100: the row count went from 50 to 200, and the
+    # title plus a short lead is what actually identifies the event.
     existing_block = "\n".join(
-        f"- {r.get('title_original', '')} | {r.get('excerpt_original', '')[:100]}"
+        f"- {r.get('title_original', '')} | {(r.get('excerpt_original') or '')[:60]}"
         for r in existing
     )
 

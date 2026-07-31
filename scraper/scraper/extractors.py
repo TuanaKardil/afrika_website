@@ -9,6 +9,8 @@ import trafilatura
 from bs4 import BeautifulSoup
 from scrapy.http import Response
 
+from scraper import sources
+
 logger = logging.getLogger(__name__)
 
 # Matches Datawrapper chart CDN URLs: datawrapper.dwcdn.net/{id}/{version}/
@@ -28,34 +30,9 @@ _LAZY_SRC_ATTRS = [
     "data-image-src",
 ]
 
-# Per-source CSS selector fallbacks
-_FALLBACK_SELECTORS: dict[str, list[str]] = {
-    "business_insider": [
-        ".content-lock-content",
-        ".post-content",
-        "article .content",
-    ],
-    "cnbc_africa": [
-        ".entry-content",
-        ".article-body",
-        "article .content",
-    ],
-    "africa_report": [
-        ".article-content",
-        ".entry-content",
-        "article .content",
-    ],
-    "aa_africa": [
-        ".article-content",
-        ".news-body",
-        "article .content",
-    ],
-    "the_conversation": [
-        ".content-body",
-        "article .content",
-        ".article__body",
-    ],
-}
+# Per-source CSS selector fallbacks now live in scraper/sources.py
+# (Source.body_selectors), so they cannot drift from the rest of a source's
+# configuration.
 
 # Selectors for article body container (tried in order, first match wins)
 _ARTICLE_BODY_SELECTORS = [
@@ -217,12 +194,14 @@ def extract_content(response: Response, source: str = "") -> str:
         no_fallback=False,
     )
 
+    src = sources.get(source)
+
     if result and len(result) >= _MIN_LENGTH:
-        if source == "business_insider":
+        if src is not None and src.strip_leading_bullets:
             result = _strip_leading_bullets(result)
     else:
-        # CSS selector fallback: concatenate matched block HTML
-        selectors = _FALLBACK_SELECTORS.get(source, [])
+        # CSS selector fallback: concatenate matched block HTML.
+        selectors = list(src.body_selectors) if src else []
         result = ""
         for selector in selectors:
             blocks = response.css(selector)

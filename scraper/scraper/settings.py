@@ -18,12 +18,15 @@ CONCURRENT_REQUESTS = 16
 
 COOKIES_ENABLED = False
 
+# Ordering is cost-driven: every free/cheap filter runs before the first AI
+# call, and each AI stage runs only on what survived the previous one.
 ITEM_PIPELINES = {
-    "scraper.pipelines.DeduplicationPipeline": 100,     # Hash + AI semantic dedup (48h)
+    "scraper.pipelines.DeduplicationPipeline": 100,     # source_url + content_hash lookup (no AI)
+    "scraper.pipelines.MinContentPipeline": 120,         # Drop stub/paywalled articles (< 100 words, no AI)
     "scraper.pipelines.TurkeyFilterPipeline": 150,       # GPT-5 Nano: PASS/SUPPRESS
     "scraper.pipelines.ScorePipeline": 160,              # Gemini Flash-Lite: 1-10 score
-    "scraper.pipelines.MinContentPipeline": 175,         # Drop stub/paywalled articles (< 80 words)
-    "scraper.pipelines.TranslationPipeline": 200,        # Gemini Flash-Lite: TR translate (score 5+)
+    "scraper.pipelines.SemanticDuplicatePipeline": 165,  # GPT-5 Nano: AI near-duplicate (48h)
+    "scraper.pipelines.TranslationPipeline": 200,        # Gemini Flash-Lite: TR translate (score 6+)
     "scraper.pipelines.ContentCleanPipeline": 220,       # Gemini Flash-Lite: remove boilerplate from content_tr
     "scraper.pipelines.QualityCheckPipeline": 235,       # Drop truncated lists; warn on missing H2
     "scraper.pipelines.SanitizationPipeline": 250,       # HTML sanitize (after translate)

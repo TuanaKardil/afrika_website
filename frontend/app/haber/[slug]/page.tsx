@@ -23,23 +23,7 @@ import { resolveCategory } from "@/lib/labels";
 import { resolveModifiedDate } from "@/lib/seo";
 import { MIN_PUBLISHED_SCORE } from "@/lib/constants";
 
-const SOURCE_LABELS: Record<string, string> = {
-  business_insider: "Business Insider Africa",
-  cnbc_africa:      "CNBC Africa",
-  africa_report:    "The Africa Report",
-  aa_africa:        "Anadolu Ajansı",
-  the_conversation: "The Conversation",
-};
-
-// The source citation links to the outlet's homepage (brand attribution),
-// not the exact scraped article.
-const SOURCE_HOMEPAGES: Record<string, string> = {
-  business_insider: "https://africa.businessinsider.com",
-  cnbc_africa:      "https://www.cnbcafrica.com",
-  africa_report:    "https://www.theafricareport.com",
-  aa_africa:        "https://www.aa.com.tr",
-  the_conversation: "https://theconversation.com",
-};
+import { SOURCE_LABELS, SOURCE_HOMEPAGES } from "@/lib/sources";
 
 export const revalidate = 3600;
 

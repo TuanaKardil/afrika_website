@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-canonical.mjs && node scripts/check-deleted-slugs.mjs",
+    "prebuild": "node scripts/check-canonical.mjs && node scripts/check-deleted-slugs.mjs && node scripts/check-sources.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

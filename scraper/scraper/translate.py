@@ -5,7 +5,48 @@ import logging
 import re
 from typing import Any
 
+from scraper import sources
 from scraper.openrouter import chat, GEMINI_FLASH_LITE
+
+# Model output follows a named language far more reliably than an ISO code.
+_LANG_NAMES = {"en": "English", "fr": "French", "pt": "Portuguese"}
+
+
+# --- Turkish-output detection ----------------------------------------------
+# Only letters that NO other source language uses. "ç", "ö" and "ü" are
+# deliberately excluded: French writes "français"/"garçon" and Portuguese
+# "moçambicano", so including "ç" made 9 of 10 French articles look Turkish
+# during calibration.
+_TR_ONLY_CHARS_RE = re.compile(r"[ğıİĞşŞ]")
+# Likewise "de", "da" and "en" are excluded: they are among the most frequent
+# words in both French and Portuguese.
+_TR_STOPWORDS_RE = re.compile(
+    r"\b(ve|bir|bu|için|ile|olarak|daha|ancak|yüzde|göre|dedi|oldu|olan|"
+    r"kadar|sonra|arasında|üzerine|ayrıca|ise|çok|değil|yıl|milyon|milyar)\b",
+    re.IGNORECASE | re.UNICODE,
+)
+
+
+def looks_turkish(html: str) -> bool:
+    """True when the body reads as Turkish.
+
+    This replaces "is the output still English?" as the translation-failure
+    gate. Asking the negative question needed a new detector per source
+    language, and a failed French or Portuguese translation sailed straight
+    through the English check and would have published French on a Turkish news
+    site. Asking the positive question is source-language agnostic, so it also
+    covers any language added later.
+
+    Calibrated against 60 published content_tr bodies (60/60 True) and 57 raw
+    English/French/Portuguese bodies (57/57 False).
+    """
+    text = re.sub(r"<[^>]+>", " ", html)
+    words = re.findall(r"\w+", text, re.UNICODE)
+    if len(words) < 50:
+        return True  # too short to judge; MinContent/QualityCheck handle these
+    char_ratio = len(_TR_ONLY_CHARS_RE.findall(text)) / len(words)
+    word_ratio = len(_TR_STOPWORDS_RE.findall(text)) / len(words)
+    return char_ratio > 0.05 or word_ratio > 0.04
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +113,11 @@ def _ensure_html_paragraphs(text: str) -> str:
 
 
 _SYSTEM_PROMPT = """\
-You are a senior Turkish news editor and translator covering African business, policy, and economics for a Turkish audience. Your task is to translate English news articles into journalistic Turkish that is simultaneously optimized for traditional search (SEO), AI engine citation (GEO), and answer-based discovery (AEO). Only add a Turkey-specific angle when it is explicitly supported by the source text or by verified supporting context provided in the prompt.
+You are a senior Turkish news editor and translator covering African business, policy, and economics for a Turkish audience. Your task is to translate news articles written in English, French, or Portuguese into journalistic Turkish that is simultaneously optimized for traditional search (SEO), AI engine citation (GEO), and answer-based discovery (AEO). Only add a Turkey-specific angle when it is explicitly supported by the source text or by verified supporting context provided in the prompt.
 
 ## Translation Rules (Non-Negotiable)
+
+0. SOURCE LANGUAGE: The article's language is stated in the user message. Translate from that language into Turkish. The output must contain no sentences left in the source language. This applies equally to English, French, and Portuguese sources.
 
 1. LENGTH: The translated article MUST NOT exceed 600 words in Turkish. If the original exceeds 1000 words, condense and summarize while preserving all key facts, quotes, and data points. If the original is 600-1000 words, compress to 600 words by removing redundant background paragraphs, repetitive examples, and non-essential anecdotes. Count: title + body only. Source link and image captions are excluded.
 
@@ -86,6 +129,13 @@ You are a senior Turkish news editor and translator covering African business, p
    Nigeria→Nijerya, South Africa→Güney Afrika, Egypt→Mısır, Ethiopia→Etiyopya,
    Ghana→Gana, Cameroon→Kamerun, Congo→Kongo, Zimbabwe→Zimbabve, Tanzania→Tanzanya,
    Rwanda→Ruanda, Somalia→Somali, Sudan→Sudan, Uganda→Uganda, Kenya→Kenya.
+   From French sources: Maroc→Fas, Algérie→Cezayir, Tunisie→Tunus, Sénégal→Senegal,
+   Côte d'Ivoire→Fildişi Sahili, Afrique du Sud→Güney Afrika, Égypte→Mısır,
+   Cameroun→Kamerun, Guinée→Gine, Tchad→Çad, Union africaine→Afrika Birliği,
+   Banque africaine de développement→Afrika Kalkınma Bankası (AfDB).
+   From Portuguese sources: Moçambique→Mozambik, Angola→Angola, Cabo Verde→Cape Verde,
+   Guiné-Bissau→Gine-Bissau, São Tomé e Príncipe→Sao Tome ve Principe,
+   África do Sul→Güney Afrika, União Africana→Afrika Birliği.
    African Union→Afrika Birliği, AfCFTA→Afrika Kıtası Serbest Ticaret Alanı (AfCFTA),
    African Development Bank→Afrika Kalkınma Bankası (AfDB).
    Turkish Airlines→Türk Hava Yolları. Other company names: keep original spelling.
@@ -158,6 +208,8 @@ Return ONLY a valid JSON object — no markdown code fences, no explanatory text
 
 _USER_TEMPLATE = """\
 Translate the following news article to Turkish.
+
+Source language: {source_lang}
 
 Title: {title}
 Excerpt: {excerpt}
@@ -355,15 +407,11 @@ def _translate_one(article: dict[str, Any]) -> dict[str, Any]:
     excerpt = article.get("excerpt_original") or ""
     body = article.get("content_original") or ""
     source_url = article.get("source_url") or ""
-    _SOURCE_LABELS = {
-        "business_insider": "Business Insider Africa",
-        "cnbc_africa": "CNBC Africa",
-        "africa_report": "The Africa Report",
-        "the_conversation": "The Conversation Africa",
-        "aa_africa": "Anadolu Agency",
-    }
     raw_source = article.get("source") or ""
-    source_name = _SOURCE_LABELS.get(raw_source) or raw_source or source_url
+    source_name = sources.label(raw_source) or raw_source or source_url
+    # Prefer the explicit value the spider set; fall back to the registry so the
+    # DB-driven paths (retranslate.py and the backfills) only need `source`.
+    source_lang = article.get("source_lang") or sources.lang(raw_source)
 
     user_message = _USER_TEMPLATE.format(
         title=title,
@@ -371,6 +419,7 @@ def _translate_one(article: dict[str, Any]) -> dict[str, Any]:
         body=body,
         source_url=source_url,
         source_name=source_name,
+        source_lang=_LANG_NAMES.get(source_lang, "English"),
     )
 
     # A 600-word Turkish body plus title/excerpt and JSON escaping can exceed
@@ -444,14 +493,21 @@ def translate_article(
     body: str,
     source_url: str,
     source_name: str = "",
+    source_lang: str = "",
 ) -> tuple[str, str, str] | None:
-    """Translate a single article. Returns (title_tr, excerpt_tr, content_tr) or None on failure."""
+    """Translate a single article. Returns (title_tr, excerpt_tr, content_tr) or None on failure.
+
+    `source_name` is the source SLUG (callers pass item["source"]); the display
+    label is resolved from the registry. `source_lang` may be left empty, in
+    which case the registry supplies it from the slug.
+    """
     article = {
         "title_original": title,
         "excerpt_original": excerpt,
         "content_original": body,
         "source_url": source_url,
         "source": source_name,
+        "source_lang": source_lang,
     }
     result = _translate_one(article)
     if result.get("title_tr") is None:
@@ -466,12 +522,17 @@ def translate_article(
 _MEANINGLESS_ALT_RE = re.compile(
     r"^(photo|image|picture|img|banner|file photo|ap photo|reuters|afp|epa|"
     r"getty|handout|archive|file|stock photo|stock|generic|illustration|logo|"
-    r"video|thumbnail|cover|hero|featured|\d+[\w\s]*)$",
+    r"video|thumbnail|cover|hero|featured|"
+    # French / Portuguese equivalents, for medias24 and 360mozambique
+    r"foto|fotografia|imagem|imagen|légende|legenda|sans légende|sem legenda|"
+    r"arquivo|fichier|photo d'archive|destaque|"
+    r"\d+[\w\s]*)$",
     re.I,
 )
 
 _ALT_SYSTEM = (
     "Translate the image alt text to Turkish. "
+    "The input may be in English, French, or Portuguese. "
     "Rules: "
     "(1) MAXIMUM 10 WORDS — this is a short image description, NOT an article. "
     "(2) Use Turkish country/city name conventions: Nigeria→Nijerya, South Africa→Güney Afrika, "
@@ -854,6 +915,13 @@ def finalize_content_tr(
     """
     if not content_tr:
         return None, "empty"
+
+    # Language gate first: a body still in the source language must never reach
+    # the clean/H2 steps, let alone the DB. TranslationPipeline applies the same
+    # check, but backfills bypass the pipeline entirely and this function is the
+    # one choke point every Turkish body goes through (CLAUDE.md rule 24).
+    if not looks_turkish(content_tr):
+        return None, "not-turkish"
 
     if clean:
         try:

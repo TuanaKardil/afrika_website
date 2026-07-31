@@ -22,7 +22,8 @@ class ArticleItem(scrapy.Item):
     is_suppressed = scrapy.Field()
     is_update = scrapy.Field()
     inline_image_urls = scrapy.Field()   # list[str] of image URLs from article body
-    image_alt_en = scrapy.Field()        # alt text from source <img> tag (English)
+    image_alt_source = scrapy.Field()    # alt text from source <img> tag, in the source language
+    source_lang = scrapy.Field()         # "en" | "fr" | "pt", from the sources registry
     # Pipeline-assigned fields (not set by spiders)
     score = scrapy.Field()              # 1-10 Africa relevance score
     turkey_filter_result = scrapy.Field()  # "PASS" or "SUPPRESS"

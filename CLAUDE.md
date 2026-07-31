@@ -5,7 +5,9 @@
 
 ## 1. Project Summary
 
-A Turkish-language, Africa-focused business and economy news platform. News is pulled daily from English sources (The Conversation Africa, Africa Report, CNBC Africa, AA Africa, Business Insider Africa). Items are translated to Turkish via AI, scored (1-10), classified, tagged with 8-15 hashtags, and published.
+A Turkish-language, Africa-focused business and economy news platform. News is pulled daily from 15 sources in English, French and Portuguese. Items are translated to Turkish via AI, scored (1-10), classified, tagged with 8-15 hashtags, and published.
+
+**Sources are declared in exactly one place: `scraper/scraper/sources.py`** (slug, Turkish label, homepage, acquisition strategy, language, cutoff window, selectors). The spiders, `extractors.py`, `translate.py`, `run.sh` and the CI matrix all read from it; `frontend/lib/sources.ts` mirrors it and `frontend/scripts/check-sources.mjs` fails the build on drift. Adding a source means a registry entry, a 4-line spider stub, and a migration widening the `articles_source_check` CHECK.
 
 - **Update times:** 07:00 TST + 13:00 TST (n8n cron, twice daily)
 - **Fetch window:** Last 24 hours
