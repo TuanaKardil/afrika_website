@@ -120,10 +120,16 @@ _JOOMLA_ALT = ("figure img::attr(alt)", ".itemImage img::attr(alt)",
 # Joomla exposes no article:published_time / JSON-LD / <time>; the only date on
 # the page is this element's text, e.g. "Saturday, 25 July 2026 17:47".
 _JOOMLA_DATE = (".itemDateCreated", ".itemDate")
-# K2 publishes _XS/_S/_M/_L/_XL/_Generic renditions of every image and links
-# the _S thumbnail (290px). _Generic is the full 1190px original; verified
-# present for 10/10 sampled Ecofin images.
-_K2_FULLSIZE = (r"_S\.jpg$", "_Generic.jpg")
+# K2 publishes _XS/_S/_M/_L/_XL/_Generic renditions of every image, and BOTH the
+# linked variant and the largest available one differ per install, so the target
+# has to be measured per source rather than assumed:
+#   Ecofin               links _S (290px); _Generic is the full 1190px original.
+#   Business in Cameroon links _M (450px); _Generic is only 300px there, so _XL
+#                        (666px) is the largest and _Generic would be a
+#                        DOWNGRADE.
+# Both patterns exclude their own target so the rewrite stays idempotent.
+_K2_TO_GENERIC = (r"_(XS|S|M|L|XL)\.jpg$", "_Generic.jpg")
+_K2_TO_XL = (r"_(XS|S|M|L|Generic)\.jpg$", "_XL.jpg")
 
 
 _ALL: tuple[Source, ...] = (
@@ -221,7 +227,7 @@ _ALL: tuple[Source, ...] = (
         body_selectors=_JOOMLA_BODY,
         image_alt_selectors=_JOOMLA_ALT,
         date_selectors=_JOOMLA_DATE,
-        featured_image_rewrite=_K2_FULLSIZE,
+        featured_image_rewrite=_K2_TO_GENERIC,
         download_delay=4,
         enabled=True,
         notes=(
@@ -264,7 +270,7 @@ _ALL: tuple[Source, ...] = (
         body_selectors=_JOOMLA_BODY,
         image_alt_selectors=_JOOMLA_ALT,
         date_selectors=_JOOMLA_DATE,
-        featured_image_rewrite=_K2_FULLSIZE,
+        featured_image_rewrite=_K2_TO_XL,
         download_delay=4,
         enabled=True,
         notes="Same Joomla template as ecofin. Cloudflare, same content signals.",
