@@ -89,6 +89,11 @@ class Source:
     # feed mixes in that are not news (e.g. 360mozambique's tender listings,
     # which are short notices and belong to the separate tenders pipeline).
     exclude_url_re: str = ""
+    # (regex, replacement) applied to the featured image URL before download, to
+    # trade a CMS thumbnail for its full-size rendition. Joomla K2 links the "_S"
+    # variant (290px) in page markup, and the WebP ladder never upscales, so
+    # without this every image on the site capped at 290px.
+    featured_image_rewrite: tuple[str, str] | None = None
     download_delay: int | None = None
     strip_leading_bullets: bool = False
     enabled: bool = True
@@ -115,6 +120,10 @@ _JOOMLA_ALT = ("figure img::attr(alt)", ".itemImage img::attr(alt)",
 # Joomla exposes no article:published_time / JSON-LD / <time>; the only date on
 # the page is this element's text, e.g. "Saturday, 25 July 2026 17:47".
 _JOOMLA_DATE = (".itemDateCreated", ".itemDate")
+# K2 publishes _XS/_S/_M/_L/_XL/_Generic renditions of every image and links
+# the _S thumbnail (290px). _Generic is the full 1190px original; verified
+# present for 10/10 sampled Ecofin images.
+_K2_FULLSIZE = (r"_S\.jpg$", "_Generic.jpg")
 
 
 _ALL: tuple[Source, ...] = (
@@ -212,6 +221,7 @@ _ALL: tuple[Source, ...] = (
         body_selectors=_JOOMLA_BODY,
         image_alt_selectors=_JOOMLA_ALT,
         date_selectors=_JOOMLA_DATE,
+        featured_image_rewrite=_K2_FULLSIZE,
         download_delay=4,
         enabled=True,
         notes=(
@@ -254,6 +264,7 @@ _ALL: tuple[Source, ...] = (
         body_selectors=_JOOMLA_BODY,
         image_alt_selectors=_JOOMLA_ALT,
         date_selectors=_JOOMLA_DATE,
+        featured_image_rewrite=_K2_FULLSIZE,
         download_delay=4,
         enabled=False,
         notes="Same Joomla template as ecofin. Cloudflare, same content signals.",

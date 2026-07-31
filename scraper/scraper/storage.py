@@ -234,14 +234,54 @@ def upload_featured_image(
     return jpeg_url, srcset
 
 
+# Difference-hash grid. 16x16 comparisons -> a 256-bit hash.
+_DHASH_SIZE = 16
+# Max differing bits for two images to count as the same picture. 0 is an exact
+# match; real duplicates that went through separate JPEG encodes land in single
+# digits, while unrelated photos sit near 128 (half the bits).
+_DHASH_MAX_DISTANCE = 24
+
+
 def _image_fingerprint(img_bytes: bytes) -> str:
-    """16x16 grayscale perceptual fingerprint — catches same-image-different-filename."""
+    """Perceptual difference-hash, as hex.
+
+    This replaced an MD5 of a 16x16 grayscale thumbnail. MD5 is an EXACT hash,
+    so a single differing pixel produced a completely different value: the
+    featured image and the same photo inside the article body failed to match
+    whenever the CDN re-encoded one of them, and the picture was uploaded twice
+    and rendered twice. Measured on a real pair (both 2560x1704, 732 KB vs
+    681 KB): MD5 said "different", dHash distance was 0.
+
+    dHash compares each pixel with its right-hand neighbour, so it keys on
+    structure rather than exact values and survives re-compression and rescaling.
+    """
     try:
-        buf = io.BytesIO(img_bytes)
-        img = Image.open(buf).convert("L").resize((16, 16), Image.LANCZOS)
-        return hashlib.md5(img.tobytes()).hexdigest()
+        img = (Image.open(io.BytesIO(img_bytes)).convert("L")
+               .resize((_DHASH_SIZE + 1, _DHASH_SIZE), Image.LANCZOS))
+        px = list(img.getdata())
+        bits = 0
+        row_len = _DHASH_SIZE + 1
+        for row in range(_DHASH_SIZE):
+            base = row * row_len
+            for col in range(_DHASH_SIZE):
+                bits = (bits << 1) | (1 if px[base + col] > px[base + col + 1] else 0)
+        return f"{bits:064x}"
     except Exception:
         return ""
+
+
+def fingerprints_match(a: str, b: str) -> bool:
+    """True when two fingerprints describe the same picture.
+
+    Must be used instead of `a == b`: dHash is a similarity hash, so equality
+    would throw away the tolerance that makes it work.
+    """
+    if not a or not b:
+        return False
+    try:
+        return bin(int(a, 16) ^ int(b, 16)).count("1") <= _DHASH_MAX_DISTANCE
+    except ValueError:
+        return False
 
 
 def compute_image_fingerprint(url: str) -> str:
@@ -253,10 +293,15 @@ def compute_image_fingerprint(url: str) -> str:
 
 
 def rewrite_image_srcs(html: str, url_map: dict[str, str]) -> str:
-    """Replace original img src values with Supabase Storage URLs."""
+    """Replace original img src values with Supabase Storage URLs.
+
+    Parsed with html.parser, not lxml: lxml treats input as a whole document and
+    wraps a fragment in <html><body>, so every rewritten body was stored with a
+    stray "</body></html>" tail. html.parser leaves a fragment a fragment.
+    """
     if not url_map:
         return html
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
     for img in soup.find_all("img"):
         src = img.get("src", "")
         if src in url_map:

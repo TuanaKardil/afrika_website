@@ -678,14 +678,19 @@ class StoragePipeline:
             if not featured_fp or not src:
                 return False
             from scraper.storage import compute_image_fingerprint as _cfp
-            fp = _cfp(src)
-            return bool(fp and fp == featured_fp)
+            from scraper.storage import fingerprints_match
+            # Tolerance matters: `fp == featured_fp` used to be the test, and it
+            # missed every CDN re-encode of the same photo.
+            return fingerprints_match(_cfp(src), featured_fp)
 
-        # Build full image URL list: inline imgs already in content HTML + explicit inline_image_urls
+        # Build full image URL list: inline imgs already in content HTML + explicit inline_image_urls.
+        # A dry run must not upload here either: these two loops are what filled
+        # Storage with hundreds of files during offline analysis runs, because
+        # only the FEATURED image upload was gated.
         url_map: dict[str, str] = {}
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(content, "lxml")
-        for i, img in enumerate(soup.find_all("img")):
+        for i, img in enumerate([] if self._dry_run else soup.find_all("img")):
             src = img.get("src", "")
             if src and src not in url_map:
                 if _is_featured_duplicate(src):
@@ -701,7 +706,7 @@ class StoragePipeline:
                     url_map[src] = new_url
 
         # Also upload explicit inline_image_urls (handles lazy-loaded images not in content HTML)
-        for j, src in enumerate(item.get("inline_image_urls") or []):
+        for j, src in enumerate([] if self._dry_run else (item.get("inline_image_urls") or [])):
             if src and src not in url_map:
                 if _is_featured_duplicate(src):
                     logger.info("Skipping visually identical inline image: %s", src[:80])

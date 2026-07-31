@@ -201,11 +201,26 @@ class BaseNewsSpider(scrapy.Spider, ABC):
         ).strip()
 
     def extract_featured_image(self, response: Response) -> str:
-        return (
+        url = (
             response.css("meta[property='og:image']::attr(content)").get()
             or response.css("figure img::attr(src)").get()
             or ""
         ).strip()
+        return self.upgrade_image_url(url)
+
+    def upgrade_image_url(self, url: str) -> str:
+        """Swap a CMS thumbnail for its full-size rendition, per the registry.
+
+        The WebP ladder in storage.py never upscales, so a thumbnail source caps
+        every variant the site can serve. Joomla links the 290px "_S" rendition;
+        without this rewrite the article hero was a 290px image stretched across
+        a 1600px box.
+        """
+        rewrite = self.src.featured_image_rewrite
+        if not url or not rewrite:
+            return url
+        pattern, replacement = rewrite
+        return re.sub(pattern, replacement, url)
 
     def extract_image_alt(self, response: Response) -> str:
         for selector in self.src.image_alt_selectors:
@@ -235,7 +250,7 @@ class BaseNewsSpider(scrapy.Spider, ABC):
 
         content_html = self.extract_body(response)
         excerpt = re.sub(r"<[^>]+>", "", content_html)[:200].strip()
-        inline_images = extract_inline_images(response)
+        inline_images = extract_inline_images(response, source=self.source_slug)
 
         # Some sites (capital_ethiopia) publish no og:image at all. The first
         # editorial inline image is a better featured image than nothing, and

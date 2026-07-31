@@ -116,7 +116,7 @@ class ConversationAfricaSpider(scrapy.Spider):
         ).strip()
 
         content_html = extract_content(response, source=_SOURCE_SLUG)
-        inline_images = extract_inline_images(response)
+        inline_images = extract_inline_images(response, source=_SOURCE_SLUG)
 
         plain_text = re.sub(r"<[^>]+>", "", content_html)
         excerpt = plain_text[:200].strip()

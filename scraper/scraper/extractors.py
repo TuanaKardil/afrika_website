@@ -220,24 +220,37 @@ def extract_content(response: Response, source: str = "") -> str:
     return result
 
 
-def extract_inline_images(response) -> list[str]:
+def extract_inline_images(response, source: str = "") -> list[str]:
     """Extract editorial inline image URLs from the article body only.
 
     Strips related-article widgets, sidebars, author bios, and other noise
     before scanning so only content images are returned.
     Returns a deduplicated list of absolute HTTP URLs.
+
+    `source` scopes the search to that source's registered body container. This
+    is not optional polish: when no selector matches, the search falls back to
+    the whole <body>, and on Joomla (ecofin, business_in_cameroon) that pulled
+    in the "most read" sidebar thumbnails, so every article ended up with the
+    same ~11 junk images appended to it and uploaded to Storage.
     """
     soup = BeautifulSoup(response.text, "lxml")
 
-    # Find the most specific article body container
+    # Registry selectors first (per-source, precise), then the generic list.
+    src_cfg = sources.get(source)
+    selectors = list(src_cfg.body_selectors) if src_cfg else []
+    selectors += [s for s in _ARTICLE_BODY_SELECTORS if s not in selectors]
+
     container = None
-    for sel in _ARTICLE_BODY_SELECTORS:
+    for sel in selectors:
         container = soup.select_one(sel)
         if container:
             break
     if container is None:
-        container = soup.find("body")
-    if container is None:
+        logger.warning(
+            "No article body container matched for source=%r at %s; "
+            "skipping inline images rather than scanning the whole page",
+            source, getattr(response, "url", "")[:100],
+        )
         return []
 
     # Remove noise sections (related articles, sidebars, widgets, etc.)
