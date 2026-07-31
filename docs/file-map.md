@@ -41,7 +41,13 @@
 | `frontend/components/layout/HeaderSearch.tsx` | Desktop search bar (right side of header) with autocomplete dropdown and submit button |
 | `supabase/migrations/021_search_v2.sql` | pg_trgm extension + `search_articles_v2` + `count_search_articles_v2` RPCs |
 | `supabase/migrations/022_image_alt_tr.sql` | Adds `image_alt_tr TEXT` column; backfills existing rows with `title_tr` |
-| `scraper/scraper/items.py` | Scrapy item fields — includes `image_alt_en` (raw English from source) and `image_alt_tr` (translated Turkish, max 10 words) |
+| `scraper/scraper/items.py` | Scrapy item fields — includes `image_alt_source` (raw alt in the source language) , `image_alt_tr` (translated Turkish, max 10 words) and `source_lang` |
+| `scraper/scraper/sources.py` | **Source registry — the single source of truth.** Slug, Turkish label, homepage, acquisition strategy (Rss / NewsSitemap / HtmlIndex), language, cutoff days, body/alt/date selectors. `python3 -m scraper.sources --slugs-json` feeds the CI matrix. |
+| `scraper/scraper/spiders/base_news_spider.py` | Shared article parsing for every news spider: date, title, author, image, alt, credit, body, excerpt, `ArticleItem`. A source-specific quirk overrides one `extract_*` method. |
+| `scraper/scraper/spiders/strategies/` | `rss.py`, `sitemap.py`, `html_index.py` — the three ways article URLs are discovered. A new source is usually a 4-line stub subclassing one of these. |
+| `scraper/tools/inspect_items.py` | Report card for a spider's raw output (`-s ITEM_PIPELINES='{}'`). No AI cost. First gate for a new source. |
+| `scraper/tools/check_robots.py` | Verifies our UA may still fetch each source's entry URLs, and surfaces Cloudflare `Content-Signal` lines. |
+| `frontend/lib/sources.ts` | Mirror of the Python registry for the frontend (labels + homepages). `frontend/scripts/check-sources.mjs` fails the build if the two drift. |
 | `scraper/scraper/translate.py` | `translate_image_alt()` — separate Gemini call (max 80 tokens) for image alt; NEVER mixed with article body translation |
 | `scraper/backfill_image_alt.py` | One-time backfill: fetches source pages, extracts real alt text, translates and updates DB |
 | `scraper/scraper/storage.py` | Image pipeline. `upload_featured_image()` uploads the canonical JPEG (max 1200px, q80) AND responsive WebP variants (`_variant_widths` ladder, `<stem>-<w>.webp`), returning `(jpeg_url, srcset)`. `upload_image()` (inline/legacy) stays JPEG-only. See rule 20. |

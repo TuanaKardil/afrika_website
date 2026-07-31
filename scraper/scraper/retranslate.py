@@ -31,7 +31,10 @@ def main() -> None:
     # Fetch articles where translation was not applied (title_tr equals title_original)
     rows = (
         sb.table("articles")
-        .select("id,source_url,title_original,title_tr,excerpt_original,content_original,content_hash")
+        # `source` is required: _translate_one resolves both the "Kaynak:" label
+        # and the source language from it. Without it the label fell back to the
+        # raw URL and the language defaulted to English.
+        .select("id,source,source_url,title_original,title_tr,excerpt_original,content_original,content_hash")
         .execute()
     )
 

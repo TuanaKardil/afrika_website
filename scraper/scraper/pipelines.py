@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 from scrapy.exceptions import DropItem
 
 from scraper.sanitize import sanitize_html
+# Turkish-output detection lives in translate.py so finalize_content_tr() can
+# apply the same gate without importing this module.
+from scraper.translate import looks_turkish as _looks_turkish
 
 load_dotenv()
 
@@ -92,7 +95,23 @@ def _is_english(html: str) -> bool:
     return en_hits / len(words) > 0.08
 
 
+
+
 _TR_CHARS = str.maketrans("çşığöüÇŞİĞÖÜ", "csigoucsigou")
+
+
+def _is_slug_conflict(exc: Exception) -> bool:
+    """True when a failed insert was a unique violation on articles.slug."""
+    msg = str(exc).lower()
+    return "23505" in msg or ("duplicate key" in msg and "slug" in msg)
+
+
+def _is_source_constraint_violation(exc: Exception) -> bool:
+    """True when a failed write was rejected by articles_source_check."""
+    msg = str(exc).lower()
+    return "articles_source_check" in msg or (
+        "23514" in msg and "source" in msg
+    )
 
 
 def _make_slug(title: str, existing_slugs: set[str]) -> str:
@@ -186,14 +205,41 @@ class DeduplicationPipeline:
                 raise DropItem(f"Unchanged content, skipping: {source_url}")
             item["is_update"] = True
 
-        # AI semantic duplicate check (new articles only)
-        if not item.get("is_update"):
-            from scraper.duplicate import is_duplicate
-            title = item.get("title_original", "")
-            excerpt = item.get("excerpt_original", "")
-            if is_duplicate(title, excerpt, self._supabase):
-                _stats_inc(source, "dropped_duplicate")
-                raise DropItem(f"AI duplicate detected, skipping: {source_url}")
+        return item
+
+
+class SemanticDuplicatePipeline:
+    """AI near-duplicate detection against the last 48h of published articles.
+
+    Split out of DeduplicationPipeline and moved AFTER scoring: it is the only
+    AI call in that pipeline, so running it on every scraped item meant paying
+    for articles that ScorePipeline was about to drop anyway. Running it later
+    also improves precision, because the comparison corpus then contains only
+    articles good enough to have been published.
+    """
+
+    def __init__(self):
+        self._supabase = None
+
+    def open_spider(self, spider):
+        try:
+            self._supabase = _get_supabase()
+        except Exception as exc:
+            logger.warning("Supabase unavailable, semantic dedup disabled: %s", exc)
+
+    def process_item(self, item, spider):
+        if self._supabase is None or item.get("is_update"):
+            return item
+
+        from scraper.duplicate import is_duplicate
+
+        source = item.get("source", "")
+        source_url = item.get("source_url", "")
+        if is_duplicate(item.get("title_original", ""),
+                        item.get("excerpt_original", ""),
+                        self._supabase):
+            _stats_inc(source, "dropped_duplicate")
+            raise DropItem(f"AI duplicate detected, skipping: {source_url}")
 
         return item
 
@@ -233,11 +279,13 @@ class ScorePipeline:
 
 
 class MinContentPipeline:
-    """Drop articles whose original content is too short (< 100 English words).
+    """Drop articles whose original content is too short (< 100 words).
 
-    Runs after ScorePipeline so only scored-5+ items reach this check, and
-    before TranslationPipeline so we do not waste AI translation cost on
-    stub or paywalled articles.
+    Runs at 120, i.e. before ANY AI call. It used to sit at 175, after the
+    Turkey filter, scoring and semantic dedup, so a 40-word teaser burned three
+    AI calls before being dropped for a reason that costs nothing to check. That
+    ordering assumed scoring was free; it is not, and with 15 sources (several
+    of which publish short Joomla teasers) the waste is significant.
 
     Threshold is 100 (raised from 80): Reuters/agency wire stubs and teasers
     top out around 90-96 source words and produce thin, structure-less articles
@@ -265,7 +313,8 @@ class MinContentPipeline:
 
 
 class TranslationPipeline:
-    """Translate English content to Turkish for articles scoring MIN_AFRICA_SCORE or higher.
+    """Translate source content to Turkish for articles scoring MIN_AFRICA_SCORE or higher.
+    Source may be English, French or Portuguese; item["source_lang"] says which.
     Articles below MIN_AFRICA_SCORE skip translation (title_tr/excerpt_tr/content_tr remain None).
     Uses Gemini 2.5 Flash-Lite via OpenRouter.
     """
@@ -287,6 +336,7 @@ class TranslationPipeline:
             body=item.get("content_original", ""),
             source_url=item.get("source_url", ""),
             source_name=item.get("source", ""),
+            source_lang=item.get("source_lang", ""),
         )
         if result is None:
             logger.warning("Translation failed for %s", item.get("source_url", ""))
@@ -297,11 +347,15 @@ class TranslationPipeline:
 
         title_tr, excerpt_tr, content_tr = result
 
-        # Guard: if the "translated" body is still predominantly English, the
-        # translation silently failed. Drop the item rather than publish English.
-        if content_tr and _is_english(content_tr):
-            logger.warning("Translation produced English output, dropping: %s", item.get("source_url", ""))
-            raise DropItem(f"Translation failed (English output): {item.get('source_url', '')}")
+        # Guard: the output must READ AS TURKISH. Checking "is it still English"
+        # only worked while every source was English; a failed French or
+        # Portuguese translation passed that check untouched.
+        if content_tr and not _looks_turkish(content_tr):
+            logger.warning(
+                "Translation did not produce Turkish (source_lang=%s), dropping: %s",
+                item.get("source_lang", "?"), item.get("source_url", ""),
+            )
+            raise DropItem(f"Translation failed (non-Turkish output): {item.get('source_url', '')}")
 
         item["title_tr"] = title_tr
         item["excerpt_tr"] = excerpt_tr
@@ -311,9 +365,9 @@ class TranslationPipeline:
 
         # Translate image alt text — separate call, not mixed with article translation
         from scraper.translate import translate_image_alt
-        alt_en = (item.get("image_alt_en") or "").strip()
-        if alt_en:
-            alt_tr = translate_image_alt(alt_en)
+        alt_source = (item.get("image_alt_source") or "").strip()
+        if alt_source:
+            alt_tr = translate_image_alt(alt_source)
             # Sources reuse a photo from a related story, and its alt text then
             # describes that other story: a "highest diesel prices" article
             # shipped a caption reading "lowest diesel prices". The caption is
@@ -326,7 +380,7 @@ class TranslationPipeline:
                 )
                 alt_tr = None
             item["image_alt_tr"] = alt_tr
-            logger.debug("image_alt_tr: %s → %s", alt_en[:60], item["image_alt_tr"])
+            logger.debug("image_alt_tr: %s → %s", alt_source[:60], item["image_alt_tr"])
         else:
             item["image_alt_tr"] = None
 
@@ -511,8 +565,16 @@ class StoragePipeline:
         self._known_slugs: set[str] = set()
         self._used_image_urls: set[str] = set()
         self._new_slugs: list[str] = []
+        self._dry_run = False
 
     def open_spider(self, spider):
+        # DRY_RUN exercises the whole pipeline (all AI calls included) but writes
+        # nothing: no article row, no Storage upload, no scrape_stats, no
+        # IndexNow ping. It is the only way to check a new source's translation
+        # quality before it can publish. Enable with -s DRY_RUN=1.
+        self._dry_run = spider.settings.getbool("DRY_RUN", False)
+        if self._dry_run:
+            logger.warning("DRY RUN: no DB writes, no image uploads, no IndexNow")
         try:
             self._supabase = _get_supabase()
             rows = self._supabase.table("articles").select("slug,featured_image_url").execute()
@@ -571,21 +633,27 @@ class StoragePipeline:
         article_id = str(uuid.uuid4())
 
         # Upload featured image (+ responsive WebP variants → image_srcset)
-        featured_image_url, image_srcset = upload_featured_image(
-            image_url=item.get("featured_image_source_url") or "",
-            article_id=article_id,
-            source=source,
-            published_at=published_at,
-        )
+        if self._dry_run:
+            # Uploading would write to Supabase Storage, which a dry run must not
+            # touch. Skipping it also skips the Pexels fallback below.
+            featured_image_url, image_srcset = item.get("featured_image_source_url") or "", None
+        else:
+            featured_image_url, image_srcset = upload_featured_image(
+                image_url=item.get("featured_image_source_url") or "",
+                article_id=article_id,
+                source=source,
+                published_at=published_at,
+            )
 
         # Image fallback when source had no image
-        if not featured_image_url:
+        if not featured_image_url and not self._dry_run:
             try:
                 from scraper.image_fallback import fetch_fallback_image
                 fallback_url = fetch_fallback_image(
                     title_original=title,
                     region_slug=region_slug,
                     exclude_urls=self._used_image_urls,
+                    source_lang=item.get("source_lang") or "en",
                 )
                 if fallback_url:
                     featured_image_url, image_srcset = upload_featured_image(
@@ -711,6 +779,18 @@ class StoragePipeline:
             "is_featured": False,
         }
 
+        if self._dry_run:
+            logger.info(
+                "[DRY RUN] would insert: source=%s lang=%s score=%s slug=%s "
+                "nav=%s region=%s h2=%d words=%d\n  title_tr: %s\n  meta: %s",
+                row["source"], item.get("source_lang"), row["score"], row["slug"],
+                row["nav_tab_slug"], row["region_slug"],
+                (row.get("content_tr") or "").count("<h2"),
+                len(re.sub(r"<[^>]+>", " ", row.get("content_tr") or "").split()),
+                row["title_tr"], row["meta_description_tr"],
+            )
+            return item
+
         if self._supabase is None:
             logger.warning("Supabase not available, skipping DB write for %s", source_url)
             return item
@@ -741,18 +821,64 @@ class StoragePipeline:
                 )
                 logger.info("Updated article: %s", source_url)
             else:
-                self._supabase.table("articles").insert(row).execute()
+                slug = self._insert_with_slug_retry(row, source_url)
                 logger.info("Inserted article: %s", source_url)
                 self._new_slugs.append(slug)
             _stats_inc(source, "published")
             if item.get("score"):
                 _stats_inc(source, "scores", int(item["score"]))
         except Exception as exc:
-            logger.error("DB write failed for %s: %s", source_url, exc)
+            # Distinguish the failure modes: a bare "DB write failed" line made a
+            # forgotten migration look identical to a transient network blip, and
+            # both looked like a successful run in CI.
+            if _is_source_constraint_violation(exc):
+                logger.error(
+                    "CONSTRAINT VIOLATION: source %r is not allowed by "
+                    "articles_source_check. The migration adding it has not been "
+                    "applied, so NOTHING from this source will be published. %s",
+                    source, source_url,
+                )
+            else:
+                logger.error("DB write failed for %s: %s", source_url, exc)
 
         return item
 
+    def _insert_with_slug_retry(self, row: dict, source_url: str) -> str:
+        """Insert, recovering from a slug collision with a concurrent spider.
+
+        `_known_slugs` is a per-process snapshot taken in open_spider, so two
+        spiders running in parallel (run.sh, and the CI matrix) can compute the
+        same slug from the same Turkish title. Without this the loser's insert
+        raised, was swallowed by the caller's `except`, and the article vanished
+        after its full AI cost had already been paid.
+
+        Recomputing the slug is safe *here* and only here: this is the insert
+        path, where _make_slug's ordinal suffix ("-2", "-3") is exactly the
+        wanted behaviour. CLAUDE.md rule 22 forbids recomputing a slug on the
+        UPDATE path, which is a different branch and is untouched.
+        """
+        for attempt in range(3):
+            try:
+                self._supabase.table("articles").insert(row).execute()
+                return row["slug"]
+            except Exception as exc:
+                if not _is_slug_conflict(exc) or attempt == 2:
+                    raise
+                taken = row["slug"]
+                self._known_slugs.add(taken)
+                row["slug"] = _make_slug(row.get("title_tr") or row["title_original"],
+                                         self._known_slugs)
+                self._known_slugs.add(row["slug"])
+                logger.error(
+                    "SLUG COLLISION: %r already taken (concurrent spider), "
+                    "retrying as %r for %s", taken, row["slug"], source_url,
+                )
+        return row["slug"]
+
     def close_spider(self, spider):
+        if self._dry_run:
+            logger.warning("DRY RUN complete: nothing was written")
+            return
         _ping_indexnow(self._new_slugs)
         if self._supabase is None or not _run_stats:
             return
@@ -763,6 +889,21 @@ class StoragePipeline:
         for src, counts in _run_stats.items():
             scores = counts.get("scores", [])
             avg_score = round(sum(scores) / len(scores), 1) if scores else None
+
+            # A source that scrapes plenty but publishes nothing is the signature
+            # of a site change (paywall tightened, body selector dead), and it is
+            # otherwise invisible: the run stays green and the daily report just
+            # shows a quiet zero. business_daily_africa is the likeliest to hit
+            # this, since it serves full text while marking articles Subscription.
+            if counts["total_scraped"] > 5 and counts["published"] == 0:
+                logger.error(
+                    "YIELD FLOOR: %s scraped %d articles and published 0 "
+                    "(duplicate=%d low_score=%d min_content=%d turkey_filter=%d). "
+                    "Check whether the site changed.",
+                    src, counts["total_scraped"], counts["dropped_duplicate"],
+                    counts["dropped_low_score"], counts["dropped_min_content"],
+                    counts["dropped_turkey_filter"],
+                )
             row = {
                 "run_date": today,
                 "source": src,

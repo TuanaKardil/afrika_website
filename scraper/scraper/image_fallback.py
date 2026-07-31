@@ -30,11 +30,23 @@ _REGION_QUERIES = {
 
 # ─── AI query extraction ───────────────────────────────────────────────────────
 
-def _ai_search_query(title: str) -> str:
+def _title_words_fallback(title: str, source_lang: str, region_slug: str) -> str:
+    """Non-AI fallback query.
+
+    Only usable for English titles: Pexels is an English-language index, so
+    feeding it raw French or Portuguese title words returns junk. For those,
+    fall back to the region query instead.
+    """
+    if source_lang and source_lang != "en":
+        return _REGION_QUERIES.get(region_slug, "Africa")
+    words = re.sub(r"[^\w\s]", " ", title).split()
+    return " ".join(words[:5])
+
+
+def _ai_search_query(title: str, source_lang: str = "en", region_slug: str = "") -> str:
     openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
     if not openrouter_key:
-        words = re.sub(r"[^\w\s]", " ", title).split()
-        return " ".join(words[:5])
+        return _title_words_fallback(title, source_lang, region_slug)
 
     try:
         from scraper.openrouter import chat
@@ -45,6 +57,8 @@ def _ai_search_query(title: str) -> str:
             "visually strong HD photo for this article.\n"
             "Focus on the main subject: infrastructure, energy, agriculture, people, landscape, etc.\n"
             "Do NOT include brand names or very specific company names — use the category instead.\n"
+            "The article title may be in English, French, or Portuguese. "
+            "Return the query in ENGLISH regardless of the title's language.\n"
             "Return ONLY the query string, nothing else.\n\n"
             f"Article title: {title}\n"
         )
@@ -52,8 +66,7 @@ def _ai_search_query(title: str) -> str:
         return (result or "").strip().strip('"').strip("'") or "Africa news"
     except Exception as exc:
         logger.warning("AI search query failed, falling back to title words: %s", exc)
-        words = re.sub(r"[^\w\s]", " ", title).split()
-        return " ".join(words[:5])
+        return _title_words_fallback(title, source_lang, region_slug)
 
 
 # ─── Pexels ────────────────────────────────────────────────────────────────────
@@ -156,16 +169,20 @@ def fetch_fallback_image(
     title_original: str,
     region_slug: str | None = None,
     exclude_urls: set[str] | None = None,
+    source_lang: str = "en",
 ) -> str | None:
     """Fetch a relevant HD image not already used by another article.
 
     Args:
-        title_original: English article title used to generate the search query.
+        title_original: Article title, in the source language, used to generate
+            the search query. Pexels is an English index, so the query is always
+            produced in English regardless of this title's language.
         region_slug: Used as a secondary query if the primary yields no results.
         exclude_urls: Set of image URLs already stored in the DB (to avoid duplicates).
+        source_lang: "en" | "fr" | "pt". Only affects the non-AI fallback path.
     """
     exclude = exclude_urls or set()
-    query = _ai_search_query(title_original)
+    query = _ai_search_query(title_original, source_lang, region_slug or "")
     logger.info("Image fallback query: '%s'", query)
 
     # 1. Pexels primary

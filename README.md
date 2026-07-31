@@ -8,7 +8,7 @@ Türkçe Afrika iş dünyası haber platformu. 5 İngilizce kaynaktan günlük h
 
 ## Özellikler
 
-- 5 kaynaktan günlük otomatik haber çekme (Business Insider Africa, CNBC Africa, The Africa Report, Anadolu Ajansı, The Conversation Africa)
+- 15 kaynaktan günlük otomatik haber çekme (İngilizce, Fransızca ve Portekizce). Kaynak listesi tek yerde: `scraper/scraper/sources.py`
 - Afrika alaka puanlaması (1-10) — 6 altı haberler otomatik elenir
 - Türkçe çeviri (OpenRouter `google/gemini-2.5-flash-lite`) — maks 600 kelime
 - 8 navigasyon sekmesi + 26 sektör + 6 bölge otomatik sınıflandırma

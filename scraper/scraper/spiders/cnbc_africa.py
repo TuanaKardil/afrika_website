@@ -6,9 +6,11 @@ from urllib.parse import urljoin
 import scrapy
 from scrapy.http import Response
 
+from scraper import sources
 from scraper.items import ArticleItem
 
-_CUTOFF_DAYS = 1
+_SOURCE_SLUG = "cnbc_africa"
+_CUTOFF_DAYS = sources.get(_SOURCE_SLUG).cutoff_days
 _BASE = "https://www.cnbcafrica.com"
 _START_URLS = [
     f"{_BASE}/",
@@ -106,10 +108,11 @@ class CNBCAfricaSpider(scrapy.Spider):
             or response.css("meta[property='og:image:alt']::attr(content)").get()
             or ""
         ).strip()
-        image_alt_en = _strip_caption_credit(raw_caption)
+        image_alt_source = _strip_caption_credit(raw_caption)
 
         yield ArticleItem(
-            source="cnbc_africa",
+            source=_SOURCE_SLUG,
+            source_lang=sources.get(_SOURCE_SLUG).lang,
             source_url=response.url,
             title_original=title,
             excerpt_original=excerpt,
@@ -118,7 +121,7 @@ class CNBCAfricaSpider(scrapy.Spider):
             published_at=published_at.isoformat(),
             featured_image_source_url=featured_image_url,
             image_credit="",
-            image_alt_en=image_alt_en,
+            image_alt_source=image_alt_source,
             is_update=False,
         )
 

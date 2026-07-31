@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { canonicalMeta } from "@/lib/seo";
+import { SOURCES } from "@/lib/sources";
 
 export const metadata: Metadata = {
   title: "Editoryal Politika",
@@ -32,11 +33,11 @@ export default function EditoryelPolitikaPage() {
           orijinal makaleye bağlantı yer alır. Kullandığımız kaynaklar:
         </p>
         <ul className="font-body text-base text-on-surface/80 list-disc pl-5 space-y-1 mb-4">
-          <li>The Conversation Africa (theconversation.com/africa)</li>
-          <li>The Africa Report (theafricareport.com)</li>
-          <li>CNBC Africa (cnbcafrica.com)</li>
-          <li>Anadolu Ajansı Afrika (aa.com.tr)</li>
-          <li>Business Insider Africa (businessinsider.africa)</li>
+          {SOURCES.map((s) => (
+            <li key={s.slug}>
+              {s.label} ({s.homepage.replace(/^https?:\/\/(www\.)?/, "")})
+            </li>
+          ))}
         </ul>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
           İçerikler Türk okuyucuya tarafsız biçimde aktarılmakta; tam metne erişmek için
@@ -47,9 +48,9 @@ export default function EditoryelPolitikaPage() {
       <section className="mb-8">
         <h2 className="font-headline text-xl text-on-surface mb-3">Çeviri Süreci</h2>
         <p className="font-body text-base text-on-surface/80 leading-relaxed">
-          İngilizce kaynak içerikler, editörlerimiz tarafından Türkçeye çevrilerek
-          yayınlanmaktadır. Çevirilerde orijinal haberin anlamı, bağlamı ve tarafsızlığı
-          titizlikle korunmaktadır.
+          İngilizce, Fransızca ve Portekizce kaynak içerikler, editörlerimiz tarafından
+          Türkçeye çevrilerek yayınlanmaktadır. Çevirilerde orijinal haberin anlamı,
+          bağlamı ve tarafsızlığı titizlikle korunmaktadır.
         </p>
       </section>
 

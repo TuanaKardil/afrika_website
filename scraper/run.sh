@@ -10,13 +10,13 @@ echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Starting scraper run"
 
 pip3 install -r requirements.txt --quiet
 
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running 5 news spiders in parallel"
-python3 -m scrapy crawl conversation_africa &
-python3 -m scrapy crawl africa_report &
-python3 -m scrapy crawl cnbc_africa &
-python3 -m scrapy crawl aa_africa &
-python3 -m scrapy crawl business_insider &
-wait
+# Spider list comes from scraper/scraper/sources.py (enabled sources only), so
+# adding a source never means editing this script. -P 4 matches max-parallel in
+# .github/workflows/scrape.yml so local and CI behave the same.
+SPIDERS=$(python3 -m scraper.sources)
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running news spiders in parallel:"
+echo "$SPIDERS" | tr '\n' ' '; echo
+echo "$SPIDERS" | xargs -P 4 -I{} python3 -m scrapy crawl {}
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] News spiders finished"
 
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Retranslating any untranslated articles"

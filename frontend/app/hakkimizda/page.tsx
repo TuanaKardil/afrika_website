@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { canonicalMeta } from "@/lib/seo";
+import { SOURCES } from "@/lib/sources";
 
 export const metadata: Metadata = {
   title: "Hakkımızda",
@@ -32,11 +33,9 @@ export default function HakkimizdaPage() {
           Haberlerimizi aşağıdaki uluslararası kaynakların editöryal içeriklerinden derliyoruz:
         </p>
         <ul className="font-body text-base text-on-surface/80 leading-relaxed list-disc pl-5 space-y-1">
-          <li>The Conversation Africa</li>
-          <li>The Africa Report</li>
-          <li>CNBC Africa</li>
-          <li>Anadolu Ajansı Afrika</li>
-          <li>Business Insider Africa</li>
+          {SOURCES.map((s) => (
+            <li key={s.slug}>{s.label}</li>
+          ))}
         </ul>
         <p className="font-body text-base text-on-surface/80 leading-relaxed mt-4">
           Her haber, kaynak gösterilerek yayınlanır ve orijinal içeriğe bağlantı içerir.

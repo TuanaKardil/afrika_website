@@ -7,9 +7,42 @@ on:
   workflow_dispatch:
 
 jobs:
-  scrape:
+  # The spider list is read from scraper/scraper/sources.py (enabled sources
+  # only), so adding a source never means editing this file.
+  prepare:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 5
+    outputs:
+      spiders: ${{ steps.list.outputs.spiders }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.6.0
+        with:
+          python-version: "3.11"
+
+      - name: List enabled spiders
+        id: list
+        run: |
+          cd scraper
+          echo "spiders=$(python3 -m scraper.sources --slugs-json)" >> "$GITHUB_OUTPUT"
+          python3 -m scraper.sources
+
+  scrape:
+    needs: prepare
+    runs-on: ubuntu-latest
+    # Per source, not for the whole run. One source is never legitimately this
+    # slow, and a hung site can no longer eat the other sources' budget.
+    timeout-minutes: 30
+    strategy:
+      # A dead site must not cancel the other sources' jobs.
+      fail-fast: false
+      # OpenRouter rate limits are the real ceiling; translate.MAX_WORKERS is 4.
+      max-parallel: 4
+      matrix:
+        spider: ${{ fromJSON(needs.prepare.outputs.spiders) }}
 
     steps:
       - name: Checkout repository
@@ -25,29 +58,28 @@ jobs:
       - name: Install dependencies
         run: pip install -r scraper/requirements.txt
 
-      - name: Run spiders
+      - name: Run ${{ matrix.spider }} spider
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           cd scraper
-          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running Business Insider Africa spider"
-          python3 -m scrapy crawl business_insider
-          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running CNBC Africa spider"
-          python3 -m scrapy crawl cnbc_africa
-          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running The Africa Report spider"
-          python3 -m scrapy crawl africa_report
-          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running Anadolu Agency Africa spider"
-          python3 -m scrapy crawl aa_africa
-          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running The Conversation Africa spider"
-          python3 -m scrapy crawl conversation_africa
-          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] All spiders complete"
+          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running ${{ matrix.spider }} spider"
+          python3 -m scrapy crawl "${{ matrix.spider }}"
+          echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] ${{ matrix.spider }} complete"
 
   translate:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     needs: scrape
+    # `fail-fast: false` alone is not enough: if any matrix job fails, the
+    # `scrape` job result is "failure" and a plain `needs: scrape` would SKIP
+    # this job. That is the exact failure this matrix exists to prevent, since
+    # skipping translate leaves articles untranslated, unclassified and
+    # untagged. Run whenever the workflow was not cancelled.
+    if: ${{ !cancelled() }}
 
     steps:
       - name: Checkout repository
