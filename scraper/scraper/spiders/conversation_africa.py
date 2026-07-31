@@ -19,7 +19,10 @@ _BASE = "https://theconversation.com"
 
 
 class ConversationAfricaSpider(scrapy.Spider):
-    name = "conversation_africa"
+    # Must equal the registry slug: run.sh and the CI matrix crawl by slug.
+    # This was historically "conversation_africa" while the DB stored
+    # "the_conversation", which broke the first matrix run.
+    name = "the_conversation"
     allowed_domains = ["theconversation.com"]
 
     def start_requests(self):

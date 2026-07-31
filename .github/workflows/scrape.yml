@@ -23,12 +23,30 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install dependencies
+        run: pip install -r scraper/requirements.txt
+
       - name: List enabled spiders
         id: list
         run: |
           cd scraper
           echo "spiders=$(python3 -m scraper.sources --slugs-json)" >> "$GITHUB_OUTPUT"
           python3 -m scraper.sources
+
+      # The matrix crawls by registry slug, so every enabled slug must be a real
+      # spider name. Without this the mismatch only surfaces as a per-source job
+      # dying with "Spider not found" 20 minutes into the run.
+      - name: Verify every enabled slug has a spider
+        run: |
+          cd scraper
+          missing=$(comm -23 \
+            <(python3 -m scraper.sources | sort) \
+            <(python3 -m scrapy list | sort))
+          if [ -n "$missing" ]; then
+            echo "::error::Enabled sources with no matching spider name: $missing"
+            exit 1
+          fi
+          echo "All enabled slugs resolve to a spider."
 
   scrape:
     needs: prepare
