@@ -64,11 +64,18 @@ _NOISE_PATTERN = re.compile(
 # Above this many inline images, the body container is almost certainly wrong.
 _MAX_INLINE_IMAGES = 6
 
-# Headings that are widget furniture rather than article sections.
+# Headings that open a related-articles block rather than an article section.
+# Prefix match, not full match: real widgets add a suffix ("Related Coverage:
+# Features"). Multilingual because the FR and PT sources carry their own
+# wording ("a lire aussi", "leia tambem").
 _NOISE_HEADING_RE = re.compile(
-    r"\s*(also read|read also|read more|related( (articles?|posts?|news|stories))?|"
-    r"you may also like|more from|recommended( for you)?|trending|"
-    r"share this|advertisement|sponsored|tags?|newsletter|subscribe)\s*[:.]?\s*",
+    r"^\s*("
+    r"also read|read also|read more|related\b|you may also like|more from|"
+    r"recommended|trending|most read|editor'?s picks?|"
+    r"share this|advertisement|sponsored|tags?|newsletter|subscribe"
+    r"|à lire aussi|a lire aussi|lire aussi|voir aussi|sur le m[êe]me sujet"
+    r"|leia tamb[ée]m|veja tamb[ée]m|mais not[íi]cias"
+    r")\b",
     re.I,
 )
 
@@ -215,13 +222,24 @@ def _normalise_headings(html: str) -> str:
 
     soup = BeautifulSoup(html, "html.parser")
 
-    # Widget labels ("Also Read") ride along as headings. They are not article
-    # content, and left in place they also break the level detection below: a
-    # stray <h2>Also Read</h2> made 2 the top level, so the real <h4> section
-    # headings were demoted to h3 and the body ended up with no H2 at all.
-    for tag in soup.find_all(re.compile(r"^h[1-6]$")):
+    # A related-articles widget flattens into a heading ("Related Coverage",
+    # "a lire aussi") followed by the linked articles' own titles as sibling
+    # headings. Removing only the label leaves those titles behind, so the whole
+    # tail goes: thebftonline appended 7 unrelated headlines to every article,
+    # medias24 six. These blocks always sit after the body, so anything from the
+    # label onwards is discarded.
+    #
+    # Empty headings go too: a stray <h2></h2> otherwise fixed the top level and
+    # blocked the promotion below.
+    top_level = soup if soup.find("body") is None else soup.find("body")
+    for tag in list(top_level.find_all(re.compile(r"^h[1-6]$"))):
         text = tag.get_text(strip=True)
-        if not text or _NOISE_HEADING_RE.fullmatch(text):
+        if not text:
+            tag.decompose()
+            continue
+        if _NOISE_HEADING_RE.match(text):
+            for sibling in list(tag.next_siblings):
+                sibling.extract()
             tag.decompose()
 
     headings = soup.find_all(re.compile(r"^h[1-6]$"))

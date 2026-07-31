@@ -266,7 +266,7 @@ _ALL: tuple[Source, ...] = (
         date_selectors=_JOOMLA_DATE,
         featured_image_rewrite=_K2_FULLSIZE,
         download_delay=4,
-        enabled=False,
+        enabled=True,
         notes="Same Joomla template as ecofin. Cloudflare, same content signals.",
     ),
     Source(
@@ -279,7 +279,7 @@ _ALL: tuple[Source, ...] = (
         allowed_domains=("medias24.com",),
         body_selectors=_WP_BODY,
         image_alt_selectors=_WP_ALT,
-        enabled=False,
+        enabled=True,
         notes="French. WordPress.",
     ),
     Source(
@@ -310,8 +310,13 @@ _ALL: tuple[Source, ...] = (
                              "meta[property='og:image:alt']::attr(content)"),
         enabled=False,
         notes=(
-            "Next.js. Sitemap index -> /sitemaps/articles-{0,1,2}.xml. MUST filter "
-            "children by lastmod or it walks the whole archive."
+            "DISABLED: the article page only carries a teaser. Measured over 20 "
+            "articles, 19 were under 100 words (median 44), so MinContentPipeline "
+            "drops nearly all of them. Earlier probes looked viable only because "
+            "the Related Coverage widget was being counted as body text. "
+            "Re-enable only if the site starts publishing full text. "
+            "Next.js. Sitemap index -> /sitemaps/articles-{0,1,2}.xml; children "
+            "MUST be filtered by lastmod or it walks the whole archive."
         ),
     ),
     Source(
@@ -326,7 +331,7 @@ _ALL: tuple[Source, ...] = (
         allowed_domains=("dailynewsegypt.com",),
         body_selectors=_WP_BODY,
         image_alt_selectors=_WP_ALT,
-        enabled=False,
+        enabled=True,
     ),
     Source(
         slug="capital_ethiopia",
@@ -337,7 +342,7 @@ _ALL: tuple[Source, ...] = (
         allowed_domains=("capitalethiopia.com",),
         body_selectors=_WP_BODY,
         image_alt_selectors=_WP_ALT,
-        enabled=False,
+        enabled=True,
         notes="Small feed, low daily volume, hence the wider window.",
     ),
     Source(
@@ -353,7 +358,7 @@ _ALL: tuple[Source, ...] = (
         body_selectors=(".article-content", ".body-content", "article .content"),
         image_alt_selectors=("figure img::attr(alt)",
                              "meta[property='og:image:alt']::attr(content)"),
-        enabled=False,
+        enabled=True,
         notes=(
             "RSS is robots-Disallowed (/rss, /rssFeed/*) and so is pagination "
             "(*/page/*), so a single index page is all we get. Expect low yield."
@@ -370,7 +375,7 @@ _ALL: tuple[Source, ...] = (
         body_selectors=_WP_BODY,
         image_alt_selectors=_WP_ALT,
         exclude_url_re=r"/tenders/",
-        enabled=False,
+        enabled=True,
         notes=(
             "Portuguese. WordPress. Slug avoids a leading digit on purpose. "
             "Its feed mixes in /tenders/ notices (~80 words); those are excluded."
