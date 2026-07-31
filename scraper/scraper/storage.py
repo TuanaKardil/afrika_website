@@ -55,6 +55,9 @@ _MAX_IMAGE_WIDTH = 1200
 # Responsive WebP ladder. Variants are generated only at widths <= the source
 # width (never upscaled), so a small source simply yields fewer rungs.
 _VARIANT_TARGETS = (400, 800, 1200)
+# Below this, the source is a CMS thumbnail rather than the real photo, and the
+# no-upscale rule means every variant inherits that ceiling.
+_MIN_FEATURED_WIDTH = 600
 _WEBP_QUALITY = 80
 
 
@@ -199,6 +202,19 @@ def upload_featured_image(
     except Exception as exc:
         logger.warning("Failed to process image for %s: %s", image_url, exc)
         return None, None
+
+    # The WebP ladder never upscales, so a thumbnail source silently caps every
+    # variant the site can serve and the hero renders soft. Ecofin shipped 39
+    # articles at 290px this way before anyone noticed. Make it loud: most CMSes
+    # publish a larger rendition under a predictable URL, which belongs in
+    # Source.featured_image_rewrite.
+    if img.width < _MIN_FEATURED_WIDTH:
+        logger.error(
+            "SMALL FEATURED IMAGE: %dx%d for source=%r (%s). Every responsive "
+            "variant will cap at %dpx. Check whether the CMS exposes a larger "
+            "rendition and add Source.featured_image_rewrite.",
+            img.width, img.height, source, image_url[:100], img.width,
+        )
 
     sb = _get_supabase()
 

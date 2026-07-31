@@ -61,6 +61,9 @@ _NOISE_PATTERN = re.compile(
     re.I,
 )
 
+# Above this many inline images, the body container is almost certainly wrong.
+_MAX_INLINE_IMAGES = 6
+
 # URL fragments that indicate non-editorial images
 _NOISE_URL_PATTERN = re.compile(
     r"(logo|icon|avatar|spinner|placeholder|pixel|tracking|"
@@ -279,5 +282,20 @@ def extract_inline_images(response, source: str = "") -> list[str]:
 
         seen.add(src)
         urls.append(src)
+
+    # Backstop against a wrong body selector on a future source. A news article
+    # carrying more than this many inline photos is rare; a container that
+    # accidentally includes a sidebar produces exactly this signature (Ecofin
+    # yielded 11 identical widget thumbnails on every article, which were then
+    # uploaded to Storage and appended to every body). Dropping them is the safe
+    # side: the featured image is unaffected and the body text is untouched.
+    if len(urls) > _MAX_INLINE_IMAGES:
+        logger.error(
+            "INLINE IMAGE FLOOD: source=%r yielded %d inline images at %s, "
+            "which almost always means the body selector is matching a sidebar. "
+            "Dropping them; fix Source.body_selectors for this source.",
+            source, len(urls), getattr(response, "url", "")[:100],
+        )
+        return []
 
     return urls
