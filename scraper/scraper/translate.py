@@ -5,6 +5,8 @@ import logging
 import re
 from typing import Any
 
+from bs4 import BeautifulSoup
+
 from scraper import sources
 from scraper.openrouter import chat, GEMINI_FLASH_LITE
 
@@ -905,9 +907,59 @@ def h2_count(content_tr: str) -> int:
     return len(_H2_TAG_RE.findall(content_tr or ""))
 
 
+# Blocks that legitimately end without sentence punctuation. A table's last cell
+# is usually a number, a list's last item rarely takes a full stop, and a caption
+# is a fragment by nature.
+_NON_PROSE_TAIL_TAGS = {"table", "ul", "ol", "dl", "figure", "figcaption", "img", "blockquote"}
+
+# Only these are judged on their final punctuation. Inline tags (strong, em, a,
+# small, span) are containers within a sentence, not the sentence itself.
+_BLOCK_TAGS = ["p", "h2", "h3", "h4", "li", "td", "th", "blockquote",
+               "figure", "figcaption", "table", "ul", "ol", "div"]
+
+
 def is_truncated_body(content_tr: str) -> bool:
-    """True when the body stops mid-sentence (token cap, or a source teaser)."""
-    plain = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", content_tr or "")).strip()
+    """True when the body stops mid-sentence.
+
+    Only PROSE is judged on its final punctuation. The check used to flatten the
+    whole body to text and test the last character, which fired on every article
+    ending in a table, list or caption: the captured example ended
+    "...Devam Eden Aşamalar* 260000" (a table cell) and was dropped as truncated
+    even though the response was complete, JSON-valid and carried its source
+    citation. That false positive is what the retry loop was mostly firing on.
+    """
+    if not content_tr:
+        return False
+
+    try:
+        soup = BeautifulSoup(content_tr, "html.parser")
+    except Exception:
+        soup = None
+
+    if soup is not None:
+        # Walk backwards to the last BLOCK that carries content. Inline tags are
+        # skipped: the innermost node at the end of "<p><strong>Özet:</strong>
+        # ..." is the <strong>, and judging it flagged a perfectly complete
+        # paragraph because it ends in a colon.
+        for el in reversed(soup.find_all(_BLOCK_TAGS)):
+            classes = el.get("class") or []
+            if "source-link" in classes or el.find_parent(class_="source-link"):
+                continue
+            # The element itself, or anything nested in one: walking backwards
+            # lands on the innermost node first, so a table is reached as its
+            # last <td> ("260000") rather than as <table>.
+            if el.name in _NON_PROSE_TAIL_TAGS or el.find_parent(_NON_PROSE_TAIL_TAGS):
+                return False
+            text = el.get_text(" ", strip=True)
+            if not text:
+                continue
+            # Older bodies carry the citation as plain "Kaynak: ..." text with no
+            # source-link class; it is not prose and must not be judged.
+            if _SOURCE_TAIL_RE.match(" " + text):
+                continue
+            return not text.rstrip().endswith(_SENTENCE_END)
+
+    plain = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", content_tr)).strip()
     body = _SOURCE_TAIL_RE.sub("", plain).rstrip()
     return bool(body) and not body.endswith(_SENTENCE_END)
 
