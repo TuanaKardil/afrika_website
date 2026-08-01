@@ -1,39 +1,17 @@
 import type { Metadata } from "next";
-import { getArticlesByNavTab } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
-import ArticleGrid from "@/components/sections/ArticleGrid";
-import Breadcrumb from "@/components/ui/Breadcrumb";
-import Pagination from "@/components/sections/Pagination";
+import { NAV_TAB_LISTINGS } from "@/lib/nav-tab-listings";
+import NavTabListing, { navTabMetadata } from "@/components/sections/NavTabListing";
 
-interface PazarlarEkonomiPageProps {
-  searchParams: { sayfa?: string };
+// No searchParams anywhere in this file: that is what lets the route prerender.
+// Pagination lives at ./sayfa/[n].
+export const revalidate = 1800;
+
+const CONFIG = NAV_TAB_LISTINGS["pazarlar-ekonomi"];
+
+export function generateMetadata(): Promise<Metadata> {
+  return navTabMetadata(CONFIG, 1);
 }
 
-export async function generateMetadata({ searchParams }: PazarlarEkonomiPageProps): Promise<Metadata> {
-  const page = parsePageParam(searchParams.sayfa);
-  return {
-    title: titleWithPage("Pazarlar & Ekonomi", page),
-    description: "Afrika piyasaları ve ekonomi haberleri.",
-    ...canonicalMeta("/pazarlar-ekonomi", { sayfa: String(page) }),
-    ...paginatedRobots(page),
-  };
-}
-
-export default async function PazarlarEkonomiPage({ searchParams }: PazarlarEkonomiPageProps) {
-  const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
-  const { articles, count } = await getArticlesByNavTab("pazarlar-ekonomi", page);
-
-  return (
-    <main className="container mx-auto px-4 py-8">
-      <Breadcrumb items={[{ name: "Pazarlar & Ekonomi", href: "/pazarlar-ekonomi" }]} />
-      <header className="mb-6">
-        <h1 className="font-headline text-3xl text-on-surface">Pazarlar & Ekonomi</h1>
-        {count > 0 && (
-          <p className="font-body text-sm text-on-surface/50 mt-1">{count} haber</p>
-        )}
-      </header>
-      <ArticleGrid articles={articles} />
-      <Pagination page={page} total={count} basePath="/pazarlar-ekonomi" />
-    </main>
-  );
+export default function Page() {
+  return <NavTabListing config={CONFIG} page={1} />;
 }

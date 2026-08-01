@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PAGE_SIZE } from "@/lib/queries/articles";
+import { paginatedPath } from "@/lib/seo";
 
 interface PaginationProps {
   page: number;
@@ -8,10 +9,9 @@ interface PaginationProps {
   pageSize?: number;
 }
 
-function buildUrl(basePath: string, page: number): string {
-  const separator = basePath.includes("?") ? "&" : "?";
-  return page === 1 ? basePath : `${basePath}${separator}sayfa=${page}`;
-}
+// Path segments, not "?sayfa=": a query param made the whole route dynamic and
+// disabled ISR for every listing. See lib/seo.ts paginatedPath.
+const buildUrl = paginatedPath;
 
 export default function Pagination({
   page,

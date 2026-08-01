@@ -1,39 +1,17 @@
 import type { Metadata } from "next";
-import { getArticlesByNavTab } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
-import ArticleGrid from "@/components/sections/ArticleGrid";
-import Breadcrumb from "@/components/ui/Breadcrumb";
-import Pagination from "@/components/sections/Pagination";
+import { NAV_TAB_LISTINGS } from "@/lib/nav-tab-listings";
+import NavTabListing, { navTabMetadata } from "@/components/sections/NavTabListing";
 
-interface EtkinliklerFuarlarPageProps {
-  searchParams: { sayfa?: string };
+// No searchParams anywhere in this file: that is what lets the route prerender.
+// Pagination lives at ./sayfa/[n].
+export const revalidate = 1800;
+
+const CONFIG = NAV_TAB_LISTINGS["etkinlikler-fuarlar"];
+
+export function generateMetadata(): Promise<Metadata> {
+  return navTabMetadata(CONFIG, 1);
 }
 
-export async function generateMetadata({ searchParams }: EtkinliklerFuarlarPageProps): Promise<Metadata> {
-  const page = parsePageParam(searchParams.sayfa);
-  return {
-    title: titleWithPage("Etkinlikler & Fuarlar", page),
-    description: "Afrika iş fuarları ve etkinlik haberleri.",
-    ...canonicalMeta("/etkinlikler-fuarlar", { sayfa: String(page) }),
-    ...paginatedRobots(page),
-  };
-}
-
-export default async function EtkinliklerFuarlarPage({ searchParams }: EtkinliklerFuarlarPageProps) {
-  const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
-  const { articles, count } = await getArticlesByNavTab("etkinlikler-fuarlar", page);
-
-  return (
-    <main className="container mx-auto px-4 py-8">
-      <Breadcrumb items={[{ name: "Etkinlikler & Fuarlar", href: "/etkinlikler-fuarlar" }]} />
-      <header className="mb-6">
-        <h1 className="font-headline text-3xl text-on-surface">Etkinlikler & Fuarlar</h1>
-        {count > 0 && (
-          <p className="font-body text-sm text-on-surface/50 mt-1">{count} haber</p>
-        )}
-      </header>
-      <ArticleGrid articles={articles} />
-      <Pagination page={page} total={count} basePath="/etkinlikler-fuarlar" />
-    </main>
-  );
+export default function Page() {
+  return <NavTabListing config={CONFIG} page={1} />;
 }

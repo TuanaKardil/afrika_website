@@ -36,6 +36,45 @@ const nextConfig = {
       },
     ];
   },
+
+  // Pagination moved from "?sayfa=N" into the path so listing routes could
+  // prerender: reading searchParams marks a route dynamic in Next 14, which
+  // disabled ISR for every listing and left them at 0.6-1.5 s TTFB against
+  // 0.22 s for the static article pages.
+  //
+  // These keep old links, shared URLs and anything already in Search Console
+  // resolving. 308 (permanent) so the destination inherits the ranking signals.
+  // "?sayfa=1" collapses to the clean base path, which is the canonical form.
+  async redirects() {
+    const paginated = [
+      "/",
+      "/firsatlar",
+      "/pazarlar-ekonomi",
+      "/ticaret-ihracat",
+      "/diger",
+      "/turk-is-dunyasi",
+      "/etkinlikler-fuarlar",
+      "/bolge/:slug",
+      "/sektorler/:slug",
+      "/hashtag/:tag",
+      "/yazarlar/:slug",
+    ];
+
+    return paginated.flatMap((source) => [
+      {
+        source,
+        has: [{ type: "query", key: "sayfa", value: "1" }],
+        destination: source,
+        permanent: true,
+      },
+      {
+        source,
+        has: [{ type: "query", key: "sayfa", value: "(?<n>\\d+)" }],
+        destination: `${source === "/" ? "" : source}/sayfa/:n`,
+        permanent: true,
+      },
+    ]);
+  },
 };
 
 export default nextConfig;

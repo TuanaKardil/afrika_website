@@ -1,11 +1,39 @@
 // Prebuild guard: every public page must declare a canonical URL or opt out
 // with a robots noindex. Fails the build otherwise, so a new page can never
 // ship without its canonical. See CLAUDE.md rule 14 and lib/seo.ts.
-import { readdirSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const appDir = fileURLToPath(new URL("../app", import.meta.url));
+const rootDir = fileURLToPath(new URL("..", import.meta.url));
+
+// A page may delegate generateMetadata to a shared helper (the listing routes
+// do, so /x and /x/sayfa/[n] cannot drift apart). Follow local imports one level
+// so the guard reads the helper instead of declaring a false miss. Without this
+// the check is trivially bypassed by moving metadata into any other file.
+function resolveLocalImport(spec, fromFile) {
+  const base = spec.startsWith("@/")
+    ? resolve(rootDir, spec.slice(2))
+    : spec.startsWith(".")
+      ? resolve(dirname(fromFile), spec)
+      : null;
+  if (!base) return null;
+  for (const candidate of [`${base}.tsx`, `${base}.ts`, join(base, "index.tsx"), join(base, "index.ts")]) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+function sourceWithHelpers(file) {
+  const src = readFileSync(file, "utf8");
+  let combined = src;
+  for (const match of src.matchAll(/import\s[^;]*?from\s+["']([^"']+)["']/g)) {
+    const target = resolveLocalImport(match[1], file);
+    if (target) combined += "\n" + readFileSync(target, "utf8");
+  }
+  return { src, combined };
+}
 
 // Admin pages are covered by a noindex in app/admin/layout.tsx.
 const SKIP_PREFIXES = ["admin"];
@@ -26,12 +54,12 @@ for (const file of findPages(appDir)) {
   const rel = relative(appDir, file).replace(/\\/g, "/");
   if (SKIP_PREFIXES.some((p) => rel === `${p}/page.tsx` || rel.startsWith(`${p}/`))) continue;
 
-  const src = readFileSync(file, "utf8");
+  const { src, combined } = sourceWithHelpers(file);
   const hasCanonical =
-    /\bcanonical\b/.test(src) ||
-    /\bbuildCanonical\b/.test(src) ||
-    /\bcanonicalMeta\b/.test(src);
-  const hasNoindex = /index:\s*false/.test(src);
+    /\bcanonical\b/.test(combined) ||
+    /\bbuildCanonical\b/.test(combined) ||
+    /\bcanonicalMeta\b/.test(combined);
+  const hasNoindex = /index:\s*false/.test(combined);
   if (!hasCanonical && !hasNoindex) failures.push(rel);
 
   // The root layout template already appends "| Afrika Haberleri"; a page

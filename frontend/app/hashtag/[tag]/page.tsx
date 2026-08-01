@@ -1,75 +1,16 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { getArticlesByHashtag } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
-import ArticleCard from "@/components/ui/ArticleCard";
-import Pagination from "@/components/sections/Pagination";
-import Breadcrumb from "@/components/ui/Breadcrumb";
-import { HASHTAG_MIN_ARTICLES } from "@/lib/constants";
+import HashtagListing, { hashtagMetadata } from "./listing";
 
+// No searchParams in this file: that is what lets the route prerender.
+// Pagination lives at ./sayfa/[n].
 export const revalidate = 1800;
 
-interface HashtagPageProps {
-  params: { tag: string };
-  searchParams: { sayfa?: string };
+export function generateMetadata(
+  { params }: { params: { tag: string } }
+): Promise<Metadata> {
+  return hashtagMetadata(params.tag, 1);
 }
 
-export async function generateMetadata({ params, searchParams }: HashtagPageProps): Promise<Metadata> {
-  const tag = decodeURIComponent(params.tag);
-  const page = parsePageParam(searchParams.sayfa);
-
-  // A tag carrying fewer than HASHTAG_MIN_ARTICLES articles is a thin
-  // aggregation and is already excluded from sitemap.xml. Say so on the page
-  // too (noindex, follow) instead of letting Google crawl it and file it under
-  // "Taranan, ancak dizine eklenmedi". The articles themselves stay indexed.
-  const { count } = await getArticlesByHashtag(tag, 1);
-  const thin = count < HASHTAG_MIN_ARTICLES;
-
-  return {
-    title: titleWithPage(`#${tag} Haberleri`, page),
-    description: `${tag} etiketiyle ilgili Afrika haberleri`,
-    ...canonicalMeta(`/hashtag/${encodeURIComponent(tag)}`, { sayfa: String(page) }),
-    ...paginatedRobots(page),
-    ...(thin ? { robots: { index: false, follow: true } } : {}),
-  };
-}
-
-export default async function HashtagPage({ params, searchParams }: HashtagPageProps) {
-  const tag = decodeURIComponent(params.tag);
-  const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
-
-  const { articles, count } = await getArticlesByHashtag(tag, page);
-
-  if (page === 1 && articles.length === 0) notFound();
-
-  const totalPages = Math.ceil(count / 12);
-
-  return (
-    <main className="max-w-container mx-auto px-4 md:px-6 py-8">
-      <Breadcrumb items={[{ name: `#${tag}`, href: `/hashtag/${encodeURIComponent(tag)}` }]} />
-      <div className="border-t-2 border-primary mb-3" />
-      <h1 className="font-headline text-2xl md:text-3xl font-black text-navy mb-1">
-        #{tag}
-      </h1>
-      <p className="font-body text-sm text-on-surface/50 mb-8">
-        {count} haber bulundu
-      </p>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {articles.map((article) => (
-          <ArticleCard key={article.id} article={article} />
-        ))}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="mt-10">
-          <Pagination
-            page={page}
-            total={count}
-            basePath={`/hashtag/${encodeURIComponent(tag)}`}
-          />
-        </div>
-      )}
-    </main>
-  );
+export default function Page({ params }: { params: { tag: string } }) {
+  return <HashtagListing rawTag={params.tag} page={1} />;
 }

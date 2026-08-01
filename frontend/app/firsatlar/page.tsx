@@ -1,39 +1,17 @@
 import type { Metadata } from "next";
-import { getArticlesByNavTab } from "@/lib/queries/articles";
-import { canonicalMeta, parsePageParam, titleWithPage, paginatedRobots } from "@/lib/seo";
-import ArticleGrid from "@/components/sections/ArticleGrid";
-import Breadcrumb from "@/components/ui/Breadcrumb";
-import Pagination from "@/components/sections/Pagination";
+import { NAV_TAB_LISTINGS } from "@/lib/nav-tab-listings";
+import NavTabListing, { navTabMetadata } from "@/components/sections/NavTabListing";
 
-interface FirsatlarPageProps {
-  searchParams: { sayfa?: string };
+// No searchParams anywhere in this file: that is what lets the route prerender.
+// Pagination lives at ./sayfa/[n].
+export const revalidate = 1800;
+
+const CONFIG = NAV_TAB_LISTINGS["firsatlar"];
+
+export function generateMetadata(): Promise<Metadata> {
+  return navTabMetadata(CONFIG, 1);
 }
 
-export async function generateMetadata({ searchParams }: FirsatlarPageProps): Promise<Metadata> {
-  const page = parsePageParam(searchParams.sayfa);
-  return {
-    title: titleWithPage("Fırsatlar", page),
-    description: "Afrika'dan yatırım fırsatları ve proje haberleri.",
-    ...canonicalMeta("/firsatlar", { sayfa: String(page) }),
-    ...paginatedRobots(page),
-  };
-}
-
-export default async function FirsatlarPage({ searchParams }: FirsatlarPageProps) {
-  const page = Math.max(1, Number(searchParams.sayfa ?? 1) || 1);
-  const { articles, count } = await getArticlesByNavTab("firsatlar", page);
-
-  return (
-    <main className="container mx-auto px-4 py-8">
-      <Breadcrumb items={[{ name: "Fırsatlar", href: "/firsatlar" }]} />
-      <header className="mb-6">
-        <h1 className="font-headline text-3xl text-on-surface">Fırsatlar</h1>
-        {count > 0 && (
-          <p className="font-body text-sm text-on-surface/50 mt-1">{count} haber</p>
-        )}
-      </header>
-      <ArticleGrid articles={articles} />
-      <Pagination page={page} total={count} basePath="/firsatlar" />
-    </main>
-  );
+export default function Page() {
+  return <NavTabListing config={CONFIG} page={1} />;
 }

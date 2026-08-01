@@ -5,10 +5,28 @@ type CanonicalParams = Record<string, string | null | undefined>;
 const SITE_URL = "https://www.afrikahaberleri.tr";
 
 // Fixed order keeps canonical URLs stable regardless of incoming param order.
-const PARAM_ORDER = ["ulke", "bolge", "kategori", "sayfa"] as const;
+// "sayfa" is deliberately absent: pagination lives in the path now
+// (/firsatlar/sayfa/2), because reading searchParams made every listing route
+// dynamic and cost them ISR entirely.
+const PARAM_ORDER = ["ulke", "bolge", "kategori"] as const;
 
 export function parsePageParam(sayfa?: string): number {
   return Math.max(1, Number(sayfa ?? 1) || 1);
+}
+
+/**
+ * Page number as a path segment. Page 1 is the bare path so it stays the
+ * canonical, indexable URL and never appears as ".../sayfa/1".
+ */
+export function paginatedPath(basePath: string, page: number): string {
+  return page <= 1 ? basePath : `${basePath}/sayfa/${page}`;
+}
+
+/** Parses the [n] route segment; anything that is not an integer >= 2 is invalid. */
+export function parsePageSegment(n: string): number | null {
+  if (!/^[0-9]+$/.test(n)) return null;
+  const page = Number(n);
+  return page >= 2 ? page : null;
 }
 
 /**
@@ -22,7 +40,6 @@ export function buildCanonical(path: string, params: CanonicalParams = {}): stri
   for (const key of PARAM_ORDER) {
     const value = params[key];
     if (!value) continue;
-    if (key === "sayfa" && value === "1") continue;
     search.set(key, value);
   }
   const qs = search.toString();
