@@ -51,10 +51,16 @@ Your task is to remove any content that does NOT belong to the main article body
 
 Rules:
 - Keep ALL actual news content intact. Do not summarize, shorten, or rewrite.
+- NEVER remove the trailing source citation <p class="source-link">...</p>. It is
+  a mandatory attribution to the original outlet, not a cross-promotion, even
+  though it looks like one of the link teasers listed above. Leave it last.
 - Preserve all HTML tags exactly as they appear in the input.
 - Do not add any new content.
 - If the body is already clean with no boilerplate, return it unchanged.
 - Return ONLY the cleaned HTML. No explanation, no commentary, no markdown fences."""
+
+# Matches the citation block that translate.py appends to every body.
+_SOURCE_LINK_RE = re.compile(r'<p class="source-link">.*?</p>', re.DOTALL)
 
 
 def clean_article_body(content_tr: str) -> str:
@@ -88,6 +94,16 @@ def clean_article_body(content_tr: str) -> str:
             len(cleaned), len(content_tr),
         )
         return content_tr
+
+    # Restore the source citation deterministically. The prompt now tells the
+    # model to keep it, but instruction alone is not enough: this step was
+    # silently eating the citation on 100% of articles, because it looks exactly
+    # like the "recommended article link" boilerplate the model is asked to
+    # strip. A mandatory attribution cannot depend on the model complying.
+    original_link = _SOURCE_LINK_RE.search(content_tr)
+    if original_link and not _SOURCE_LINK_RE.search(cleaned):
+        cleaned = cleaned.rstrip() + "\n" + original_link.group(0)
+        logger.warning("clean_article_body: model dropped the source link, restored it")
 
     if cleaned != content_tr:
         logger.info("clean_article_body: removed boilerplate (%d -> %d chars)", len(content_tr), len(cleaned))
