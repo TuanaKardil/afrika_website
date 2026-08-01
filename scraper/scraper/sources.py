@@ -283,7 +283,9 @@ _ALL: tuple[Source, ...] = (
         lang="fr",
         cutoff_days=1,
         allowed_domains=("medias24.com",),
-        body_selectors=_WP_BODY,
+        # medias24 is not a stock WordPress theme: none of _WP_BODY matches,
+        # which left the body unscoped. #postContent is the real container.
+        body_selectors=("#postContent",) + _WP_BODY,
         image_alt_selectors=_WP_ALT,
         enabled=True,
         notes="French. WordPress.",

@@ -57,6 +57,8 @@ _NOISE_PATTERN = re.compile(
     r"moreLike|section-element|author-bio|byline-block|"
     r"tag-list|breadcrumb|pagination|footer|header|"
     r"banner|popup|modal|overlay|sticky|ad-slot|"
+    # Newspaper-theme ad blocks (capital_ethiopia): td-a-rec, td_spot_img_all
+    r"td-a-rec|td_spot|adsense|doubleclick|dfp-|ad-?container|"
     r"also-read|read-more|you-may|see-also|explore-more",
     re.I,
 )
@@ -82,9 +84,49 @@ _NOISE_HEADING_RE = re.compile(
 # URL fragments that indicate non-editorial images
 _NOISE_URL_PATTERN = re.compile(
     r"(logo|icon|avatar|spinner|placeholder|pixel|tracking|"
-    r"1x1|spacer|author|profile|headshot|badge|flag)",
+    r"1x1|spacer|author|profile|headshot|badge|flag|"
+    # Follow/share call-to-action badges. medias24 puts a "GoogleNews.jpg"
+    # button inside the article body itself, so it survives container scoping
+    # and has to be matched by name.
+    r"googlenews|google-news|follow-us|followus|whatsapp|telegram|"
+    r"facebook|twitter|linkedin|instagram|subscribe)",
     re.I,
 )
+
+# WordPress and most CMSes encode the rendition size in the filename
+# ("-150x150.jpg"). Anything whose shorter side is below this is a related-post
+# or gallery thumbnail, never body art.
+_MIN_NAMED_DIMENSION = 400
+_NAMED_DIMENSION_RE = re.compile(r"-(\d{2,4})x(\d{2,4})\.(?:jpe?g|png|webp|gif)$", re.I)
+
+# Standard IAB ad slot dimensions. capital_ethiopia serves a 300x250 house ad
+# inside the article body on every article, under a hash filename that no name
+# based rule can catch.
+_AD_DIMENSIONS = {
+    (300, 250), (336, 280), (728, 90), (970, 250), (970, 90),
+    (160, 600), (300, 600), (320, 50), (320, 100), (468, 60), (250, 250),
+}
+
+
+def _is_noise_image(src: str, width: str = "", height: str = "") -> bool:
+    """True when an image URL is furniture rather than article art."""
+    if not src:
+        return True
+    if _NOISE_URL_PATTERN.search(src):
+        return True
+
+    named = _NAMED_DIMENSION_RE.search(src)
+    if named:
+        w, h = int(named.group(1)), int(named.group(2))
+        if (w, h) in _AD_DIMENSIONS or min(w, h) < _MIN_NAMED_DIMENSION:
+            return True
+
+    try:
+        if width and height and (int(width), int(height)) in _AD_DIMENSIONS:
+            return True
+    except (TypeError, ValueError):
+        pass
+    return False
 
 
 def _real_src(img_tag) -> str:
@@ -201,6 +243,26 @@ def _fetch_datawrapper_tables(html: str) -> str:
     return "\n".join(tables)
 
 
+def _strip_noise_images(html: str) -> str:
+    """Drop furniture images from already-extracted body HTML.
+
+    extract_inline_images() filters the images it collects, but images that
+    trafilatura leaves INSIDE the body were never checked, and StoragePipeline
+    uploads every <img> it finds in content_original. That second, unfiltered
+    path is how a "follow us on Google News" button ended up stored and rendered
+    under six medias24 articles, and a 300x250 house ad under every
+    capital_ethiopia one.
+    """
+    if not html or "<img" not in html:
+        return html
+    soup = BeautifulSoup(html, "html.parser")
+    for img in soup.find_all("img"):
+        src = _real_src(img)
+        if _is_noise_image(src, img.get("width") or "", img.get("height") or ""):
+            (img.find_parent("figure") or img).decompose()
+    return str(soup)
+
+
 def _normalise_headings(html: str) -> str:
     """Remap source headings onto the h2/h3 pair the sanitizer allows.
 
@@ -285,6 +347,7 @@ def extract_content(response: Response, source: str = "") -> str:
             result = f"<p>{response.css('body').xpath('string()').get('').strip()}</p>"
 
     result = _normalise_headings(result)
+    result = _strip_noise_images(result)
 
     # Append any Datawrapper chart tables found in the page HTML.
     # These are JS-rendered embeds (ranking lists, tables) not captured by trafilatura.
@@ -348,8 +411,8 @@ def extract_inline_images(response, source: str = "") -> list[str]:
         except (ValueError, TypeError):
             pass
 
-        # Skip non-editorial URLs (logos, avatars, author photos, etc.)
-        if _NOISE_URL_PATTERN.search(src):
+        # Skip furniture: logos, follow badges, sized thumbnails, ad slots.
+        if _is_noise_image(src, img.get("width") or "", img.get("height") or ""):
             continue
 
         seen.add(src)

@@ -69,8 +69,19 @@ Canonical hashtag list (one tag per line):
 {canonical}"""
 
 
+MIN_HASHTAGS = 8
+MAX_HASHTAGS = 15
+_HASHTAG_ATTEMPTS = 2
+
+
 def assign_hashtags(title: str, content: str) -> list[str]:
-    """Return exactly 10 hashtags from hashtag.md for the given article.
+    """Return 8-15 hashtags from the canonical list for the given article.
+
+    Retries once when the model comes back with too few valid tags, keeping the
+    better of the two attempts. Without the retry, 10% of articles published
+    with fewer than the mandated 8 (one had 4): the model invents tags outside
+    the canonical list, they get filtered out, and whatever survived was
+    accepted as-is.
 
     Returns an empty list on failure (pipelines.py will log a warning).
     """
@@ -81,12 +92,38 @@ def assign_hashtags(title: str, content: str) -> list[str]:
     plain = re.sub(r"<[^>]+>", " ", content)
     user_msg = f"Title: {title}\n\nBody: {plain[:3000]}"
 
+    best: list[str] = []
+    for attempt in range(_HASHTAG_ATTEMPTS):
+        valid = _one_attempt(user_msg, tag_list, temperature=0.2 + 0.2 * attempt)
+        if len(valid) > len(best):
+            best = valid
+        if len(best) >= MIN_HASHTAGS:
+            break
+        if attempt + 1 < _HASHTAG_ATTEMPTS:
+            logger.warning(
+                "assign_hashtags: only %d valid tags, retrying (%s)",
+                len(valid), title[:60],
+            )
+
+    if len(best) < MIN_HASHTAGS:
+        logger.warning(
+            "assign_hashtags: still %d valid tags after %d attempts (need %d): %s",
+            len(best), _HASHTAG_ATTEMPTS, MIN_HASHTAGS, title[:60],
+        )
+    return best[:MAX_HASHTAGS]
+
+
+def _one_attempt(user_msg: str, tag_list: list[str], temperature: float) -> list[str]:
     raw = chat(
         [{"role": "user", "content": user_msg}],
         model=GEMINI_FLASH_LITE,
         system=_build_system(tag_list),
-        temperature=0.2,
-        max_tokens=300,
+        temperature=temperature,
+        # 300 truncated the JSON array mid-string on articles that warranted the
+        # full 15 tags: Turkish tag names are long and tokenize poorly, and a
+        # cut array has no closing bracket, so the parse found nothing and the
+        # article got ZERO hashtags rather than a short list.
+        max_tokens=700,
     )
 
     if not raw:
@@ -109,12 +146,4 @@ def assign_hashtags(title: str, content: str) -> list[str]:
 
     # Validate: only allow tags from canonical list
     canonical_set = set(tag_list)
-    valid = [t for t in result if isinstance(t, str) and t in canonical_set]
-
-    if not (8 <= len(valid) <= 15):
-        logger.warning(
-            "assign_hashtags: expected 8-15 tags, got %d valid out of %d returned",
-            len(valid), len(result),
-        )
-
-    return valid[:15]
+    return [t for t in result if isinstance(t, str) and t in canonical_set]

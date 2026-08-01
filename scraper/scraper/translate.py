@@ -634,7 +634,14 @@ _META_DESC_SYSTEM: str | None = None
 # on-target result immediately; keep a slightly-off one as a fallback and retry
 # once to hit the ideal band; reject anything genuinely too short/long.
 _MD_IDEAL = (135, 160)
-_MD_SAFETY = (125, 170)
+# The floor was 125, which discarded 24% of descriptions across every source.
+# Measured over a sample of the rejects, ALL of them were too SHORT (105-122
+# chars), never too long: the model simply undershoots. A 110-char description
+# costs nothing (Google renders up to ~155 and does not penalise shorter ones)
+# whereas returning None drops the <meta description> entirely and the page
+# falls back to the excerpt. The ceiling stays put, since an over-long one does
+# get truncated mid-word in results.
+_MD_SAFETY = (105, 170)
 
 
 def generate_meta_description(title_tr: str, content_tr: str) -> str | None:
