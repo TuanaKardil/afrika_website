@@ -59,12 +59,20 @@ _NOISE_PATTERN = re.compile(
     r"banner|popup|modal|overlay|sticky|ad-slot|"
     # Newspaper-theme ad blocks (capital_ethiopia): td-a-rec, td_spot_img_all
     r"td-a-rec|td_spot|adsense|doubleclick|dfp-|ad-?container|"
+    # Card/list widgets that embed OTHER articles inside the body container
+    # (theafricareport: div.list-folder > article.card-horizontal).
+    # "teaser" is deliberately NOT here: plenty of themes use it for the
+    # article's own standfirst.
+    r"list-folder|card-horizontal|card-list|"
     r"also-read|read-more|you-may|see-also|explore-more",
     re.I,
 )
 
 # Above this many inline images, the body container is almost certainly wrong.
 _MAX_INLINE_IMAGES = 6
+
+# The article's OWN header block, which must survive the "header" noise token.
+_OWN_HEADER_RE = re.compile(r"\b(article|post|entry|story|single)[-_]{0,2}header\b", re.I)
 
 # Headings that open a related-articles block rather than an article section.
 # Prefix match, not full match: real widgets add a suffix ("Related Coverage:
@@ -174,8 +182,14 @@ def _remove_noise_elements(container) -> None:
     for tag in container.find_all(True):
         classes = " ".join(tag.get("class") or [])
         tag_id = tag.get("id") or ""
-        if _NOISE_PATTERN.search(classes) or _NOISE_PATTERN.search(tag_id):
-            to_remove.append(tag)
+        if not (_NOISE_PATTERN.search(classes) or _NOISE_PATTERN.search(tag_id)):
+            continue
+        # "header" is a noise token, but "article__header" is the article's own
+        # title/standfirst block. Removing it cost 47 words of real copy on
+        # theafricareport before this exception existed.
+        if _OWN_HEADER_RE.search(classes) or _OWN_HEADER_RE.search(tag_id):
+            continue
+        to_remove.append(tag)
 
     for tag in to_remove:
         try:
@@ -314,8 +328,50 @@ def _normalise_headings(html: str) -> str:
     return str(soup)
 
 
+# Containers that embed OTHER articles inside the body. Deliberately narrow:
+# this runs on the WHOLE page before extraction, where the broader
+# _NOISE_PATTERN is far too blunt (applied page-wide it took the article body
+# with it, cutting The Conversation from 802 words to 21).
+_EMBEDDED_ARTICLES_RE = re.compile(
+    r"list-folder|card-horizontal|card-list|related-(articles?|posts?|stories)|"
+    r"more-stories|you-may-also|also-read",
+    re.I,
+)
+
+
+def _prestrip_embedded_articles(html: str) -> str:
+    """Drop blocks that embed OTHER articles before trafilatura sees the page.
+
+    theafricareport nests a div.list-folder of related stories INSIDE
+    div.article__content, so container scoping cannot exclude it: four photos
+    from unrelated British news stories were extracted, uploaded and rendered
+    under an article about African pension funds, and the same photo turned up
+    across several articles.
+
+    Only the embedded-article containers go. Anything wider risks the body.
+    """
+    if not html or not _EMBEDDED_ARTICLES_RE.search(html):
+        return html
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+        # Collect first: decomposing while iterating leaves detached nodes in
+        # the generator and blows up on the next .get().
+        doomed = [
+            tag for tag in soup.find_all(True)
+            if _EMBEDDED_ARTICLES_RE.search(
+                " ".join(tag.get("class") or []) + " " + (tag.get("id") or "")
+            )
+        ]
+        for tag in doomed:
+            tag.decompose()
+        return str(soup)
+    except Exception as exc:  # never let cleanup cost us the article
+        logger.warning("embedded-article pre-strip failed, using raw html: %s", exc)
+        return html
+
+
 def extract_content(response: Response, source: str = "") -> str:
-    html = _fix_lazy_images(response.text)
+    html = _prestrip_embedded_articles(_fix_lazy_images(response.text))
 
     result = trafilatura.extract(
         html,

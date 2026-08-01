@@ -160,7 +160,8 @@ _ALL: tuple[Source, ...] = (
         strategy=Rss(feed_url="https://www.theafricareport.com/feed/"),
         cutoff_days=7,
         allowed_domains=("theafricareport.com",),
-        body_selectors=(".article-content", ".entry-content", "article .content"),
+        # theafricareport uses .article__content, not any stock selector.
+        body_selectors=(".article__content", ".article-content", ".entry-content"),
         image_alt_selectors=(".article-featured-image img::attr(alt)",
                              "figure img::attr(alt)",
                              "meta[property='og:image:alt']::attr(content)"),
