@@ -12,11 +12,81 @@ const PAGINATED_PREFIXES = [
   "/diger",
   "/turk-is-dunyasi",
   "/etkinlikler-fuarlar",
+  "/sektorler",
+  "/ulkeler",
+  "/haberler",
   "/bolge/",
-  "/sektorler/",
   "/hashtag/",
   "/yazarlar/",
 ];
+
+// "/haberler?kategori=X" and "?bolge=Y" now have their own static routes, so
+// the filter pills link there instead of re-querying /haberler. These keep the
+// old, indexed query URLs resolving.
+const HABERLER_KATEGORI: Record<string, string> = {
+  "firsatlar": "/firsatlar",
+  "pazarlar-ekonomi": "/pazarlar-ekonomi",
+  "ticaret-ihracat": "/ticaret-ihracat",
+  "sektorler": "/sektorler",
+  "ulkeler": "/ulkeler",
+  "diger": "/diger",
+};
+
+const HABERLER_BOLGE = new Set([
+  "kuzey-afrika",
+  "bati-afrika",
+  "orta-afrika",
+  "dogu-afrika",
+  "guney-afrika",
+]);
+
+/**
+ * "/haberler?kategori=firsatlar" -> "/firsatlar",
+ * "/haberler?bolge=dogu-afrika"  -> "/bolge/dogu-afrika".
+ *
+ * The combined region+category view had no equivalent route and is gone;
+ * category wins there, since it is the site's primary taxonomy and matches the
+ * main nav. Page numbers are dropped rather than carried: the destination is a
+ * different result set, so page 3 of the old filter is not page 3 of the new
+ * route, and landing on page 1 is the honest answer.
+ */
+function haberlerFilterRedirect(request: NextRequest): NextResponse | null {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname !== "/haberler") return null;
+
+  const kategori = searchParams.get("kategori");
+  if (kategori && HABERLER_KATEGORI[kategori]) {
+    return NextResponse.redirect(new URL(HABERLER_KATEGORI[kategori], request.url), 308);
+  }
+
+  const bolge = searchParams.get("bolge");
+  if (bolge && HABERLER_BOLGE.has(bolge)) {
+    return NextResponse.redirect(new URL(`/bolge/${bolge}`, request.url), 308);
+  }
+  // "bolge=afrika" is the unfiltered view, i.e. /haberler itself; fall through
+  // to the pagination rule so any "sayfa" is still honoured.
+  return null;
+}
+
+/**
+ * "/ulkeler?ulke=kenya" -> "/ulkeler/kenya".
+ *
+ * The country filter was a closed set of 54 slugs, all linked from the nav
+ * menu, so it moved into the path and every country page now prerenders. Runs
+ * before the pagination rule so "?ulke=x&sayfa=2" lands on
+ * "/ulkeler/x/sayfa/2" in one hop.
+ */
+function countryFilterRedirect(request: NextRequest): NextResponse | null {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname !== "/ulkeler") return null;
+
+  const ulke = searchParams.get("ulke");
+  if (!ulke || !/^[a-z0-9-]+$/.test(ulke)) return null;
+
+  const sayfa = Number(searchParams.get("sayfa") ?? 1);
+  const suffix = Number.isInteger(sayfa) && sayfa > 1 ? `/sayfa/${sayfa}` : "";
+  return NextResponse.redirect(new URL(`/ulkeler/${ulke}${suffix}`, request.url), 308);
+}
 
 /**
  * 308s old "?sayfa=N" URLs onto the path form, dropping the query.
@@ -59,6 +129,12 @@ function paginationRedirect(request: NextRequest): NextResponse | null {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const haberlerFilter = haberlerFilterRedirect(request);
+  if (haberlerFilter) return haberlerFilter;
+
+  const country = countryFilterRedirect(request);
+  if (country) return country;
 
   const paginated = paginationRedirect(request);
   if (paginated) return paginated;
