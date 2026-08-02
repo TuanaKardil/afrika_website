@@ -17,9 +17,15 @@ export function parsePageParam(sayfa?: string): number {
 /**
  * Page number as a path segment. Page 1 is the bare path so it stays the
  * canonical, indexable URL and never appears as ".../sayfa/1".
+ *
+ * The trailing slash MUST be stripped: the homepage feed passes basePath="/",
+ * and naive concatenation produced "//sayfa/2", which a browser reads as a
+ * protocol-relative URL and resolves to the host "sayfa" (https://sayfa/2).
  */
 export function paginatedPath(basePath: string, page: number): string {
-  return page <= 1 ? basePath : `${basePath}/sayfa/${page}`;
+  if (page <= 1) return basePath;
+  const base = basePath === "/" ? "" : basePath.replace(/\/+$/, "");
+  return `${base}/sayfa/${page}`;
 }
 
 /** Parses the [n] route segment; anything that is not an integer >= 2 is invalid. */
